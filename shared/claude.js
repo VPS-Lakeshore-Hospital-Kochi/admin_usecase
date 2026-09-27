@@ -293,7 +293,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireUploads); else setTimeout(wireUploads);
 
   /* ---------- branded Word export ---------- */
-  const NAVY = '001E5F', MAGENTA = '9F003A', CREAM = 'FBF6EE', GREY = 'D9DCE3', FONT = 'DM Sans';
+  const NAVY = '001E5F', MAGENTA = 'D81054', CREAM = 'FDFAE7', GREY = 'D9DDE8', INK = '162A54', SLATE = '5C6480', FONT = 'DM Sans';
 
   function mdBlocks(text) {
     const lines = String(text).replace(/\r/g, '').split('\n'), out = [];
@@ -320,7 +320,7 @@
     while ((m = re.exec(text))) {
       if (m.index > last) parts.push(new D.TextRun({ text: text.slice(last, m.index), ...base }));
       const t = m[0];
-      if (t.startsWith('**')) parts.push(new D.TextRun({ text: t.slice(2, -2), bold: true, ...base }));
+      if (t.startsWith('**')) parts.push(new D.TextRun({ text: t.slice(2, -2), ...base, font: 'DM Sans SemiBold' })); // brand: SemiBold, never Bold
       else if (t.startsWith('`')) parts.push(new D.TextRun({ text: t.slice(1, -1), font: 'Consolas', ...base }));
       else parts.push(new D.TextRun({ text: t.slice(1, -1), italics: true, ...base }));
       last = m.index + t.length;
@@ -345,7 +345,7 @@
             margins: { top: 60, bottom: 60, left: 100, right: 100 },
             children: [new D.Paragraph({
               alignment: num ? D.AlignmentType.RIGHT : D.AlignmentType.LEFT,
-              children: runs(D, txt, ri === 0 ? { bold: true, color: 'FFFFFF', size: 18 } : { size: 18 }),
+              children: runs(D, txt, ri === 0 ? { color: 'FFFFFF', size: 18 } : { size: 18 }),
             })],
           });
         }),
@@ -363,13 +363,13 @@
       const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
       const body = [
         new D.Paragraph({ spacing: { after: 60 }, children: [
-          new D.TextRun({ text: `${dept.toUpperCase()}  ·  DRAFT  ·  ${today.toUpperCase()}`, color: MAGENTA, bold: true, size: 16 })] }),
+          new D.TextRun({ text: `${dept.toUpperCase()}  ·  DRAFT  ·  ${today.toUpperCase()}`, color: '003462', size: 16, characterSpacing: 20 })] }),
         new D.Paragraph({ heading: D.HeadingLevel.TITLE, spacing: { after: 120 },
           border: { bottom: { style: D.BorderStyle.SINGLE, size: 12, color: NAVY, space: 6 } },
-          children: [new D.TextRun({ text: title, bold: true, color: NAVY, size: 40 })] }),
+          children: [new D.TextRun({ text: title, color: NAVY, size: 44 })] }),
       ];
       for (const b of mdBlocks(text)) {
-        if (b.t === 'h') body.push(new D.Paragraph({ heading: [D.HeadingLevel.HEADING_1, D.HeadingLevel.HEADING_1, D.HeadingLevel.HEADING_2, D.HeadingLevel.HEADING_3][b.level - 1], spacing: { before: 240, after: 80 }, children: runs(D, b.text, { color: NAVY, bold: true }) }));
+        if (b.t === 'h') body.push(new D.Paragraph({ heading: [D.HeadingLevel.HEADING_1, D.HeadingLevel.HEADING_1, D.HeadingLevel.HEADING_2, D.HeadingLevel.HEADING_3][b.level - 1], spacing: { before: 240, after: 80 }, children: runs(D, b.text, { color: NAVY }) }));
         else if (b.t === 'ul') body.push(new D.Paragraph({ bullet: { level: b.level }, children: runs(D, b.text) }));
         else if (b.t === 'ol') body.push(new D.Paragraph({ numbering: { reference: 'hub-num', level: 0 }, children: runs(D, b.text) }));
         else if (b.t === 'table') { body.push(docTable(D, b.rows)); body.push(new D.Paragraph({ children: [] })); }
@@ -378,19 +378,19 @@
       }
       body.push(new D.Paragraph({
         spacing: { before: 240 }, shading: { type: D.ShadingType.CLEAR, color: 'auto', fill: CREAM },
-        border: { left: { style: D.BorderStyle.SINGLE, size: 24, color: MAGENTA, space: 8 } },
-        children: [new D.TextRun({ text: 'Review before use. ', bold: true, color: MAGENTA }),
+        border: { left: { style: D.BorderStyle.SINGLE, size: 12, color: NAVY, space: 8 } },
+        children: [new D.TextRun({ text: 'Review before use. ', italics: true, color: NAVY }),
           new D.TextRun({ text: 'Drafted with Claude from the inputs on screen. Check figures, names and dates, and have the owner approve before circulating.' })],
       }));
       const doc = new D.Document({
         creator: 'VPS Lakeshore Admin Hub', title, description: 'Draft generated with Claude',
         styles: {
-          default: { document: { run: { font: FONT, size: 20, color: '1B2233' }, paragraph: { spacing: { line: 276 } } } },
+          default: { document: { run: { font: FONT, size: 20, color: INK }, paragraph: { spacing: { line: 276 } } } },
           paragraphStyles: [
             { id: 'Title', name: 'Title', basedOn: 'Normal', run: { font: FONT, color: NAVY } },
-            { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 28, bold: true, color: NAVY } },
-            { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 24, bold: true, color: NAVY } },
-            { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 22, bold: true, color: MAGENTA } },
+            { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 30, color: NAVY } },
+            { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 25, color: NAVY } },
+            { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: 22, color: NAVY } },
           ],
         },
         numbering: { config: [{ reference: 'hub-num', levels: [{ level: 0, format: D.LevelFormat.DECIMAL, text: '%1.', alignment: D.AlignmentType.START, style: { paragraph: { indent: { left: 540, hanging: 360 } } } }] }] },
@@ -399,14 +399,14 @@
           headers: { default: new D.Header({ children: [new D.Paragraph({
             border: { bottom: { style: D.BorderStyle.SINGLE, size: 6, color: MAGENTA, space: 4 } },
             tabStops: [{ type: D.TabStopType.RIGHT, position: 9500 }],
-            children: [new D.TextRun({ text: 'VPS Lakeshore', bold: true, color: NAVY, size: 22 }),
+            children: [new D.TextRun({ text: 'VPS Lakeshore', color: NAVY, size: 22 }),
               new D.TextRun({ text: '  In good hands', italics: true, color: MAGENTA, size: 16 }),
-              new D.TextRun({ text: '\t' + dept, color: '5B6478', size: 16 })] })] }) },
+              new D.TextRun({ text: '\t' + dept, color: SLATE, size: 16 })] })] }) },
           footers: { default: new D.Footer({ children: [new D.Paragraph({
             shading: { type: D.ShadingType.CLEAR, color: 'auto', fill: CREAM },
             tabStops: [{ type: D.TabStopType.RIGHT, position: 9500 }],
-            children: [new D.TextRun({ text: 'Lakeshore Hospital & Research Centre Ltd · Kochi · Internal draft', size: 14, color: '5B6478' }),
-              new D.TextRun({ children: ['\tPage ', D.PageNumber.CURRENT, ' of ', D.PageNumber.TOTAL_PAGES], size: 14, color: '5B6478' })] })] }) },
+            children: [new D.TextRun({ text: 'Lakeshore Hospital & Research Centre Ltd · Kochi · Internal draft', size: 14, color: SLATE }),
+              new D.TextRun({ children: ['\tPage ', D.PageNumber.CURRENT, ' of ', D.PageNumber.TOTAL_PAGES], size: 14, color: SLATE })] })] }) },
           children: body,
         }],
       });

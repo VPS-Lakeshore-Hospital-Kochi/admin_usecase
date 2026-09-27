@@ -230,7 +230,7 @@
   }
 
   /* ---------- charts ---------- */
-  const SERIES = n => `var(--series-${(n % 8) + 1})`;
+  const SERIES = n => `var(--series-${(n % 4) + 1})`; // brand chart ramp: navy → slate → light slate → grey (max 4 series)
   const niceMax = v => { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p / (v / p > 5 ? 2 : 1)) * p * (v / p > 5 ? 2 : 1); };
   const compact = v => Math.abs(v) >= 1e7 ? (v / 1e7).toFixed(1).replace(/\.0$/, '') + ' Cr' : Math.abs(v) >= 1e5 ? (v / 1e5).toFixed(1).replace(/\.0$/, '') + ' L' : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : String(Math.round(v * 10) / 10);
 

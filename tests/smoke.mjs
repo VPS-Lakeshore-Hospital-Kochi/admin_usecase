@@ -6,7 +6,7 @@ import { readFile, readdir } from 'fs/promises';
 import { extname, join } from 'path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript' };
+const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json' };
 const server = createServer(async (req, res) => {
   try {
     const p = join(ROOT, decodeURIComponent(req.url.split('?')[0]).replace(/\/$/, '/index.html'));
@@ -17,10 +17,14 @@ const server = createServer(async (req, res) => {
 }).listen(8765);
 
 const APPS = (await readdir(join(ROOT, 'apps'))).filter(f => f.endsWith('.html')).map(f => f.replace(/\.html$/, ''));
+// ONLY=slug[,slug] limits the run to those prototypes (hub and governance are skipped)
+const ONLY = (process.env.ONLY || '').split(',').filter(Boolean);
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 let failed = 0;
 
-for (const [path, width] of [['index.html', 1280], ['governance.html', 1280], ['governance.html', 375], ...APPS.flatMap(a => [[`apps/${a}.html`, 1280], [`apps/${a}.html`, 375]])]) {
+const PAGES = ONLY.length ? ONLY.flatMap(a => [[`apps/${a}.html`, 1280], [`apps/${a}.html`, 375]])
+  : [['index.html', 1280], ['governance.html', 1280], ['governance.html', 375], ...APPS.flatMap(a => [[`apps/${a}.html`, 1280], [`apps/${a}.html`, 375]])];
+for (const [path, width] of PAGES) {
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
