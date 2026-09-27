@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Records release desk</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Records release desk</h1>
+    <p>Assess a medical records release request against what is attached, and draft the reply, release scope and log entry — before Medical Records Officer sign-off.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample request</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="insurer">Insurer claim — full case records</option>
+          <option value="police">Police request — road-accident case</option>
+          <option value="son">Patient's son requesting father's records by email</option>
+        </select>
+      </div>
+      <label>Request text, requester details &amp; attachments (editable)</label>
+      <textarea id="req" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: the Medical Records Officer approves the release scope and reply; Legal reviews any police/court request before documents leave the hospital. Synthetic data only — all names, IDs and case details are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Medical Records', title: 'Records release desk' });
+
+const CHECKLIST_ITEMS = ['Requester ID proof attached', 'Patient consent / authorisation attached', 'Court order / official requisition attached (if applicable)', 'Purpose of request clearly stated', 'Relationship to patient established'];
+
+const SCENARIOS = {
+insurer: {
+  label: 'Insurer claim — full case records',
+  text: `Requester: Ms. Sheeba Thomas, Claims Officer, Apex General Insurance
+Patient: Mr. Joseph Kutty, IP26-2210, admitted 2026-08-02 to 2026-08-09, General Medicine
+Request text: "We require the complete case records including discharge summary, investigation reports and treatment notes to process a hospitalisation claim under policy no. AGI-778234."
+Attached: (1) Signed patient-consent/authorisation letter for release to insurer, (2) copy of insurer's own claim intimation form, (3) requester's official ID badge scan.
+Not attached: Court order (not applicable for this type of request).`,
+  checked: [true, true, false, true, false],
+},
+police: {
+  label: 'Police request — road-accident case',
+  text: `Requester: Sub-Inspector Rahul Menon, Ernakulam Rural Police Station
+Patient: Mr. Anoop Varghese, IP26-2255, admitted 2026-09-10, Orthopaedics/Emergency (RTA case)
+Request text: "Kindly provide copies of medical records/MLC and treatment details of the above patient for investigation into FIR no. 442/2026 (road traffic accident)."
+Attached: (1) Official requisition letter on police letterhead with station seal, (2) officer's ID card copy.
+Not attached: Patient consent (patient unconscious/unable to consent at time of request), formal court order (this is a police investigation requisition, not yet a court summons).`,
+  checked: [true, false, false, true, true],
+},
+son: {
+  label: "Patient's son requesting father's records by email",
+  text: `Requester: Mr. Vishnu Pillai, claiming to be son of patient
+Patient: Mr. K.P. Pillai, IP26-2298, admitted 2026-09-05, Cardiology
+Request text (email): "Hi, I am Mr. K.P. Pillai's son. Can you please email me my father's discharge summary and reports? He is currently unwell and can't come to collect them himself."
+Attached: (1) Requester's own Aadhaar copy (self ID only).
+Not attached: Patient's written consent/authorisation, proof of relationship (birth certificate / ration card), any note from treating doctor on patient's incapacity to authorise.`,
+  checked: [true, false, false, true, false],
+},
+};
+
+function renderKpis() {
+  const text = document.getElementById('req').value.toLowerCase();
+  const checks = [
+    /id\b.*attached|id proof|id badge|id card/.test(text) && text.includes('attached'),
+    text.includes('consent') && !text.includes('not attached') || /consent.*attached/.test(text),
+    /court order.*attached(?!.*not applicable)/.test(text),
+    text.includes('request text'),
+    /relationship|son of|claims officer|police|insurer/.test(text),
+  ];
+  const box = document.getElementById('kpis');
+  const labels = ['ID proof', 'Patient consent', 'Court order', 'Purpose stated', 'Relationship/role clear'];
+  box.innerHTML = labels.map((l, i) => `<div class="kpi"><div class="label">${l}</div><div class="value" style="font-size:1.1rem;color:${checks[i] ? 'var(--ok)' : 'var(--bad)'}">${checks[i] ? 'Present' : 'Missing'}</div></div>`).join('');
+}
+document.getElementById('req').addEventListener('input', renderKpis);
+
+function loadScenario(key) {
+  document.getElementById('req').value = SCENARIOS[key].text;
+  renderKpis();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('insurer');
+
+const DEMO = {
+insurer: `## Can this be released?
+
+**Yes, with conditions.** A signed patient consent/authorisation for release to the insurer is attached, and the requester's identity as an insurer claims officer is verifiable. This is a routine cashless/reimbursement-support release, not a contested disclosure.
+
+## What is still needed
+
+- Confirm the consent letter is **specific to this insurer and this claim number** (AGI-778234), not a generic old authorisation.
+- No court order is required for this category — correctly not attached.
+
+## What to release
+
+- **Discharge summary** — yes.
+- **Investigation reports** — yes, as requested.
+- **Full treatment/nursing notes** — release only if the consent explicitly covers "complete case records"; otherwise release discharge summary + investigation reports + itemised bill, and treat full notes as an additional request requiring re-confirmation of scope with the patient.
+
+## Fees / timeline (per hospital policy placeholder)
+
+Standard MRD release fee applies per page/copy as per the current hospital tariff; target turnaround is **3 working days** for insurer requests with complete documentation.
+
+## Draft reply
+
+"Dear Ms. Thomas, we acknowledge your request for Mr. Joseph Kutty's (IP26-2210) hospitalisation records for claim AGI-778234. Based on the signed patient authorisation on file, we will release the discharge summary, investigation reports and itemised bill within 3 working days. Please confirm if the complete treatment notes are also required, as this needs an explicit consent scope."
+
+## Log entry
+
+Date: [today] | Patient: IP26-2210 | Requester: Sheeba Thomas, Apex General Insurance | Docs released: discharge summary, investigation reports, itemised bill | Basis: signed patient consent | Released by: MRD desk | Approved by: Medical Records Officer
+
+## Note
+
+Standard insurer release with consent on file — **no Legal review required** for this category, but confirm DPDP-compliant handling (data shared only for the stated claim purpose, not retained beyond need).`,
+
+police: `## Can this be released?
+
+**Not yet — do not release directly on this requisition alone.** A police station-letterhead requisition is a reasonable basis to *engage*, but releasing full medical records/MLC to police without patient consent (patient unable to consent) requires **Legal review** to confirm this falls under a permitted disclosure (e.g., MLC/RTA cases where law requires hospital cooperation) versus needing a formal court order/summons.
+
+## What is still needed
+
+- **Legal sign-off** confirming this specific request qualifies for release without patient consent (RTA/MLC cases often have a statutory basis, but this must be confirmed, not assumed).
+- If Legal advises a court order is needed for anything beyond the MLC itself (e.g. full treatment notes), that should be requested from the police before wider release.
+- Patient/next-of-kin consent should still be attempted where feasible, even if not strictly mandatory.
+
+## What to release
+
+- The **Medico-Legal Case (MLC) form / accident register entry** is typically releasable to police as part of standard MLC procedure, once Legal confirms.
+- **Full clinical treatment notes** — hold pending Legal review; do not release proactively.
+
+## Fees / timeline (per hospital policy placeholder)
+
+MLC-related police requests are typically expedited; target turnaround **1–2 working days** after Legal clearance, per hospital policy on medico-legal cooperation.
+
+## Draft reply
+
+"Dear Sub-Inspector Menon, we acknowledge your requisition regarding Mr. Anoop Varghese (IP26-2255) in connection with FIR 442/2026. We are reviewing this with our Legal department to confirm the scope of records that can be shared under an MLC/RTA case without patient consent, and will revert within 2 working days. The Medico-Legal Case form will be made available as per standard procedure once confirmed."
+
+## Log entry
+
+Date: [today] | Patient: IP26-2255 | Requester: SI Rahul Menon, Ernakulam Rural PS | Docs released: pending Legal review | Basis: police requisition, FIR 442/2026 | Status: **Escalated to Legal** | Approved by: pending
+
+## Note
+
+**Confirm with Legal before any release** — this involves law-enforcement access to medical records without patient consent, and has DPDP/health-data-sensitivity implications; Legal should also confirm whether this requisition, versus a formal court summons, is sufficient under applicable law.`,
+
+son: `## Can this be released?
+
+**No — not on the basis currently attached.** Only the requester's own ID is attached; there is no patient consent/authorisation and no documented proof of relationship or of the patient's incapacity to authorise release himself. Releasing a patient's records to a third party (even a family member) without one of these is not appropriate.
+
+## What is still needed, before release
+
+1. **Patient's own written/verbal-recorded consent** authorising release to his son, OR
+2. If the patient is genuinely unable to consent (illness/incapacity), a **note from the treating doctor confirming this**, plus
+3. **Proof of relationship** (e.g. ration card, birth certificate, or any document linking requester to patient) as a safeguard, given the request came by email with only self-ID attached.
+
+## What to release (once conditions are met)
+
+- If patient consent is obtained directly (e.g. a phone call recorded/logged, or the patient visits/authorises in writing): release **discharge summary and reports** as requested.
+- If incapacity is confirmed by the treating doctor instead: release only what is reasonably needed for ongoing care coordination (e.g. discharge summary), not the full file, until relationship proof is also on record.
+- **Do not email records to an unverified address** — even once consent exists, prefer a verified channel (patient portal, in-person collection, or a phone-confirmed email address).
+
+## Fees / timeline (per hospital policy placeholder)
+
+Standard family-request turnaround **2–3 working days** once consent/authorisation is completed; no fee waiver implied.
+
+## Draft reply
+
+"Dear Mr. Pillai, to release your father's medical records we first need either his own consent (which we can confirm by a phone call to him, or his signature), or, if he is currently unable to provide this, a note from us confirming that and proof of your relationship to him. Please contact the Medical Records desk at [phone] so we can verify this quickly and proceed."
+
+## Log entry
+
+Date: [today] | Patient: IP26-2298 | Requester: Vishnu Pillai (claimed son) | Docs released: **none yet** | Basis: **pending consent/relationship verification** | Approved by: pending
+
+## Note
+
+This is a routine third-party request needing standard verification, not a Legal escalation by itself — but if the requester pushes back or disputes the verification requirement, **flag to Legal**, and keep in mind DPDP considerations around sharing health data by unverified email.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const req = document.getElementById('req').value;
+  const prompt = `You are the Medical Records release desk at VPS Lakeshore Hospital, Kochi, assessing a records-release request.
+
+Request details:
+${req}
+
+Assess: (1) whether this can be released, (2) what consent/authorisation/court-order is still needed, (3) what to release (summary vs full copy vs specific document like an MLC form), (4) fees/timeline per hospital policy (use a generic placeholder like "standard MRD tariff, 3 working days"), (5) a draft reply to the requester, (6) a log entry line (date, patient, requester, docs released, basis, approved by). For any police/court-linked request or anything involving disclosure without patient consent, explicitly flag it for Legal review and note general DPDP (data protection) considerations in generic terms — say "confirm with Legal" rather than giving a definitive legal ruling.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a Medical Records Officer at a 350-bed NABH-accredited hospital in Kerala, handling third-party records-release requests carefully and in line with patient-privacy norms.',
+    prompt, demo: DEMO[key], manualMinutes: 30,
+  });
+});
+</script>
+</body>
+</html>

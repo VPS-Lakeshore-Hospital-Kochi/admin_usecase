@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record completeness audit</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Record completeness audit</h1>
+    <p>Administrative check of discharged-file checklists across departments — flags missing signatures/forms and files overdue for closure. Claude does not assess clinical content.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample checklist batch</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="week1">Week 38 discharges (12 files)</option>
+          <option value="week2">Week 39 discharges (12 files)</option>
+        </select>
+      </div>
+      <label>Discharged-file checklist rows (editable)</label>
+      <textarea id="rows" rows="15"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: the Medical Records Officer verifies the deficiency list and clears reminder emails before they go to unit heads. Synthetic data only — all IP numbers and names are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Medical Records', title: 'Record completeness audit' });
+
+const HEADER = 'ip_no | dept | discharge_date | discharge_summary_signed | consent_forms_complete | anaesthesia_record | nursing_notes_signed | billing_closed | days_since_discharge';
+
+const SCENARIOS = {
+week1: {
+  rows: `IP26-3301 | Orthopaedics | 2026-09-14 | Y | Y | Y | Y | Y | 13
+IP26-3308 | General Surgery | 2026-09-16 | N | Y | Y | Y | N | 11
+IP26-3312 | Cardiology | 2026-09-18 | Y | Y | N | Y | Y | 9
+IP26-3319 | Orthopaedics | 2026-09-19 | N | N | Y | N | N | 8
+IP26-3325 | Paediatrics | 2026-09-20 | Y | Y | Y | Y | Y | 7
+IP26-3330 | General Medicine | 2026-09-21 | Y | N | Y | Y | N | 6
+IP26-3336 | Cardiology | 2026-09-22 | N | Y | Y | N | Y | 5
+IP26-3341 | General Surgery | 2026-09-23 | Y | Y | Y | Y | Y | 4
+IP26-3345 | Obstetrics | 2026-09-24 | Y | Y | N/A | Y | N | 3
+IP26-3350 | Orthopaedics | 2026-09-25 | N | Y | Y | Y | N | 2
+IP26-3355 | General Medicine | 2026-09-13 | N | N | Y | N | N | 14
+IP26-3360 | Paediatrics | 2026-09-26 | Y | Y | Y | Y | Y | 1`,
+},
+week2: {
+  rows: `IP26-3401 | Cardiology | 2026-09-15 | N | Y | N | Y | N | 12
+IP26-3405 | General Medicine | 2026-09-16 | Y | Y | Y | Y | Y | 11
+IP26-3411 | Orthopaedics | 2026-09-17 | N | N | Y | N | N | 10
+IP26-3417 | General Surgery | 2026-09-18 | Y | N | Y | Y | Y | 9
+IP26-3422 | Obstetrics | 2026-09-19 | Y | Y | N/A | Y | N | 8
+IP26-3428 | Paediatrics | 2026-09-20 | Y | Y | Y | Y | Y | 7
+IP26-3433 | Cardiology | 2026-09-21 | N | Y | Y | N | N | 6
+IP26-3438 | General Medicine | 2026-09-14 | N | N | Y | N | N | 13
+IP26-3444 | Orthopaedics | 2026-09-23 | Y | Y | Y | Y | Y | 4
+IP26-3449 | General Surgery | 2026-09-24 | N | Y | Y | Y | N | 3
+IP26-3455 | Obstetrics | 2026-09-25 | Y | Y | N/A | Y | Y | 2
+IP26-3460 | Paediatrics | 2026-09-26 | Y | Y | Y | Y | Y | 1`,
+},
+};
+
+function parseRows(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(c => c.trim()));
+}
+function renderKpis() {
+  const rows = parseRows(document.getElementById('rows').value);
+  const byDept = {};
+  let overdue = 0;
+  rows.forEach(r => {
+    const [ip, dept, dd, ds, cf, ar, nn, bc, days] = r;
+    const fields = [ds, cf, ar, nn, bc].filter(v => v !== 'N/A');
+    const complete = fields.filter(v => v === 'Y').length;
+    if (!byDept[dept]) byDept[dept] = { complete: 0, total: 0 };
+    byDept[dept].complete += complete;
+    byDept[dept].total += fields.length;
+    if (parseInt(days, 10) > 7 && fields.some(v => v === 'N')) overdue++;
+  });
+  const box = document.getElementById('kpis');
+  const tiles = Object.entries(byDept).map(([d, v]) => {
+    const pct = Math.round((v.complete / v.total) * 100);
+    return `<div class="kpi"><div class="label">${Hub.esc(d)}</div><div class="value" style="color:${pct === 100 ? 'var(--ok)' : pct >= 70 ? 'var(--navy)' : 'var(--bad)'}">${pct}%</div></div>`;
+  }).join('');
+  box.innerHTML = `<div class="kpi"><div class="label">Files audited</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Overdue &gt;7 days, incomplete</div><div class="value" style="color:${overdue ? 'var(--bad)' : 'var(--navy)'}">${overdue}</div></div>${tiles}`;
+}
+document.getElementById('rows').addEventListener('input', renderKpis);
+
+function loadScenario(key) {
+  document.getElementById('rows').value = HEADER + '\n' + SCENARIOS[key].rows;
+  renderKpis();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('week1');
+
+const DEMO = {
+week1: `## Deficiency list by department
+
+**Orthopaedics**
+- IP26-3319 (8 days overdue): discharge summary unsigned, consent forms incomplete, nursing notes unsigned, billing open — **4 deficiencies, most incomplete file in batch**. Responsible: Unit Consultant (summary), Ward Nursing In-charge (notes), Billing Desk.
+- IP26-3350 (2 days): discharge summary unsigned, billing open. Responsible: Unit Consultant, Billing Desk.
+
+**General Medicine**
+- IP26-3355 (14 days overdue — oldest file in batch): discharge summary unsigned, consent forms incomplete, nursing notes unsigned, billing open. Responsible: Unit Consultant, Ward Nursing In-charge, Billing Desk. **Escalate — nearly two weeks overdue.**
+- IP26-3330 (6 days): consent forms incomplete, billing open.
+
+**Cardiology**
+- IP26-3312 (9 days overdue): anaesthesia record missing. Responsible: Anaesthesia Dept.
+- IP26-3336 (5 days): discharge summary unsigned, nursing notes unsigned.
+
+**General Surgery**
+- IP26-3308 (11 days overdue): discharge summary unsigned, billing open. Responsible: Unit Consultant, Billing Desk.
+
+**Obstetrics**
+- IP26-3345 (3 days): billing open. (Anaesthesia record correctly N/A.)
+
+## Pattern analysis
+
+- **Discharge summary sign-off is the single most common gap** (5 of 12 files), concentrated in Orthopaedics and General Medicine.
+- **Billing closure lags** on nearly half the flagged files, often paired with an unsigned summary — suggests billing is waiting on the summary rather than an independent delay.
+- **General Medicine's IP26-3355 at 14 days** is the clearest breach of the 7-day expectation and should be the first reminder sent.
+
+## Reminder email (draft, to Unit Heads)
+
+Subject: Pending discharge-file completion — action needed within 48 hours
+
+"Dear Doctor, our records show the following discharged files under your unit are pending completion beyond the hospital's 7-day expectation: [list IP numbers per department]. Kindly ensure discharge summaries are signed and consent/nursing documentation completed at the earliest, and inform Billing once done. This is an administrative reminder only; MRD does not review clinical content."
+
+## Note on NABH record-completion expectations (generic)
+
+NABH accreditation standards expect complete and timely medical record documentation, including discharge summaries, signed consent, and closure of records within a defined turnaround time. This audit checks administrative completeness only (signatures/forms present, timelines met) — **it does not evaluate clinical accuracy or adequacy of documentation**, which remains the treating team's responsibility.`,
+
+week2: `## Deficiency list by department
+
+**General Medicine**
+- IP26-3438 (13 days overdue): discharge summary unsigned, consent forms incomplete, nursing notes unsigned, billing open. Responsible: Unit Consultant, Ward Nursing In-charge, Billing Desk. **Escalate — oldest open file.**
+
+**Orthopaedics**
+- IP26-3411 (10 days overdue): discharge summary unsigned, consent forms incomplete, nursing notes unsigned, billing open — most incomplete file this week. Responsible: Unit Consultant, Nursing In-charge, Billing Desk.
+
+**Cardiology**
+- IP26-3401 (12 days overdue): discharge summary unsigned, anaesthesia record missing, billing open. Responsible: Unit Consultant, Anaesthesia Dept, Billing Desk.
+- IP26-3433 (6 days): discharge summary unsigned, nursing notes unsigned.
+
+**General Surgery**
+- IP26-3417 (9 days overdue): consent forms incomplete. Responsible: Ward Nursing/Admissions desk (consent capture).
+- IP26-3449 (3 days): discharge summary unsigned, billing open.
+
+**Obstetrics**
+- IP26-3422 (8 days overdue): billing open. (Anaesthesia record correctly N/A.)
+
+## Pattern analysis
+
+- **Two files (Cardiology, Orthopaedics) exceed 10 days overdue**, both with 3+ missing items — these are the priority escalations this week.
+- **Consent-form completion is the recurring weak point in General Surgery**, appearing on both flagged files.
+- Billing closure continues to trail discharge-summary sign-off, as in prior weeks — suggests a workflow dependency worth reviewing with Billing.
+
+## Reminder email (draft, to Unit Heads)
+
+Subject: Pending discharge-file completion — action needed within 48 hours
+
+"Dear Doctor, the following discharged files under your unit remain incomplete beyond the hospital's 7-day expectation: [list IP numbers per department]. Please complete discharge summary sign-off and any pending consent/nursing documentation at the earliest. This is an administrative completeness reminder only; MRD does not assess clinical content."
+
+## Note on NABH record-completion expectations (generic)
+
+NABH standards expect medical records to be completed and closed within a defined timeframe after discharge, with all required signatures and forms in place. This audit is purely administrative — checking presence and timeliness of required items — and does not evaluate the clinical quality or content of the documentation.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const rows = document.getElementById('rows').value;
+  const prompt = `You are supporting the Medical Records Department (MRD) at VPS Lakeshore Hospital, Kochi with an administrative completeness audit of discharged files. This is a check of presence/absence of required signatures and forms only — you must not comment on clinical adequacy or content.
+
+Checklist rows (ip_no | dept | discharge_date | discharge_summary_signed | consent_forms_complete | anaesthesia_record | nursing_notes_signed | billing_closed | days_since_discharge):
+${rows}
+
+Produce: (1) a deficiency list grouped by department, naming the responsible role for each missing item (Unit Consultant, Ward Nursing In-charge, Anaesthesia Dept, Billing Desk as relevant), flagging files over 7 days overdue, (2) a short pattern analysis across departments, (3) a draft reminder email to Unit Heads, (4) a short generic note on NABH record-completion expectations, explicitly stating this is an administrative check only and MRD does not assess clinical content.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a Medical Records Officer at a 350-bed NABH-accredited hospital, responsible for administrative (non-clinical) completeness audits of discharged files.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

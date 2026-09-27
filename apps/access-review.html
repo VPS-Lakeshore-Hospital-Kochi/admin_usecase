@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User access review</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>User access review</h1>
+    <p>Cross-check the HIS user list against the HR roster to catch resigned-but-active accounts, orphaned logins and dormant users before the quarterly review.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample lists</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q3">Q3 2026 quarterly review</option>
+          <option value="q2">Q2 2026 quarterly review</option>
+        </select>
+      </div>
+      <label>HIS user list (editable)</label>
+      <textarea id="hisList" rows="10"></textarea>
+      <label>HR roster (editable)</label>
+      <textarea id="hrList" rows="8"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: respective Department Heads confirm each disable/role-change action before it is carried out by IT. Synthetic data only — all user IDs, names and IDs are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'User access review' });
+
+const SCENARIOS = {
+q3: {
+  his: `user_id | name | role | dept | last_login
+pharmacy1 | Generic Pharmacy Login | Pharmacist | Pharmacy | 2026-09-25
+lab_tech3 | Generic Lab Login | Lab Technician | Laboratory | 2026-09-24
+nurse_w5_2 | Staff Nurse - Ward5 | Staff Nurse | Nursing | 2026-09-26
+billdesk4 | Billing Counter 4 | Billing Executive | Billing | 2026-09-20
+radiotech1 | Radiology Tech Login | Radiographer | Radiology | 2026-06-02
+hrexec2 | HR Executive Login | HR Executive | HR | 2026-09-22
+consult_derma1 | Consultant Login Derma | Consultant | Dermatology | 2026-09-19
+frontoff3 | Front Office Login | Front Office Exec | Front Office | 2026-09-25
+storeexec1 | Stores Executive Login | Stores Executive | Materials | 2026-05-30
+itadmin2 | IT Admin Login | IT Admin | IT | 2026-09-26
+opdnurse2 | OPD Nurse Login | Staff Nurse | Nursing | 2026-09-23
+finexec1 | Finance Executive Login | Finance Executive | Finance | 2026-04-18`,
+  hr: `emp_id | name | dept | status | exit_date
+E1042 | Pharmacy Staff (pharmacy1) | Pharmacy | Active | -
+E1088 | Lab Staff (lab_tech3) | Laboratory | Active | -
+E1120 | Nursing Staff (nurse_w5_2) | Nursing | Active | -
+E1067 | Billing Staff (billdesk4) | Billing | Active | -
+E1033 | Radiology Staff (radiotech1) | Radiology | Resigned | 2026-05-15
+E1155 | HR Staff (hrexec2) | HR | Active | -
+E1099 | Front Office Staff (frontoff3) | Front Office | Active | -
+E1077 | Stores Staff (storeexec1) | Materials | Resigned | 2026-06-01
+E1201 | IT Staff (itadmin2) | IT | Active | -
+E1140 | OPD Nursing Staff (opdnurse2) | Nursing | Active | -
+E1055 | Finance Staff (finexec1) | Finance | Active | -`,
+},
+q2: {
+  his: `user_id | name | role | dept | last_login
+pharmacy2 | Generic Pharmacy Login 2 | Pharmacist | Pharmacy | 2026-06-20
+lab_tech1 | Generic Lab Login 1 | Lab Technician | Laboratory | 2026-06-21
+nurse_icu1 | ICU Nurse Login | Staff Nurse | Nursing | 2026-06-22
+billdesk1 | Billing Counter 1 | Billing Executive | Billing | 2026-03-10
+consult_ortho2 | Consultant Login Ortho | Consultant | Orthopaedics | 2026-06-19
+security1 | Security Login | Security Officer | Security | 2026-02-28
+housekeep2 | Housekeeping Login | Housekeeping Supervisor | Housekeeping | 2026-06-18
+itadmin1 | IT Admin Login 1 | IT Admin | IT | 2026-06-22
+dietician1 | Dietician Login | Dietician | Dietetics | 2026-06-15
+opdnurse1 | OPD Nurse Login 1 | Staff Nurse | Nursing | 2026-01-05
+frontoff1 | Front Office Login 1 | Front Office Exec | Front Office | 2026-06-20
+temp_contractor9 | External Contractor Login | Contractor | IT | 2026-06-10`,
+  hr: `emp_id | name | dept | status | exit_date
+E2011 | Pharmacy Staff (pharmacy2) | Pharmacy | Active | -
+E2044 | Lab Staff (lab_tech1) | Laboratory | Active | -
+E2077 | Nursing Staff (nurse_icu1) | Nursing | Active | -
+E2090 | Billing Staff (billdesk1) | Billing | Resigned | 2026-03-31
+E2109 | Consultant (consult_ortho2) | Orthopaedics | Active | -
+E2133 | Housekeeping Staff (housekeep2) | Housekeeping | Active | -
+E2160 | IT Staff (itadmin1) | IT | Active | -
+E2177 | Dietician Staff (dietician1) | Dietetics | Active | -
+E2188 | Front Office Staff (frontoff1) | Front Office | Active | -`,
+},
+};
+
+function parseTable(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.split('|').map(c => c.trim()));
+}
+
+function renderKpis() {
+  const his = parseTable(document.getElementById('hisList').value).slice(1);
+  const hr = parseTable(document.getElementById('hrList').value).slice(1);
+  const now = new Date('2026-09-27');
+  let noMatch = 0, resignedActive = 0, dormant90 = 0;
+  his.forEach(row => {
+    const [uid, name, role, dept, lastLogin] = row;
+    const match = hr.find(h => (h[1] || '').includes(uid));
+    if (!match) noMatch++;
+    else if ((match[3] || '').toLowerCase() === 'resigned') resignedActive++;
+    if (lastLogin) {
+      const days = Math.floor((now - new Date(lastLogin)) / 86400000);
+      if (days >= 90) dormant90++;
+    }
+  });
+  const box = document.getElementById('kpis');
+  box.innerHTML = `
+    <div class="kpi"><div class="label">HIS accounts</div><div class="value">${his.length}</div></div>
+    <div class="kpi"><div class="label">No HR match</div><div class="value" style="color:${noMatch ? 'var(--bad)' : 'var(--navy)'}">${noMatch}</div></div>
+    <div class="kpi"><div class="label">Resigned but active</div><div class="value" style="color:${resignedActive ? 'var(--bad)' : 'var(--navy)'}">${resignedActive}</div></div>
+    <div class="kpi"><div class="label">No login 90+ days</div><div class="value" style="color:${dormant90 ? 'var(--warn)' : 'var(--navy)'}">${dormant90}</div></div>`;
+}
+document.getElementById('hisList').addEventListener('input', renderKpis);
+document.getElementById('hrList').addEventListener('input', renderKpis);
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('hisList').value = s.his;
+  document.getElementById('hrList').value = s.hr;
+  renderKpis();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('q3');
+
+const DEMO = {
+q3: `## Access exception table
+
+| User (HIS login) | Dept | Issue | Risk | Action |
+|---|---|---|---|---|
+| radiotech1 | Radiology | HR shows **Resigned** 2026-05-15, HIS account still active, last login 2026-06-02 (after exit date) | **High** | **Disable immediately** |
+| storeexec1 | Materials | HR shows **Resigned** 2026-06-01, HIS account still active, last login 2026-05-30 | **High** | **Disable immediately** |
+| radiotech1 | Radiology | Also flagged for no login in 90+ days as of review date | Medium | Superseded by disable action above |
+| storeexec1 | Materials | Also flagged for no login in 90+ days as of review date | Medium | Superseded by disable action above |
+| finexec1 | Finance | Active in HR, but last login 2026-04-18 - over 150 days dormant | Medium | Confirm with Finance Head whether role still needed; disable if unused |
+| consult_derma1 | Dermatology | Generic-style ID for a named consultant role; confirm this is not shared across multiple doctors | Low | Confirm with Dept Head |
+
+## Sign-off note (for Department Heads)
+
+"Please review the accounts listed above for your department and confirm within 5 working days whether each should be **disabled**, **kept active with role unchanged**, or **role changed**. No action will be taken on an account until your written confirmation is received. Unconfirmed high-risk accounts (resigned-but-active) will be provisionally suspended after 5 days as a precaution."
+
+## Quarterly review SOP (one-liner)
+
+This HIS-vs-HR access reconciliation should be run **every quarter, within the first week**, with sign-off collected from all Department Heads before the review is closed and filed for audit.`,
+
+q2: `## Access exception table
+
+| User (HIS login) | Dept | Issue | Risk | Action |
+|---|---|---|---|---|
+| billdesk1 | Billing | HR shows **Resigned** 2026-03-31, HIS account still active, last login 2026-03-10 | **High** | **Disable immediately** |
+| temp_contractor9 | IT | No matching entry in HR roster at all - external contractor login with no traceable HR record | **High** | Confirm with IT Head; disable if contract has ended, else document under vendor-access register |
+| security1 | Security | No matching HR entry found in this roster extract; last login 2026-02-28 (90+ days dormant) | Medium | Confirm employment status with HR before disabling |
+| opdnurse1 | Nursing | Active in HR but last login 2026-01-05 - well over 90 days dormant | Medium | Confirm with Nursing Head whether still required |
+
+## Sign-off note (for Department Heads)
+
+"Please review the flagged accounts for your department and respond within 5 working days confirming disable / keep active / change role. High-risk items (resigned-but-active, unmatched external logins) will be provisionally suspended if no response is received."
+
+## Quarterly review SOP (one-liner)
+
+Run this HIS-vs-HR reconciliation **every quarter**, including a check for contractor/vendor logins that may not appear in the HR roster, and file signed-off Department Head confirmations for audit.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const his = document.getElementById('hisList').value;
+  const hr = document.getElementById('hrList').value;
+  const prompt = `You are running the quarterly HIS user-access review for VPS Lakeshore Hospital, Kochi.
+
+HIS user list:
+${his}
+
+HR roster:
+${hr}
+
+Cross-check the two lists. Produce an exception table: user (HIS login, generic-style ID), department, issue, risk (High/Medium/Low), and recommended action (disable / change role / confirm with dept head). Pay special attention to accounts marked Resigned in HR that are still active in HIS, users with no matching HR record, and accounts with no login in 90+ days. Then write a short sign-off note addressed to Department Heads, and a one-line note on the quarterly review SOP/cadence.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an IT & Data Governance analyst at a 350-bed NABH-accredited hospital, running periodic access-control reviews.',
+    prompt, demo: DEMO[key], manualMinutes: 180,
+  });
+});
+</script>
+</body>
+</html>
