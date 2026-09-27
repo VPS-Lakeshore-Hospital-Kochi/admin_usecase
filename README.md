@@ -1,6 +1,6 @@
 # Lakeshore Admin Hub
 
-**Live:** https://vps-lakeshore-hospital-kochi.github.io/admin_usecase/ (served from the `gh-pages` branch)
+**Live:** https://vps-lakeshore-hospital-kochi.github.io/admin_usecase/ (served from the `gh-pages` branch, which `.github/workflows/sync-gh-pages.yml` keeps in step with `main` on every merge)
 
 32 working prototypes across 13 departments showing how the non-clinical departments of VPS Lakeshore Hospital, Kochi can use Claude.
 Static HTML — no build step, no server-side code.
