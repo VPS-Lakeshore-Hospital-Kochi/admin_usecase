@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lakeshore Admin Hub</title>
+<link rel="stylesheet" href="shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Claude across the non-clinical hospital</h1>
+    <p>Working prototypes showing how each administrative department at VPS Lakeshore can use Claude day to day.
+      Every tile runs on sample data. Add an API key under <b>Settings</b> to switch from demo outputs to live Claude.</p>
+  </section>
+
+  <div class="kpis" id="summary"></div>
+  <div class="grid cols-3" id="tiles"></div>
+
+  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+</main>
+
+<script src="shared/claude.js"></script>
+<script>
+  Hub.mountHeader();
+
+  const APPS = [
+    { href: 'apps/finance-mis.html', dept: 'Finance & Accounts', title: 'MIS commentary & variance memo',
+      what: 'Reads the monthly MIS and writes the "what moved and why" commentary by department, with budget-vs-actual variance memos.',
+      manual: 180, users: 'CFO, Finance controllers' },
+    { href: 'apps/tpa-preauth.html', dept: 'Revenue Cycle · TPA', title: 'Cashless pre-auth file builder',
+      what: 'Checks a case against the TPA/insurer checklist, flags missing documents and drafts the pre-auth request inside the IRDAI 1-hour window.',
+      manual: 45, users: 'Insurance desk, Billing' },
+    { href: 'apps/purchase-quotes.html', dept: 'Purchase & Stores', title: 'Quote comparison & PC note',
+      what: 'Normalises vendor quotations into a comparative statement, scores L1/technical fit and drafts the Purchase Committee note.',
+      manual: 120, users: 'Purchase manager, Purchase Committee' },
+    { href: 'apps/hr-screener.html', dept: 'Human Resources', title: 'Resume screener & interview kit',
+      what: 'Ranks applicants against the job description with evidence, red flags and a tailored interview question pack.',
+      manual: 90, users: 'HR, Hiring managers' },
+    { href: 'apps/marketing-studio.html', dept: 'Marketing & Comms', title: 'Content studio',
+      what: 'Turns a brief into social posts, a press note and a doctor profile in the "In good hands" voice — English and Malayalam.',
+      manual: 150, users: 'Marketing, Corporate comms' },
+    { href: 'apps/patient-feedback.html', dept: 'Patient Experience', title: 'Feedback intelligence',
+      what: 'Tags every complaint and review by theme, department and urgency, and routes service-recovery actions to owners.',
+      manual: 240, users: 'Patient relations, Quality, Unit heads' },
+    { href: 'apps/nabh-readiness.html', dept: 'Quality & Accreditation', title: 'NABH readiness & policy Q&A',
+      what: 'Maps the P&P library to NABH chapters, flags gaps and overdue revisions, and answers "what does our policy say" questions.',
+      manual: 300, users: 'Quality manager, Department heads' },
+    { href: 'apps/ceo-copilot.html', dept: 'Management Office', title: 'CEO / Chairman copilot',
+      what: 'Morning brief across departments, meeting notes to tracked actions, and plain-English questions on hospital KPIs.',
+      manual: 60, users: 'CEO, Chairman, COO' },
+  ];
+
+  document.getElementById('tiles').innerHTML = APPS.map(a => `
+    <a class="card tile" href="${a.href}">
+      <span class="dept">${Hub.esc(a.dept)}</span>
+      <h2>${Hub.esc(a.title)}</h2>
+      <p>${Hub.esc(a.what)}</p>
+      <span class="meta">For: ${Hub.esc(a.users)} · replaces ~${a.manual} min of manual work</span>
+    </a>`).join('');
+
+  const hours = Math.round(APPS.reduce((s, a) => s + a.manual, 0) / 60);
+  document.getElementById('summary').innerHTML = `
+    <div class="kpi"><div class="label">Departments covered</div><div class="value">${APPS.length}</div></div>
+    <div class="kpi"><div class="label">Manual hours per full cycle</div><div class="value">~${hours} h</div></div>
+    <div class="kpi"><div class="label">Mode</div><div class="value" style="font-size:1.1rem">${Hub.isLive() ? 'Live Claude' : 'Demo outputs'}</div></div>`;
+</script>
+</body>
+</html>
