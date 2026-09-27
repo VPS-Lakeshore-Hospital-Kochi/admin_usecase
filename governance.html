@@ -193,6 +193,8 @@ const TIER = {
   'estimate-generator': 3, 'bed-flow': 3, 'patient-feedback': 3, 'data-quality': 3, 'credential-tracker': 3,
   'capex-review': 2, 'audit-responder': 2, 'denial-analyser': 2, 'purchase-quotes': 2, 'three-way-match': 2,
   'vendor-contracts': 2, 'stock-watch': 2, 'hr-screener': 2, 'exit-analysis': 2, 'contract-review': 2,
+  'mrd-completeness': 3, 'mrd-release': 3, 'security-log': 3,
+  'access-review': 2, 'ambulance-log': 2, 'csr-report': 2, 'training-planner': 2,
 };
 const tierOf = slug => TIER[slug] || 1;
 
@@ -226,8 +228,8 @@ document.getElementById('phases').innerHTML = PHASES.map(p => `
   </div>`).join('');
 
 /* ---- Hours-saved estimator ---- */
-const RUNS_DAILY = new Set(['contact-centre', 'intl-desk', 'ops-intake', 'bed-flow', 'tpa-preauth', 'discharge-billing', 'estimate-generator']);
-const RUNS_MONTHLY = new Set(['finance-mis', 'capex-review', 'mis-pipeline', 'board-papers', 'compliance-calendar', 'market-scan', 'exit-analysis', 'incident-trends', 'nabh-readiness', 'reputation-monitor', 'docusign-tracker']);
+const RUNS_DAILY = new Set(['it-helpdesk', 'housekeeping-turnaround', 'mrd-release', 'contact-centre', 'intl-desk', 'ops-intake', 'bed-flow', 'tpa-preauth', 'discharge-billing', 'estimate-generator']);
+const RUNS_MONTHLY = new Set(['access-review', 'ambulance-log', 'csr-report', 'training-planner', 'mrd-completeness', 'security-log', 'fnb-feedback', 'finance-mis', 'capex-review', 'mis-pipeline', 'board-papers', 'compliance-calendar', 'market-scan', 'exit-analysis', 'incident-trends', 'nabh-readiness', 'reputation-monitor', 'docusign-tracker']);
 const defaultRuns = slug => RUNS_DAILY.has(slug) ? 20 : RUNS_MONTHLY.has(slug) ? 4 : 8;
 
 const estBody = document.querySelector('#est-table tbody');
