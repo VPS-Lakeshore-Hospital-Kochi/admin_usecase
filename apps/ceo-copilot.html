@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEO / Chairman copilot</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tabs button { border-radius:999px; }
+  .tabs button.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+  .mode { display:none; }
+  .mode.active { display:block; }
+  .bundle-list { font-size:13px; }
+  .bundle-list div { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--border); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>CEO / Chairman copilot</h1>
+    <p>Morning brief across departments, meeting notes turned into a tracked action list, and plain-English questions answered over the same KPI bundle.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="tabs">
+    <button type="button" class="active" data-mode="brief">A · Morning brief</button>
+    <button type="button" data-mode="actions">B · Meeting notes → actions</button>
+    <button type="button" data-mode="ask">C · Ask a question</button>
+  </div>
+
+  <!-- MODE A: MORNING BRIEF -->
+  <div class="mode active" id="mode-brief">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>Yesterday's data bundle — 26 Sep 2026</h2>
+        <div class="bundle-list" id="bundleList"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="primary" id="runBrief">Run with Claude — write the morning brief</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Claude output</h2>
+        <div class="claude-out" id="outBrief"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE B: MEETING NOTES -->
+  <div class="mode" id="mode-actions">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>Chairman's meeting notes (sample, 25 Sep 2026)</h2>
+        <textarea id="notesText" style="min-height:320px"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" id="runActions">Run with Claude — action tracker + follow-up email</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Claude output</h2>
+        <div class="claude-out" id="outActions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE C: ASK A QUESTION -->
+  <div class="mode" id="mode-ask">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>Ask about the KPI bundle</h2>
+        <p class="small" style="color:var(--muted);margin-top:-6px">Uses the same data bundle shown in tab A.</p>
+        <label for="scenarioAsk">Sample question</label>
+        <select id="scenarioAsk">
+          <option value="ortho">Why is ortho revenue down this month?</option>
+          <option value="intl">How are we tracking on the 20% international revenue goal?</option>
+          <option value="custom">Custom question (type below)</option>
+        </select>
+        <label for="askQ">Question</label>
+        <textarea id="askQ" style="min-height:80px"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" id="runAsk">Run with Claude — answer</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Claude output</h2>
+        <div class="claude-out" id="outAsk"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Management Office', title: 'CEO / Chairman copilot' });
+
+// ---------- DATA BUNDLE ----------
+const BUNDLE = {
+  census: { occupied: 289, capacity: 350, occPct: 82.6, admissions: 41, discharges: 33 },
+  revenue: { flashCr: 1.62, aopCr: 1.75, mtdCr: 24.3, mtdAopCr: 26.0 },
+  er: { footfall: 118, admits: 22 },
+  dischargesPending: 9,
+  tpaPending: { count: 27, valueCr: 0.84, oldestDays: 4 },
+  equipmentDown: [
+    { name: 'da Vinci Robotic System (OT-4)', since: '24-Sep-2026', reason: 'Arm calibration fault, vendor ETA 29-Sep' },
+    { name: 'Cath Lab 2', since: '26-Sep-2026', reason: 'X-ray tube overheating, vendor engineer on site' },
+  ],
+  complaints: [
+    { theme: 'Billing delay at discharge', count: 6 },
+    { theme: 'Long wait — radiology (MRI)', count: 5 },
+    { theme: 'Food quality — international patients', count: 3 },
+  ],
+  cash: { balanceCr: 6.4, daysPayableOutstanding: 38 },
+  docusignPending: [
+    { name: 'Dr. Anand Menon (Consultant, Cardiology renewal)', days: 6 },
+    { name: 'M/s KeralaMed Supplies (rate contract)', days: 11 },
+    { name: 'Fatima Al Busaidi visa-support MoU (Maldives referral partner)', days: 3 },
+  ],
+};
+
+document.getElementById('kpis').innerHTML = `
+  <div class="kpi"><div class="label">Occupancy</div><div class="value">${BUNDLE.census.occPct}%</div><div class="delta">${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds</div></div>
+  <div class="kpi"><div class="label">Revenue flash (yday)</div><div class="value">${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr</div><div class="delta down">vs AOP ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr</div></div>
+  <div class="kpi"><div class="label">ER footfall</div><div class="value">${BUNDLE.er.footfall}</div><div class="delta">${BUNDLE.er.admits} admitted</div></div>
+  <div class="kpi"><div class="label">Discharges pending &gt;2pm</div><div class="value">${BUNDLE.dischargesPending}</div></div>
+  <div class="kpi"><div class="label">TPA approvals pending</div><div class="value">${BUNDLE.tpaPending.count}</div><div class="delta">${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr blocked</div></div>
+  <div class="kpi"><div class="label">Cash balance</div><div class="value">${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr</div></div>`;
+
+document.getElementById('bundleList').innerHTML = `
+  <div><span>Census</span><span>${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds (${BUNDLE.census.occPct}%) · ${BUNDLE.census.admissions} adm / ${BUNDLE.census.discharges} disch</span></div>
+  <div><span>Revenue flash vs AOP</span><span>${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr vs ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr</span></div>
+  <div><span>MTD revenue vs AOP</span><span>${Hub.inr(BUNDLE.revenue.mtdCr,1)} Cr vs ${Hub.inr(BUNDLE.revenue.mtdAopCr,1)} Cr</span></div>
+  <div><span>ER footfall / admits</span><span>${BUNDLE.er.footfall} / ${BUNDLE.er.admits}</span></div>
+  <div><span>Discharges pending past 2pm</span><span>${BUNDLE.dischargesPending}</span></div>
+  <div><span>TPA approvals pending</span><span>${BUNDLE.tpaPending.count} cases, ${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr, oldest ${BUNDLE.tpaPending.oldestDays}d</span></div>
+  <div><span>Critical equipment down</span><span>${BUNDLE.equipmentDown.map(e=>e.name).join('; ')}</span></div>
+  <div><span>Top complaints (24h)</span><span>${BUNDLE.complaints.map(c=>c.theme+' ('+c.count+')').join('; ')}</span></div>
+  <div><span>Cash balance / DPO</span><span>${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr / ${BUNDLE.cash.daysPayableOutstanding}d</span></div>
+  <div><span>DocuSign approvals pending</span><span>${BUNDLE.docusignPending.map(d=>d.name+' ('+d.days+'d)').join('; ')}</span></div>`;
+
+function bundleAsText() {
+  return `CENSUS: ${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds occupied (${BUNDLE.census.occPct}%), ${BUNDLE.census.admissions} admissions, ${BUNDLE.census.discharges} discharges yesterday.
+REVENUE FLASH (yesterday): ${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr actual vs ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr AOP target (${(((BUNDLE.revenue.flashCr-BUNDLE.revenue.aopCr)/BUNDLE.revenue.aopCr)*100).toFixed(1)}%).
+MTD REVENUE: ${Hub.inr(BUNDLE.revenue.mtdCr,1)} Cr vs ${Hub.inr(BUNDLE.revenue.mtdAopCr,1)} Cr AOP MTD.
+ER: ${BUNDLE.er.footfall} footfall, ${BUNDLE.er.admits} admitted.
+DISCHARGES PENDING PAST 2PM: ${BUNDLE.dischargesPending}.
+TPA/INSURANCE APPROVALS PENDING: ${BUNDLE.tpaPending.count} cases worth ${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr, oldest pending ${BUNDLE.tpaPending.oldestDays} days.
+CRITICAL EQUIPMENT DOWNTIME: ${BUNDLE.equipmentDown.map(e=>`${e.name} — down since ${e.since}, reason: ${e.reason}`).join(' | ')}.
+TOP COMPLAINTS (last 24h): ${BUNDLE.complaints.map(c=>`${c.theme} (${c.count})`).join(', ')}.
+CASH POSITION: balance ${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr, days payable outstanding ${BUNDLE.cash.daysPayableOutstanding}.
+DOCUSIGN APPROVALS PENDING WITH CHAIRMAN/CEO: ${BUNDLE.docusignPending.map(d=>`${d.name} — pending ${d.days} days`).join(', ')}.
+Context: VPS Lakeshore Hospital, Kochi, 350 beds, NABH-accredited multi-specialty hospital with robotic surgery, cardiology and transplant programmes, strong international patient inflow from Maldives/GCC/Africa.`;
+}
+
+const DEMO_BRIEF = `## Morning Brief — VPS Lakeshore, 27 Sep 2026 (data as of 26 Sep close)
+
+**Headline:** Occupancy steady at 82.6%, but revenue flash missed AOP by ~7.4% on a slow ER day; two pieces of critical equipment are down simultaneously (robot + Cath Lab 2), which needs your attention before today's OT list is finalised.
+
+| Metric | Yesterday | Target/Note |
+|---|---|---|
+| Occupancy | 289/350 (82.6%) | Healthy; 41 admissions vs 33 discharges |
+| Revenue flash | ₹1.62 Cr | vs AOP ₹1.75 Cr (**−7.4%**) |
+| MTD revenue | ₹24.3 Cr | vs AOP ₹26.0 Cr (**−6.5%** MTD — watch closely, 3 days left in month) |
+| ER footfall | 118 | 22 admitted (18.6% conversion — normal range) |
+| Cash balance | ₹6.4 Cr | DPO 38 days — within comfort band |
+
+**Needs your eyes today**
+- **da Vinci robot (OT-4) down since 24-Sep** — vendor ETA 29-Sep. That's 5 days of lost robotic-surgery slots; ask Surgery to check if any non-urgent robotic cases can shift to conventional laparoscopic approach in the interim rather than pushing patients out.
+- **Cath Lab 2 X-ray tube overheating** — engineer on site today. Cath Lab 1 is absorbing the load; confirm no elective cath procedures are being deferred beyond 48 hours.
+- **9 discharges still pending past 2pm** yesterday — this is a recurring theme in complaints ("billing delay at discharge," 6 mentions in 24h). Recommend Finance + Nursing review the 2pm discharge SOP this week.
+- **27 TPA approvals pending, ₹84 lakh blocked, oldest 4 days** — within the 4-hour to same-day norm for most insurers but the ₹84 lakh blocked is worth a nudge to the insurance desk lead if it recurs tomorrow.
+
+**Approvals waiting on you (DocuSign)**
+| Document | Pending | Recommendation |
+|---|---|---|
+| M/s KeralaMed Supplies rate contract | 11 days | Longest-pending — sign or send back today |
+| Dr. Anand Menon consultant renewal | 6 days | Sign before month-end to avoid a privileging gap |
+| Fatima Al Busaidi (Maldives referral MoU) | 3 days | Low urgency but ties to international-revenue push — sign this week |
+
+**Watch list:** Radiology MRI wait times (5 complaints in 24h) — consider fast-tracking the token-prioritisation fix already discussed for full-bladder abdominal cases.`;
+
+document.getElementById('runBrief').addEventListener('click', () => {
+  const prompt = `Here is yesterday's hospital operations data bundle for VPS Lakeshore Hospital, Kochi:\n\n${bundleAsText()}\n\nWrite a concise morning brief for the CEO/Chairman: a one-line headline, a KPI snapshot table, a short "needs your eyes today" section prioritising the most urgent operational issues, a table of pending DocuSign approvals with a recommendation for each, and a one-line watch list item. Be direct and specific, use ₹ crore/lakh formatting, and call out root causes where the data suggests one.`;
+  Hub.run({
+    out: '#outBrief', button: '#runBrief',
+    system: 'You are the Chief of Staff / Management Office assistant to the CEO and Chairman of a 350-bed NABH-accredited multi-specialty hospital in Kochi, Kerala. You write tight, actionable morning briefs.',
+    prompt, demo: DEMO_BRIEF, manualMinutes: 60,
+  });
+});
+
+// ---------- MODE B: MEETING NOTES ----------
+const NOTES = `Chairman's review meeting — 25 Sep 2026, attendees: Chairman, CEO, COO, CFO, Medical Superintendent, Sameeraj Rao (Management Office), SK (Strategy)
+
+1. CMI (Case Mix Index), ARPOB (Average Revenue Per Occupied Bed) and ALOS (Average Length of Stay) to be tracked and reviewed every month at the management meeting — Sameeraj to set up the recurring dashboard.
+2. Need visibility on competitor revenue trends, specifically Aster Kerala cluster — quarterly benchmarking exercise to be started.
+3. International revenue currently ~14% of total; Chairman wants this to reach 20% over the next 2-3 quarters. Marketing + international desk to build a plan (GCC, Maldives, Africa corridors).
+4. Robot (da Vinci) utilisation is below plan. Proposal: offer a discount/package pricing for patients travelling from outside Kochi (Kottayam, Thrissur, Alappuzha corridors) to drive volume during off-peak OT slots.
+5. Explore revenue-share arrangements with other VPS units or external partners for underused equipment (Cath Lab 2, second Linear Accelerator slot) instead of it sitting idle.
+6. Radiology to implement a token/priority system so that full-bladder-prep patients (CT/MRI abdomen-pelvis) are not stuck behind routine cases — reduces both wait time complaints and re-prep costs.
+7. Staff training needed on patient flow management (admission to discharge) — HR/Quality to design a module, roll out to nursing and front-office staff.
+8. A monthly management dashboard (single page, CEO + Chairman view) to be maintained going forward — owners: Sameeraj Rao and SK.
+
+Chairman asked for a follow-up email summarising actions and owners to go out by end of week.`;
+
+document.getElementById('notesText').value = NOTES;
+
+const DEMO_ACTIONS = `## Action tracker — Chairman's review, 25 Sep 2026
+
+| # | Action | Owner | Due | Linked KPI | Status |
+|---|---|---|---|---|---|
+| 1 | Set up recurring monthly CMI / ARPOB / ALOS dashboard | Sameeraj Rao | 10-Oct-2026 | CMI, ARPOB, ALOS | Not started |
+| 2 | Start quarterly competitor benchmarking (Aster Kerala cluster) | SK (Strategy) | 31-Oct-2026 | Market-share proxy (revenue index) | Not started |
+| 3 | Build plan to grow international revenue from ~14% to 20% (GCC/Maldives/Africa) | Marketing + International Desk | 15-Nov-2026 (plan); ongoing to Q2 2027 | International revenue % of total | Not started |
+| 4 | Design off-peak discount/package for out-of-Kochi robotic surgery patients | COO + Surgery Dept | 20-Oct-2026 | Robot utilisation % | Not started |
+| 5 | Explore revenue-share model for underused Cath Lab 2 / 2nd LINAC slot | CFO | 15-Nov-2026 | Equipment utilisation %, other income | Not started |
+| 6 | Implement radiology token/priority system for full-bladder-prep cases | Radiology HOD | 10-Oct-2026 | MRI/CT wait time, re-prep rate | Not started |
+| 7 | Design & roll out patient-flow training module (nursing + front office) | HR + Quality | 30-Nov-2026 | Discharge-before-2pm %, patient complaints | Not started |
+| 8 | Maintain single-page monthly management dashboard | Sameeraj Rao, SK | Ongoing, monthly from 05-Oct-2026 | All of the above, rolled up | Recurring |
+
+**Notes for the tracker**
+- Items 1 and 8 are closely linked — recommend building the CMI/ARPOB/ALOS view as one panel of the same monthly dashboard rather than two separate deliverables.
+- Item 4 (robot discount) and Item 5 (revenue-share on idle equipment) both hit the same underlying issue — asset utilisation — and could share one review forum.
+- No numeric target was set for Item 2 or Item 5 in the notes; suggest owners propose a measurable target (e.g., "close competitor revenue gap by X%", "generate ₹Y lakh from revenue-share") before the next review.
+
+---
+
+### Follow-up email draft
+
+**To:** Chairman, CEO, COO, CFO, Medical Superintendent, SK
+**From:** Sameeraj Rao, Management Office
+**Subject:** Action tracker — Chairman's review, 25 Sep 2026
+
+Dear all,
+
+Thank you for the review on 25 Sep. Summarising the agreed actions and owners below; I will circulate progress against these at our next monthly management meeting.
+
+1. Monthly CMI/ARPOB/ALOS dashboard — Sameeraj, live by 10 Oct.
+2. Quarterly Aster Kerala competitor benchmarking — SK, first cut by 31 Oct.
+3. International revenue plan (target 20% of total) — Marketing/International Desk, plan by 15 Nov.
+4. Off-peak discount package for out-of-Kochi robotic surgery patients — COO/Surgery, by 20 Oct.
+5. Revenue-share model for underused Cath Lab 2 / LINAC slot — CFO, by 15 Nov.
+6. Radiology token system for full-bladder-prep cases — Radiology HOD, by 10 Oct.
+7. Patient-flow training module — HR/Quality, roll-out by 30 Nov.
+8. Single-page monthly management dashboard — Sameeraj/SK, ongoing from 5 Oct.
+
+Please let me know if any due dates or owners need adjustment. Happy to walk through the tracker in our next 1:1 if useful.
+
+Best regards,
+Sameeraj Rao`;
+
+document.getElementById('runActions').addEventListener('click', () => {
+  const notes = document.getElementById('notesText').value;
+  const prompt = `Here are the Chairman's meeting notes from VPS Lakeshore Hospital's review meeting on 25 Sep 2026:\n\n${notes}\n\nProduce: (1) an action tracker table with columns Action, Owner, Due date, Linked KPI, Status — infer reasonable due dates (today is 27 Sep 2026) and named KPIs where the notes don't state one explicitly, (2) 2-3 notes flagging where actions overlap or lack a measurable target, (3) a ready-to-send follow-up email draft from Sameeraj Rao summarising actions and owners, addressed to the meeting attendees.`;
+  Hub.run({
+    out: '#outActions', button: '#runActions',
+    system: 'You are the Management Office assistant at a Kochi multi-specialty hospital, turning leadership meeting notes into a clean action tracker and follow-up communication.',
+    prompt, demo: DEMO_ACTIONS, manualMinutes: 60,
+  });
+});
+
+// ---------- MODE C: ASK ----------
+const ASK_SAMPLES = {
+  ortho: 'Why is ortho revenue down this month?',
+  intl: 'How are we tracking on the 20% international revenue goal?',
+  custom: '',
+};
+document.getElementById('scenarioAsk').addEventListener('change', e => {
+  document.getElementById('askQ').value = ASK_SAMPLES[e.target.value] || '';
+});
+document.getElementById('askQ').value = ASK_SAMPLES.ortho;
+
+const DEMO_ASK = {
+  ortho: `**Short answer:** The data bundle here doesn't carry a department-level (ortho) revenue split, but three signals point to a plausible explanation and what to check next.
+
+1. **Robot (da Vinci) downtime since 24-Sep** — if ortho's joint-replacement/robotic-assisted cases share OT-4 slots with other specialties, this alone could suppress ortho's high-value case volume for the month.
+2. **MTD revenue is 6.5% below AOP hospital-wide** — so some of the ortho softness may simply be part of a broader shortfall, not ortho-specific. Worth checking whether other surgical departments show the same dip.
+3. **Discharge delays (9 pending past 2pm) and billing-delay complaints (6 in 24h)** can also depress same-month revenue recognition if high-value ortho discharges are getting billed into the next cycle.
+
+**Recommend:** pull the ortho-specific revenue and case-volume split from the MIS (by CMI/procedure mix) to confirm whether the gap is volume-driven (fewer cases), price-driven (payer mix shift, e.g. more TPA/scheme patients vs cash), or timing (billing/discharge lag pushing revenue into October). I can rerun this once that department-level cut is available.`,
+  intl: `**Short answer:** International revenue is currently tracking at roughly the ~14% baseline the Chairman flagged in the 25-Sep review — the data bundle here doesn't include a live updated %, so this reflects the last reported figure, not a fresh calculation.
+
+**What's in motion:**
+- Marketing + International Desk have been asked to build a growth plan targeting GCC, Maldives and Africa corridors, due 15-Nov-2026.
+- The Fatima Al Busaidi Maldives referral-partner MoU (currently pending signature, 3 days) is a direct lever for this goal — recommend prioritising its signature this week given the stated target.
+
+**Gap to target:** Moving from ~14% to 20% of total revenue within 2-3 quarters implies either (a) international revenue growing materially faster than domestic revenue, or (b) international patient volumes/ARPOB (often higher for self-pay international cases) rising disproportionately. Suggest the monthly management dashboard (Action #8 from the 25-Sep tracker) carry a dedicated international-revenue-% trendline so this can be answered precisely each month rather than from memory.`,
+};
+
+document.getElementById('runAsk').addEventListener('click', () => {
+  const q = document.getElementById('askQ').value.trim();
+  const scKey = document.getElementById('scenarioAsk').value;
+  const prompt = `Here is the current hospital KPI/data bundle for VPS Lakeshore Hospital, Kochi:\n\n${bundleAsText()}\n\nContext from the last Chairman review (25 Sep 2026): CMI/ARPOB/ALOS to be tracked monthly; international revenue currently ~14% of total with a target of 20% over 2-3 quarters; robot utilisation below plan; da Vinci robot down since 24-Sep.\n\nQuestion from the CEO/Chairman: "${q}"\n\nAnswer plainly and specifically using only the data given. If the bundle doesn't contain enough detail to fully answer, say so clearly and state exactly what additional data cut would resolve it.`;
+  Hub.run({
+    out: '#outAsk', button: '#runAsk',
+    system: 'You are the Management Office analyst answering the CEO/Chairman\'s ad-hoc questions over the hospital KPI bundle. Be honest about data limitations rather than fabricating numbers.',
+    prompt, demo: DEMO_ASK[scKey] || DEMO_ASK.ortho, manualMinutes: 60,
+  });
+});
+
+// ---------- TAB SWITCHING ----------
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+    document.getElementById('mode-' + btn.dataset.mode).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
