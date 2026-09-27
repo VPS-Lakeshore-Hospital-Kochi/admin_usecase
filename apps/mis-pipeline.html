@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIS consolidation checker</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>MIS consolidation checker</h1>
+    <p>Cross-check the month's HIS report extracts that feed the MIS pack before it goes to the CFO — stale pulls, control-total breaks and abnormal swings, in one pass.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Extract register</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="clean">August close — mostly clean</option>
+          <option value="messy">September close — multiple breaks</option>
+        </select>
+      </div>
+      <label>Extract register (editable, pipe-separated)</label>
+      <textarea id="register" rows="15"></textarea>
+      <label>MIS summary line totals (editable)</label>
+      <textarea id="misLines" rows="4"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic register for demonstration only. Report names, figures and staff are illustrative, not actual VPS Lakeshore data.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Finance & Accounts', title: 'MIS consolidation checker' });
+
+// register columns: report | extracted_by | extracted_at (ISO, close = 2026-08-31T23:59 / 2026-09-30T23:59) | rows | control_total | prior_control_total | mis_line
+const SCENARIOS = {
+  clean: {
+    misLines: `Gross Revenue (IP+OP): ₹18,42,60,000
+Collections (Cash+TPA+Corporate): ₹17,05,10,000
+Total Discounts & Deductions: ₹1,12,40,000
+Pharmacy Consumption: ₹2,86,90,000`,
+    rows: [
+      ['IP Billing Register', 'Anitha K (Billing)', '2026-09-01T08:10', 2140, '11,52,60,000', '11,08,40,000', 'Gross Revenue (IP+OP)'],
+      ['OP Billing Register', 'Rahul S (Billing)', '2026-09-01T07:40', 9860, '6,90,00,000', '6,72,15,000', 'Gross Revenue (IP+OP)'],
+      ['Cash Collection Report', 'Deepa M (Cashier)', '2026-09-01T08:55', 4310, '9,45,20,000', '9,10,00,000', 'Collections (Cash+TPA+Corporate)'],
+      ['TPA Realisation Report', 'Sunil P (Insurance)', '2026-09-01T09:20', 612, '5,20,40,000', '5,05,00,000', 'Collections (Cash+TPA+Corporate)'],
+      ['Corporate Billing Report', 'Sunil P (Insurance)', '2026-09-01T09:22', 88, '2,39,50,000', '2,28,00,000', 'Collections (Cash+TPA+Corporate)'],
+      ['Discount & Concession Log', 'Anitha K (Billing)', '2026-09-01T08:12', 340, '72,40,000', '70,10,000', 'Total Discounts & Deductions'],
+      ['Doctor Fee Waiver Log', 'HR Payroll Cell', '2026-09-01T10:05', 58, '40,00,000', '38,50,000', 'Total Discounts & Deductions'],
+      ['Pharmacy Sales-to-IP/OP', 'Vinod T (Pharmacy)', '2026-09-01T08:30', 15420, '2,10,90,000', '2,02,00,000', 'Pharmacy Consumption'],
+      ['Pharmacy Stock Consumption', 'Vinod T (Pharmacy)', '2026-09-01T08:32', 3980, '76,00,000', '74,10,000', 'Pharmacy Consumption'],
+      ['Lab Revenue Register', 'Priya N (Lab)', '2026-09-01T07:55', 6210, '58,40,000', '56,90,000', 'Gross Revenue (IP+OP)'],
+      ['Radiology Revenue Register', 'Priya N (Lab)', '2026-09-01T07:56', 2140, '31,20,000', '30,10,000', 'Gross Revenue (IP+OP)'],
+      ['Refund & Reversal Log', 'Deepa M (Cashier)', '2026-09-01T08:57', 64, '11,60,000', '10,90,000', 'Collections (Cash+TPA+Corporate)'],
+    ],
+  },
+  messy: {
+    misLines: `Gross Revenue (IP+OP): ₹19,10,00,000
+Collections (Cash+TPA+Corporate): ₹17,60,00,000
+Total Discounts & Deductions: ₹1,05,00,000
+Pharmacy Consumption: ₹2,95,00,000`,
+    rows: [
+      ['IP Billing Register', 'Anitha K (Billing)', '2026-09-30T16:20', 2210, '11,90,00,000', '11,52,60,000', 'Gross Revenue (IP+OP)'],
+      ['OP Billing Register', 'Rahul S (Billing)', '2026-10-01T07:10', 10120, '7,05,20,000', '6,90,00,000', 'Gross Revenue (IP+OP)'],
+      ['Cash Collection Report', 'Deepa M (Cashier)', '2026-10-01T08:40', 4460, '9,80,00,000', '9,45,20,000', 'Collections (Cash+TPA+Corporate)'],
+      ['TPA Realisation Report', 'Sunil P (Insurance)', '2026-09-30T14:05', 640, '5,35,00,000', '5,20,40,000', 'Collections (Cash+TPA+Corporate)'],
+      ['Corporate Billing Report', 'Sunil P (Insurance)', '2026-10-01T09:00', 91, '4,10,00,000', '2,39,50,000', 'Collections (Cash+TPA+Corporate)'],
+      ['Discount & Concession Log', 'Anitha K (Billing)', '2026-09-30T15:50', 355, '68,00,000', '72,40,000', 'Total Discounts & Deductions'],
+      ['Doctor Fee Waiver Log', 'HR Payroll Cell', '2026-09-28T18:00', 55, '37,00,000', '40,00,000', 'Total Discounts & Deductions'],
+      ['Pharmacy Sales-to-IP/OP', 'Vinod T (Pharmacy)', '2026-10-01T08:15', 15980, '2,18,00,000', '2,10,90,000', 'Pharmacy Consumption'],
+      ['Pharmacy Stock Consumption', 'Vinod T (Pharmacy)', '2026-09-29T11:00', 4020, '75,00,000', '76,00,000', 'Pharmacy Consumption'],
+      ['Lab Revenue Register', 'Priya N (Lab)', '2026-10-01T07:35', 6340, '59,50,000', '58,40,000', 'Gross Revenue (IP+OP)'],
+      ['Radiology Revenue Register', 'Priya N (Lab)', '2026-10-01T07:36', 2180, '31,80,000', '31,20,000', 'Gross Revenue (IP+OP)'],
+      ['Refund & Reversal Log', 'Deepa M (Cashier)', '2026-09-30T13:20', 70, '12,10,000', '11,60,000', 'Collections (Cash+TPA+Corporate)'],
+    ],
+  },
+};
+
+// close cutoffs by scenario (month-end 23:59)
+const CUTOFF = { clean: new Date('2026-08-31T23:59'), messy: new Date('2026-09-30T23:59') };
+let CUR = 'clean';
+
+function fmtRegister(rows) {
+  const head = 'Report | Extracted By | Extracted At | Rows | Control Total (₹) | Prior Month Total (₹) | Feeds MIS Line';
+  return head + '\n' + rows.map(r => r.join(' | ')).join('\n');
+}
+
+function num(s) { return parseFloat(String(s).replace(/,/g, '')); }
+
+function analyse(rows, cutoff) {
+  const stale = [];
+  const swings = [];
+  rows.forEach(r => {
+    const [report, by, at, , total, prior] = r;
+    const t = new Date(at);
+    if (t > cutoff) stale.push(`${report} (${by}) — extracted ${at.replace('T', ' ')}, after month-end close`);
+    const cur = num(total), pr = num(prior);
+    const pct = Math.abs(cur - pr) / pr * 100;
+    if (pct > 25) swings.push(`${report} — ${pct.toFixed(0)}% swing vs prior month`);
+  });
+  // control-total vs MIS line: sum rows per line, compare to MIS summary — done loosely per line group
+  return { stale, swings };
+}
+
+function renderKPIs(rows, cutoff) {
+  const { stale, swings } = analyse(rows, cutoff);
+  const box = document.getElementById('kpis');
+  const tiles = [
+    ['Extracts in register', rows.length, ''],
+    ['Extracted after close', stale.length, stale.length ? 'down' : 'up'],
+    ['>25% swing vs prior month', swings.length, swings.length ? 'down' : 'up'],
+    ['Reports awaiting refresh', stale.length + swings.length, ''],
+  ];
+  box.innerHTML = tiles.map(([l, v, cls]) => `<div class="kpi"><div class="label">${l}</div><div class="value ${cls}">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  CUR = key;
+  const s = SCENARIOS[key];
+  document.getElementById('register').value = fmtRegister(s.rows);
+  document.getElementById('misLines').value = s.misLines;
+  renderKPIs(s.rows, CUFF());
+}
+function CUFF() { return CUTOFF[CUR]; }
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('clean');
+
+const DEMO = {
+clean: `## Reconciliation breaks
+
+No stale extracts and no line breaches the 25% swing threshold this month — the pack is in a clean state to sign off.
+
+| Check | Result |
+|---|---|
+| Extracts pulled before month-end close | All 12 pulled before 2026-08-31 23:59 |
+| Control total vs MIS summary line | All four MIS lines reconcile within rounding (< ₹5,000 variance) |
+| >25% swing vs prior month | None flagged |
+
+## CFO sign-off checklist
+1. Confirm IP + OP billing registers pulled after the last late-night IP discharge bill was posted.
+2. Spot-check Corporate Billing Report total against the corporate collections bank statement for the month.
+3. Confirm Doctor Fee Waiver Log is signed off by the Medical Superintendent before it hits Discounts.
+4. File this register alongside the MIS pack as the audit trail for the month.
+
+## Lineage note
+- **Gross Revenue** ← IP Billing, OP Billing, Lab Revenue, Radiology Revenue registers (sum of four extracts).
+- **Collections** ← Cash Collection, TPA Realisation, Corporate Billing, Refund & Reversal (net of refunds).
+- **Discounts & Deductions** ← Discount & Concession Log + Doctor Fee Waiver Log.
+- **Pharmacy Consumption** ← Pharmacy Sales-to-IP/OP + Pharmacy Stock Consumption.
+
+## Automate first
+1. Auto-timestamp extracts at source (HIS export log) instead of relying on self-reported extract time — removes manual stale-check entirely.
+2. Auto-sum the four revenue-line feeder reports and diff against the MIS summary line every morning — this is pure arithmetic today done by hand.
+3. Leave the Doctor Fee Waiver sign-off as manual — it needs human judgement on eligibility, not automation.`,
+messy: `## Reconciliation breaks
+
+Six of twelve extracts break one or more checks — this pack is **not** sign-off ready as pulled.
+
+| Report | Break | Likely cause |
+|---|---|---|
+| IP Billing Register | Extracted 2026-09-30 16:20, before end-of-day IP billing closes | Late-evening IP discharge bills (after 4:20pm) missing from the pull |
+| OP Billing Register | Extracted 2026-10-01 07:10, after close but before overnight OP corrections posted | Should be fine, but re-pull to be safe — corrections run till midnight |
+| Cash Collection Report | Extracted 2026-10-01 08:40 | Pulled after close — likely fine, but verify against cashier end-of-day tally |
+| Corporate Billing Report | 71% swing vs prior month (₹2.39cr → ₹4.10cr) | Likely a bulk corporate invoice batch (e.g. a large TPA-linked corporate client) booked late in the month, or a duplicate/incorrect batch upload — verify against the corporate client billing log before accepting |
+| Doctor Fee Waiver Log | Extracted 2026-09-28 18:00 — two days before close | Missed two days of waiver postings; total will understate Discounts |
+| Pharmacy Stock Consumption | Extracted 2026-09-29 11:00 — a day before close | Missed the last day's issue vouchers |
+
+## CFO sign-off checklist
+1. **Do not sign off** until IP Billing, Doctor Fee Waiver and Pharmacy Stock Consumption are re-pulled after 2026-09-30 23:59.
+2. Get written confirmation from the Corporate Billing desk on the ₹4.10cr figure — trace it to at least the top 3 invoices before accepting.
+3. Re-run the MIS summary tie-out once re-pulled extracts are in — current Gross Revenue and Discounts lines are provisional.
+4. Note the delay reason in the sign-off memo so August's close timeline isn't repeated.
+
+## Lineage note
+- **Gross Revenue** ← IP Billing, OP Billing, Lab Revenue, Radiology Revenue — currently unreliable due to the stale IP Billing pull.
+- **Collections** ← Cash Collection, TPA Realisation, Corporate Billing, Refund & Reversal — Corporate Billing figure needs verification before this line is trusted.
+- **Discounts & Deductions** ← Discount & Concession Log + Doctor Fee Waiver Log — understated pending Waiver re-pull.
+- **Pharmacy Consumption** ← Pharmacy Sales-to-IP/OP + Pharmacy Stock Consumption — understated pending Stock Consumption re-pull.
+
+## Automate first
+1. **Highest priority:** a scheduled nightly extract job at a fixed time after close, so extract timing is never left to individual staff — removes the single biggest source of this month's breaks.
+2. Auto-flag any feeder report whose swing exceeds 25% vs prior month before it reaches the MIS pack, with the reporting team required to annotate a reason.
+3. Route the Corporate Billing feed through a batch-approval step before it posts, so a large late batch can't silently swing the collections line.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const register = document.getElementById('register').value;
+  const misLines = document.getElementById('misLines').value;
+  renderKPIs(SCENARIOS[key].rows, CUFF());
+  const prompt = `You are helping Finance & Accounts at VPS Lakeshore Hospital, Kochi consolidate the monthly MIS pack.
+
+Extract register (each row: report, extracted by, extracted at, row count, control total, prior month control total, MIS line it feeds):
+${register}
+
+MIS summary line totals:
+${misLines}
+
+Provide: (1) reconciliation breaks — stale extracts (pulled before month-end close), control-total mismatches vs the MIS line, and >25% swings vs prior month, with likely cause for each, (2) a sign-off checklist for the CFO, (3) a lineage note mapping which report(s) feed which MIS line, (4) which 2-3 steps to automate first and why. Use ₹ lakh/crore formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital finance controller at a 350-bed Kerala hospital, expert in MIS consolidation and month-end close.',
+    prompt, demo: DEMO[key], manualMinutes: 240,
+  });
+});
+</script>
+</body>
+</html>

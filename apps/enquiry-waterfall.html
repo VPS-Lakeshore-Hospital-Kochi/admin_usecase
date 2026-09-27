@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enquiry-to-revenue waterfall</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Enquiry-to-revenue waterfall</h1>
+    <p>See where each channel's enquiries leak between first contact and billed revenue, and what to fix first.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Monthly funnel by channel</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="aug">August — steady month</option>
+          <option value="sep">September — international desk dip</option>
+        </select>
+      </div>
+      <label>Funnel data (editable, pipe-separated: channel | enquiries | appointments | visited | admitted | billed revenue ₹)</label>
+      <textarea id="funnel" rows="10"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:20px">Stage-to-stage conversion</h2>
+  <div class="table-wrap"><table id="convTable"></table></div>
+
+  <p class="footer-note">Synthetic funnel data for demonstration only. Channel names are generic; figures do not reflect actual VPS Lakeshore performance.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Marketing & Comms', title: 'Enquiry-to-revenue waterfall' });
+
+const SCENARIOS = {
+  aug: {
+    rows: [
+      ['Call centre', 1840, 1150, 860, 210, 9450000],
+      ['WhatsApp', 2260, 1320, 780, 165, 6820000],
+      ['Website form', 1120, 640, 410, 98, 5210000],
+      ['International desk', 210, 175, 158, 61, 12400000],
+      ['Doctor referral', 640, 590, 560, 245, 18650000],
+      ['Walk-in', 980, 980, 900, 140, 4980000],
+    ],
+  },
+  sep: {
+    rows: [
+      ['Call centre', 1910, 1180, 870, 205, 9120000],
+      ['WhatsApp', 2410, 1360, 740, 150, 6210000],
+      ['Website form', 1240, 690, 430, 92, 4870000],
+      ['International desk', 260, 160, 96, 28, 5680000],
+      ['Doctor referral', 655, 605, 572, 250, 19040000],
+      ['Walk-in', 1010, 1010, 915, 138, 4890000],
+    ],
+  },
+};
+
+function fmtFunnel(rows) {
+  const head = 'Channel | Enquiries | Appointments | Visited | Admitted | Billed Revenue (₹)';
+  return head + '\n' + rows.map(r => r.join(' | ')).join('\n');
+}
+
+function pct(a, b) { return b ? (a / b * 100) : 0; }
+
+function renderConvTable(rows) {
+  const tbl = document.getElementById('convTable');
+  let totE = 0, totA = 0, totV = 0, totAd = 0, totR = 0;
+  const body = rows.map(r => {
+    const [ch, e, a, v, ad, rev] = r;
+    totE += e; totA += a; totV += v; totAd += ad; totR += rev;
+    return `<tr><td>${ch}</td><td class="num">${e}</td><td class="num">${pct(a, e).toFixed(0)}%</td><td class="num">${pct(v, a).toFixed(0)}%</td><td class="num">${pct(ad, v).toFixed(0)}%</td><td class="num">${pct(ad, e).toFixed(1)}%</td><td class="num">₹${(rev / e).toFixed(0)}</td></tr>`;
+  }).join('');
+  const totalRow = `<tr style="font-weight:700"><td>Overall</td><td class="num">${totE}</td><td class="num">${pct(totA, totE).toFixed(0)}%</td><td class="num">${pct(totV, totA).toFixed(0)}%</td><td class="num">${pct(totAd, totV).toFixed(0)}%</td><td class="num">${pct(totAd, totE).toFixed(1)}%</td><td class="num">₹${(totR / totE).toFixed(0)}</td></tr>`;
+  tbl.innerHTML = `<thead><tr><th>Channel</th><th class="num">Enquiries</th><th class="num">→Appt %</th><th class="num">→Visited %</th><th class="num">→Admitted %</th><th class="num">Overall conv %</th><th class="num">Revenue/enquiry</th></tr></thead><tbody>${body}${totalRow}</tbody>`;
+  return { totE, totAd, totR };
+}
+
+function renderKPIs(rows) {
+  const { totE, totAd, totR } = renderConvTable(rows);
+  const box = document.getElementById('kpis');
+  const tiles = [
+    ['Total enquiries', totE, ''],
+    ['Total admitted', totAd, ''],
+    ['Overall conversion', pct(totAd, totE).toFixed(1) + '%', ''],
+    ['Billed revenue', Hub.inr(totR), ''],
+  ];
+  box.innerHTML = tiles.map(([l, v, cls]) => `<div class="kpi"><div class="label">${l}</div><div class="value ${cls}">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('funnel').value = fmtFunnel(s.rows);
+  renderKPIs(s.rows);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('aug');
+
+const DEMO = {
+aug: `## Biggest leak points by channel
+
+1. **WhatsApp — enquiry to appointment (58%) and visit-to-admission (21%) are both weak.** High volume (2,260 enquiries) but the lowest revenue-per-enquiry (₹3,018). Likely cause: WhatsApp is largely fielding price/availability queries with slow or templated replies, and many who do visit are OPD-only walk-through cases with no clear conversion nudge.
+2. **Website form — only 57% of enquiries convert to a booked appointment**, the second weakest stage-1 conversion. Likely cause: form submissions often land after hours and the current callback SLA lets leads go cold before a human responds.
+3. **International desk has the smallest volume but highest revenue-per-enquiry (₹59,048)** — under-leaked relative to its potential; the leak here is upstream (too few enquiries), not downstream.
+4. **Call centre visited-to-admitted (24%)** is middling — a large share of visits are conservative/OPD consults that don't convert to IP admission, which is expected for this channel but worth separating from true drop-off.
+
+## Five fixes, owner, expected uplift
+
+| # | Fix | Owner | Expected uplift |
+|---|---|---|---|
+| 1 | WhatsApp: move to human-agent handoff within 5 minutes for any query mentioning symptoms/cost, backed by a live agent queue | Marketing & Comms (WhatsApp desk lead) | +8–10 pts on enquiry→appointment |
+| 2 | Website form: 15-minute callback SLA with an automated instant acknowledgment message | Digital Marketing exec | +10–12 pts on enquiry→appointment |
+| 3 | International desk: expand outbound outreach to 2 new source-country partner clinics | International Patient Services head | +30–40% more enquiries at current conversion |
+| 4 | Doctor referral: formalise a referring-doctor feedback loop (post-visit update call) to sustain the already-strong 91% visit-to-admit rate | Business Development manager | Protects existing high-value channel from drift |
+| 5 | Walk-in: install a same-day cost-estimate kiosk near registration to reduce visit-to-admission drop-off | Front office manager | +4–6 pts on visited→admitted |
+
+## Note for the CEO
+
+August's funnel converted 3.1% of 7,050 enquiries into 919 admissions and ₹5.75 crore in billed revenue, but conversion is highly uneven: doctor referral and international desk deliver the best per-enquiry economics while WhatsApp, our highest-volume channel, converts worst — closing that single gap by even 8-10 points would add roughly 180-220 admissions a month at no extra marketing spend, purely through faster response and better handoff.`,
+sep: `## Biggest leak points by channel
+
+1. **International desk has collapsed — enquiry-to-appointment fell to 62% (from 83% in August) and visited-to-admitted fell to 29% (from 39%).** This is the sharpest and most valuable leak in the month: revenue-per-enquiry dropped from ₹59,048 to ₹21,846. Likely cause: a visa/travel disruption for a key source market, or the international coordinator being short-staffed — needs urgent verification with the International Patient Services desk.
+2. **WhatsApp visit-to-admission fell further to 20%**, continuing last month's weak pattern, with volume still growing (2,410 enquiries) — the channel is generating more low-intent traffic than the team can convert.
+3. **Website form enquiry-to-appointment stayed weak at 56%**, unchanged from August despite the same callback process — the fix from last month evidently has not been implemented yet.
+4. **Call centre and doctor referral held steady**, confirming the dip is channel-specific (international, WhatsApp) rather than hospital-wide.
+
+## Five fixes, owner, expected uplift
+
+| # | Fix | Owner | Expected uplift |
+|---|---|---|---|
+| 1 | International desk: immediate root-cause call with the desk team on the appointment and admission drop before the next reporting cycle | International Patient Services head | Recovers ₹35-40 lakh/month if reversed to August's rate |
+| 2 | International desk: reconfirm active source-country partner status and any travel/visa blockers | International Patient Services head | Prevents recurrence |
+| 3 | WhatsApp: implement the 5-minute human-handoff fix flagged last month — still pending | Marketing & Comms (WhatsApp desk lead) | +8–10 pts on visit-to-admit |
+| 4 | Website form: escalate the unimplemented 15-minute callback SLA — two months of the same leak now | Digital Marketing exec | +10–12 pts on enquiry→appointment |
+| 5 | Doctor referral: no action needed — protect current process, it is the most stable and highest-yield channel | Business Development manager | Maintain baseline |
+
+## Note for the CEO
+
+September's overall conversion held at roughly 3.0%, but that average masks a real problem: the international desk, our highest-value channel per enquiry, saw revenue-per-enquiry fall by nearly two-thirds month-on-month, while two fixes flagged after August's review (WhatsApp handoff, website callback SLA) still haven't been implemented — the priority this month is closing the international desk gap first, since it alone is worth more than all five other channels' incremental fixes combined.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const funnel = document.getElementById('funnel').value;
+  const prompt = `You are helping Marketing & Comms at VPS Lakeshore Hospital, Kochi analyse the monthly enquiry-to-revenue funnel by channel (call centre, WhatsApp, website form, international desk, doctor referral, walk-in).
+
+Funnel data (channel | enquiries | appointments | visited | admitted | billed revenue ₹):
+${funnel}
+
+Provide: (1) the biggest leak points by channel with likely reasons, (2) exactly 5 fixes each with an owner (a specific role/team) and expected uplift, (3) a one-paragraph note for the CEO. Use ₹ lakh/crore formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital marketing analytics lead at a 350-bed Kerala hospital with a strong international patient and TPA mix, expert in funnel and channel conversion analysis.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

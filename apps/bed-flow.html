@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bed &amp; discharge flow assistant</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Bed &amp; discharge flow assistant</h1>
+    <p>Turn today's census into a prioritised discharge action list and a bed huddle plan, before the noon crunch.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Today's IP census (editable)</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="typical">Typical weekday — mixed payer mix</option>
+          <option value="busy">Post-weekend surge — heavy TPA blockers</option>
+        </select>
+      </div>
+      <label>Census (editable, pipe-separated: bed | ward | payer | expected discharge today | pending items)</label>
+      <textarea id="census" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:20px">Blocker breakdown</h2>
+  <div class="table-wrap"><table id="blockTable"></table></div>
+
+  <p class="footer-note">Synthetic census for demonstration only. Beds, wards and staff names are illustrative, not actual patient data.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Patient Experience', title: 'Bed & discharge flow assistant' });
+
+const BLOCKER_TYPES = ['TPA final approval', 'Final bill', 'Pharmacy return', 'Discharge summary', 'Reports pending', 'Transport'];
+
+const SCENARIOS = {
+  typical: {
+    rows: [
+      ['304A', 'General Surgery', 'Cash', 'Y', 'Final bill'],
+      ['304B', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
+      ['312', 'Ortho', 'TPA', 'Y', 'Discharge summary'],
+      ['315', 'Ortho', 'Cash', 'N', '—'],
+      ['401', 'Cardiology', 'International', 'Y', 'Transport'],
+      ['403', 'Cardiology', 'TPA', 'N', 'Reports pending'],
+      ['406', 'Cardiology', 'Cash', 'Y', 'Pharmacy return'],
+      ['502', 'ICU', 'TPA', 'N', '—'],
+      ['505', 'Medicine', 'Cash', 'Y', 'Final bill'],
+      ['507', 'Medicine', 'International', 'Y', 'Discharge summary'],
+      ['509', 'Medicine', 'TPA', 'N', 'Reports pending'],
+      ['602', 'Paediatrics', 'Cash', 'Y', 'Pharmacy return'],
+      ['605', 'Paediatrics', 'TPA', 'Y', 'TPA final approval'],
+      ['610', 'Gynae', 'Cash', 'N', '—'],
+    ],
+  },
+  busy: {
+    rows: [
+      ['304A', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
+      ['304B', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
+      ['312', 'Ortho', 'TPA', 'Y', 'TPA final approval, Discharge summary'],
+      ['315', 'Ortho', 'Cash', 'Y', 'Final bill'],
+      ['401', 'Cardiology', 'International', 'Y', 'Transport, Reports pending'],
+      ['403', 'Cardiology', 'TPA', 'Y', 'TPA final approval'],
+      ['406', 'Cardiology', 'Cash', 'Y', 'Pharmacy return'],
+      ['502', 'ICU', 'TPA', 'N', '—'],
+      ['505', 'Medicine', 'TPA', 'Y', 'TPA final approval, Final bill'],
+      ['507', 'Medicine', 'International', 'Y', 'Discharge summary'],
+      ['509', 'Medicine', 'TPA', 'Y', 'TPA final approval'],
+      ['602', 'Paediatrics', 'Cash', 'Y', 'Pharmacy return'],
+      ['605', 'Paediatrics', 'TPA', 'Y', 'TPA final approval'],
+      ['610', 'Gynae', 'TPA', 'N', 'Reports pending'],
+    ],
+  },
+};
+
+function fmtCensus(rows) {
+  const head = 'Bed | Ward | Payer | Expected Discharge Today | Pending Items';
+  return head + '\n' + rows.map(r => r.join(' | ')).join('\n');
+}
+
+function analyse(rows) {
+  const expected = rows.filter(r => r[3] === 'Y');
+  const counts = {};
+  BLOCKER_TYPES.forEach(b => counts[b] = 0);
+  let atRisk = 0;
+  expected.forEach(r => {
+    const items = r[4];
+    if (items === '—' || !items) return;
+    const parts = items.split(',').map(s => s.trim());
+    BLOCKER_TYPES.forEach(b => { if (parts.includes(b)) counts[b]++; });
+    if (parts.length > 0 && items !== '—') atRisk++;
+  });
+  return { expected, counts, atRisk };
+}
+
+function renderBlockTable(rows) {
+  const { counts } = analyse(rows);
+  const tbl = document.getElementById('blockTable');
+  const body = BLOCKER_TYPES.map(b => `<tr><td>${b}</td><td class="num">${counts[b]}</td></tr>`).join('');
+  tbl.innerHTML = `<thead><tr><th>Blocker type</th><th class="num">Beds affected</th></tr></thead><tbody>${body}</tbody>`;
+}
+
+function renderKPIs(rows) {
+  const { expected, atRisk } = analyse(rows);
+  renderBlockTable(rows);
+  const box = document.getElementById('kpis');
+  const clearNow = expected.filter(r => r[4] === '—').length;
+  const tiles = [
+    ['Occupied beds', rows.length, ''],
+    ['Expected discharges today', expected.length, ''],
+    ['Ready to discharge now', clearNow, clearNow ? 'up' : ''],
+    ['At risk for noon discharge', atRisk, atRisk > 4 ? 'down' : ''],
+  ];
+  box.innerHTML = tiles.map(([l, v, cls]) => `<div class="kpi"><div class="label">${l}</div><div class="value ${cls}">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('census').value = fmtCensus(s.rows);
+  renderKPIs(s.rows);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('typical');
+
+const DEMO = {
+typical: `## Prioritised discharge list
+
+| Priority | Bed / Ward | Blocker | Owner | Action needed now |
+|---|---|---|---|---|
+| 1 | 304B, Gen Surgery (TPA) | TPA final approval | Insurance desk (Sunil) | Call TPA desk, confirm approval ETA before 11am |
+| 2 | 605, Paediatrics (TPA) | TPA final approval | Insurance desk | Same — bundle both TPA calls in one round |
+| 3 | 312, Ortho (TPA) | Discharge summary | Dr. on duty, Ortho | Flag to consultant now — summary is the long pole once approval clears |
+| 4 | 507, Medicine (International) | Discharge summary | Dr. on duty, Medicine | Prepare summary in parallel with transport booking |
+| 5 | 401, Cardiology (International) | Transport | Front office / concierge | Confirm airport/hotel transport slot now, before noon traffic |
+| 6 | 406, Cardiology (Cash) | Pharmacy return | Pharmacy | Route pending pharmacy return list to pharmacy immediately |
+| 7 | 602, Paediatrics (Cash) | Pharmacy return | Pharmacy | Bundle with 406 |
+| 8 | 304A, 505 (Cash) | Final bill | Billing desk (Anitha) | Push both bills for a 10am billing slot |
+
+## 10-minute bed huddle script
+1. **(1 min)** Nurse-in-charge reads today's expected discharge count (9 of 14 beds) and current at-risk count (5).
+2. **(3 min)** Go bed-by-bed through the "TPA final approval" list first — insurance desk confirms call status for 304B and 605 out loud.
+3. **(2 min)** Discharge summary owners (Ortho, Medicine consultants on duty) confirm expected sign-off time.
+4. **(2 min)** Pharmacy and billing confirm they have the pending list and give an ETA per bed.
+5. **(1 min)** Front office confirms international transport bookings for 401 and 507.
+6. **(1 min)** Nurse-in-charge assigns a follow-up check-in time (11:30am) and closes.
+
+## Admissions waiting to match against freed beds
+- ER holding: 1 Ortho post-fall case awaiting bed — matches 312/315 (Ortho) once cleared.
+- OT recovery: 1 elective Cardiology case awaiting stepdown — matches 403/406 once cleared.
+- Suggest holding one Medicine bed (505 or 509) for a pending Medicine OP-to-IP conversion flagged this morning.
+
+## Message draft to the TPA desk
+*"Requesting urgent status update on final approval for Bed 304B (Gen Surgery, planned discharge today) and Bed 605 (Paediatrics, planned discharge today). Both patients are clinically fit for discharge and beds are needed for waiting ER/OT admissions. Please confirm approval ETA within the next hour so we can plan the noon discharge round."*`,
+busy: `## Prioritised discharge list
+
+With 9 of 14 expected discharges TPA-blocked, insurance desk capacity is the critical path today.
+
+| Priority | Bed / Ward | Blocker | Owner | Action needed now |
+|---|---|---|---|---|
+| 1 | 505, Medicine (TPA) | TPA final approval + Final bill | Insurance desk + Billing | Two blockers stacked — start this call first, bill can be readied in parallel |
+| 2 | 312, Ortho (TPA) | TPA final approval + Discharge summary | Insurance desk + Ortho consultant | Push both in parallel, don't sequence |
+| 3 | 304A, 304B, Gen Surgery (TPA) | TPA final approval | Insurance desk | Batch both hospital-side calls to the same TPA if same insurer |
+| 4 | 403, 509, Medicine/Cardio (TPA) | TPA final approval | Insurance desk | Add to the batch call queue |
+| 5 | 605, Paediatrics (TPA) | TPA final approval | Insurance desk | Add to queue — insurance desk now has 6 open TPA calls, consider pulling in a second staffer for the morning |
+| 6 | 401, Cardiology (International) | Transport + Reports pending | Front office + Lab | Reports first — transport booking depends on discharge time confirmation |
+| 7 | 315, Gen Surgery (Cash) | Final bill | Billing desk | Quick win — clear this first to free capacity while TPA calls run |
+| 8 | 406, 602, Cardio/Paeds (Cash) | Pharmacy return | Pharmacy | Bundle both |
+
+## 10-minute bed huddle script
+1. **(1 min)** Nurse-in-charge flags the unusual load: 9 of 14 expected discharges, 7 with a TPA approval blocker.
+2. **(4 min)** Insurance desk lead calls out each of the 6 pending TPA cases with current status — decide which 2 need duty manager escalation if no response by 10:30am.
+3. **(2 min)** Billing confirms the two quick-win cash bills (315) can close within the hour to free capacity.
+4. **(2 min)** Pharmacy and front office confirm their smaller queues (2 pharmacy returns, 1 transport+reports case).
+5. **(1 min)** Nurse-in-charge requests a second insurance desk staffer for the morning given the load, and sets an 11:30am recheck.
+
+## Admissions waiting to match against freed beds
+- ER holding: 2 cases (1 Ortho, 1 Cardiology) awaiting a bed — match against 312/315 and 403/406 once cleared.
+- OT recovery: 1 Gen Surgery post-op case awaiting stepdown — matches 304A/304B.
+- Recommend an early call to admissions to hold non-urgent elective admissions until at least 3 TPA approvals clear, given today's blocker load.
+
+## Message draft to the TPA desk
+*"We currently have 7 patients across General Surgery, Ortho, Cardiology, Medicine and Paediatrics awaiting final TPA approval for planned discharges today, with ER and OT admissions waiting for these beds. Requesting an urgent bulk status update on all pending cases, and priority handling given the volume, so we can plan today's discharge round by 11am."*`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const census = document.getElementById('census').value;
+  const prompt = `You are helping Patient Experience at VPS Lakeshore Hospital, Kochi run today's bed and discharge flow, based on the IP census below (bed | ward | payer cash/TPA/international | expected discharge today Y/N | pending items).
+
+Census:
+${census}
+
+Provide: (1) a prioritised discharge list with a clear owner per blocker, (2) a 10-minute bed huddle script for the nursing/ops team, (3) likely ER/OT admissions waiting that could match freed beds, (4) a short message draft to the TPA desk. Use ₹ formatting only if costs are mentioned.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital patient-flow / bed management coordinator at a 350-bed Kerala hospital with a significant TPA and international patient mix.',
+    prompt, demo: DEMO[key], manualMinutes: 45,
+  });
+});
+</script>
+</body>
+</html>
