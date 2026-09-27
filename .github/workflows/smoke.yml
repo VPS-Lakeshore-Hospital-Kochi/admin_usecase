@@ -1,0 +1,28 @@
+# Runs the Playwright smoke test (every page, desktop + phone width) on pull requests and pushes to main.
+name: Smoke test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+      - name: Run smoke test
+        run: node tests/smoke.mjs

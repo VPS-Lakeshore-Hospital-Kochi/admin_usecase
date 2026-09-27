@@ -20,7 +20,7 @@ const APPS = (await readdir(join(ROOT, 'apps'))).filter(f => f.endsWith('.html')
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined });
 let failed = 0;
 
-for (const [path, width] of [['index.html', 1280], ...APPS.flatMap(a => [[`apps/${a}.html`, 1280], [`apps/${a}.html`, 375]])]) {
+for (const [path, width] of [['index.html', 1280], ['governance.html', 1280], ['governance.html', 375], ...APPS.flatMap(a => [[`apps/${a}.html`, 1280], [`apps/${a}.html`, 375]])]) {
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -31,6 +31,12 @@ for (const [path, width] of [['index.html', 1280], ...APPS.flatMap(a => [[`apps/
     const hrefs = await page.$$eval('a.tile', as => as.map(a => a.getAttribute('href')));
     for (const h of hrefs) if (!APPS.includes(h.replace(/^apps\/|\.html$/g, ''))) errors.push(`broken tile link ${h}`);
     note = `${hrefs.length} tiles`;
+  } else if (path === 'governance.html') {
+    const links = await page.locator('a[href^="apps/"]').count();
+    note = `${links} app links`;
+    if (links !== APPS.length) errors.push(`governance links ${links} of ${APPS.length} apps`);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+    if (overflow) errors.push(`horizontal overflow at ${width}px`);
   } else {
     const btn = page.locator('button.primary:visible').first();
     if (await btn.count()) {

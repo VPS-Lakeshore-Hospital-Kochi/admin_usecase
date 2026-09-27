@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Master data steward assistant</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Master data steward assistant</h1>
+    <p>Spot near-duplicate procedure and vendor master entries built up over years of HIS use, and get a proposed merge map for steward approval.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample master extract</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="proc">Procedure/service master — CT Abdomen variants</option>
+          <option value="vendor">Vendor master — near-duplicate suppliers</option>
+        </select>
+      </div>
+      <label id="extractLabel">Extract (editable, pipe-separated)</label>
+      <textarea id="extract" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Normalised-name grouping (deterministic)</h2>
+    <div class="table-wrap"><table id="groupTable">
+      <thead><tr><th>Normalised key</th><th>Variants found</th><th class="num">Count</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Human in the loop</h3>
+    <p class="small">Claude only <b>proposes</b> the canonical name list and merge map. <b>Rahul Menon, Master Data Steward</b> reviews tariff and usage impact, then approves each merge before it is actioned in the HIS master by the module administrator. Nothing is renamed or merged automatically.</p>
+  </div>
+
+  <p class="footer-note">All codes, names, tariffs and vendor details are synthetic and illustrative only; no real hospital master data is referenced.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'Master data steward assistant' });
+
+const HEADERS = {
+  proc: ['Code','Service name','Tariff (₹)','Times used (12 mo)'],
+  vendor: ['Vendor code','Vendor name','GSTIN','City','Times used (12 mo)'],
+};
+
+const SCENARIOS = {
+proc: [
+['SVC-2201','CT Abdomen','4500','812'],
+['SVC-2244','CT Abdomen + Contrast','6800','340'],
+['SVC-2298','CT ABD W CONTRAST','6800','112'],
+['SVC-2301','CT Abdomen & Pelvis','5200','96'],
+['SVC-2355','CT Abdomen & Pelvis + contrast','7900','204'],
+['SVC-2402','CT Abd with contrast','6750','58'],
+['SVC-2410','CT Abdomen Plain','4450','176'],
+['SVC-2455','CT ABDOMEN PLAIN STUDY','4500','41'],
+['SVC-2501','CT Chest','5100','640'],
+['SVC-2540','CT Chest + Contrast','7200','388'],
+['SVC-2560','CT CHEST W/ CONTRAST','7250','67'],
+['SVC-2601','CT Brain','3800','905'],
+['SVC-2640','CT Brain Plain','3750','122'],
+['SVC-2688','CT BRAIN PLAIN STUDY','3800','29'],
+['SVC-2701','MRI Knee','8200','245'],
+],
+vendor: [
+['VEN-1001','Kerala Surgical Agencies','32AACFK1234L1Z5','Kochi','412'],
+['VEN-1044','Kerala Surgicals Agencies Pvt Ltd','32AACFK1234L1Z5','Kochi','88'],
+['VEN-1088','KSA Surgical Agencies','32AACFK1234L1Z5','Ernakulam','21'],
+['VEN-1102','MedSupply India Ltd','29AAECM5678R1ZP','Bengaluru','305'],
+['VEN-1130','Med Supply India Limited','29AAECM5678R1ZP','Bengaluru','56'],
+['VEN-1201','Southern Pharma Distributors','32AAJFS9988Q1ZM','Kochi','520'],
+['VEN-1244','Southern Pharma Distributors Pvt Ltd','32AAJFS9988Q1ZM','Kochi','144'],
+['VEN-1288','South Pharma Distribution','32AAJFS9988Q1ZM','Aluva','19'],
+['VEN-1301','Global Ortho Implants','27AABCG4455H1ZK','Mumbai','98'],
+['VEN-1350','Trivandrum Medical Traders','32AACFT7766J1ZN','Trivandrum','210'],
+['VEN-1355','TVM Medical Traders','32AACFT7766J1ZN','Trivandrum','33'],
+['VEN-1401','National Diagnostics Supplies','07AABCN2233K1ZL','Delhi','167'],
+['VEN-1440','National Diagnostic Supplies Pvt Ltd','07AABCN2233K1ZL','Delhi','44'],
+['VEN-1501','Coastal Biomedical Co','32AADFC1122M1ZQ','Kochi','78'],
+['VEN-1550','Coastal Bio-Medical Company','32AADFC1122M1ZQ','Kollam','15'],
+]
+};
+
+function toText(rows) { return rows.map(r => r.join(' | ')).join('\n'); }
+function fromText(t) { return t.trim().split('\n').filter(Boolean).map(l => l.split('|').map(c => c.trim())); }
+
+function normalize(name) {
+  return name.toUpperCase()
+    .replace(/[^A-Z0-9 &+]/g, ' ')
+    .replace(/\b(PVT|LTD|LIMITED|CO|COMPANY|STUDY|W|WITH)\b/g, '')
+    .replace(/PLUS|AND/g, '&')
+    .replace(/[+&]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function computeGroups(rows) {
+  const groups = {};
+  rows.forEach(r => {
+    const key = normalize(r[1]);
+    (groups[key] = groups[key] || []).push(r[1]);
+  });
+  return groups;
+}
+
+function renderKPIs(rows, groups) {
+  const dupGroups = Object.values(groups).filter(g => g.length > 1);
+  const dupRows = dupGroups.reduce((a, g) => a + g.length, 0);
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Master rows checked</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Distinct normalised keys</div><div class="value">${Object.keys(groups).length}</div></div>
+    <div class="kpi"><div class="label">Candidate-duplicate groups</div><div class="value">${dupGroups.length}</div></div>
+    <div class="kpi"><div class="label">Rows inside duplicate groups</div><div class="value">${dupRows}</div></div>`;
+}
+
+function renderTable(groups) {
+  const tbody = document.querySelector('#groupTable tbody');
+  const keys = Object.keys(groups).sort((a,b) => groups[b].length - groups[a].length);
+  tbody.innerHTML = keys.map(k => {
+    const variants = groups[k];
+    const tag = variants.length >= 3 ? 'bad' : variants.length === 2 ? 'warn' : 'ok';
+    return `<tr><td>${Hub.esc(k)}</td><td>${variants.map(Hub.esc).join('; ')}</td><td class="num"><span class="tag ${tag}">${variants.length}</span></td></tr>`;
+  }).join('');
+}
+
+function recompute() {
+  const rows = fromText(document.getElementById('extract').value);
+  const groups = computeGroups(rows);
+  renderKPIs(rows, groups);
+  renderTable(groups);
+  return { rows, groups };
+}
+
+function loadScenario(key) {
+  document.getElementById('extractLabel').textContent = `${key === 'proc' ? 'Procedure/service' : 'Vendor'} master extract (editable, pipe-separated: ${HEADERS[key].join(' | ')})`;
+  document.getElementById('extract').value = toText(SCENARIOS[key]);
+  recompute();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('extract').addEventListener('input', recompute);
+loadScenario('proc');
+
+const DEMO = {
+proc: `## Proposed canonical list
+
+| Canonical code (proposed) | Canonical name | Type |
+|---|---|---|
+| SVC-2201 | CT Abdomen | Base code |
+| SVC-2501 | CT Chest | Base code |
+| SVC-2601 | CT Brain | Base code |
+| MOD-CTR | + Contrast | Add-on modifier |
+| MOD-PEL | + Pelvis | Add-on modifier |
+
+## Merge map (old → new)
+
+| Old code | Old name | Merge into | Times used | Notes |
+|---|---|---|---|---|
+| SVC-2298 | CT ABD W CONTRAST | SVC-2201 + MOD-CTR | 112 | Spelling/case variant of contrast study |
+| SVC-2402 | CT Abd with contrast | SVC-2201 + MOD-CTR | 58 | Same |
+| SVC-2244 | CT Abdomen + Contrast | SVC-2201 + MOD-CTR | 340 | Keep as the tariff reference for the modifier (highest volume) |
+| SVC-2455 | CT ABDOMEN PLAIN STUDY | SVC-2410 | 41 | "Plain" duplicate of SVC-2410 |
+| SVC-2301 | CT Abdomen & Pelvis | SVC-2201 + MOD-PEL | 96 | Combination — should be a modifier stack, not a standalone code |
+| SVC-2355 | CT Abdomen & Pelvis + contrast | SVC-2201 + MOD-PEL + MOD-CTR | 204 | Same, plus contrast |
+| SVC-2560 | CT CHEST W/ CONTRAST | SVC-2540 | 67 | Spelling variant |
+| SVC-2688 | CT BRAIN PLAIN STUDY | SVC-2640 | 29 | "Plain" duplicate |
+
+## Base code vs add-on modifier
+
+Recommend restructuring the master so **CT Abdomen, CT Chest, CT Brain** stand as base codes, and **"+ Contrast"**, **"+ Pelvis"**, **"Plain"** become selectable modifiers billed as a combination, rather than each combination being saved as an independent new code. This is the root design fix — the current sprawl (15 codes for effectively 3 base studies × 2 modifiers) happened because staff created a new code whenever a combination wasn't found, instead of composing one.
+
+## Risks
+
+- **Tariff differences:** SVC-2244 (₹6,800) and SVC-2402 (₹6,750) for the same "Abdomen + Contrast" study differ by ₹50 — decide which tariff survives before merging; do not silently average.
+- **Open bills:** Any IP bill currently open against a code being merged (e.g. SVC-2298, SVC-2560) must be checked and either billed out or migrated before the old code is deactivated — deactivating a code with an open line item will break the bill.
+- **Historical reporting continuity:** Merging changes trend lines in MIS; keep a code-mapping table so past 12-month reports can still be reconciled to the new codes.
+- **Radiology protocol linkage:** Confirm CT protocol/worklist mapping in RIS references the surviving code before deactivating the old one, or scans may fail to auto-route.
+
+## Steward approval checklist
+
+- [ ] Confirm surviving tariff for each merge pair with Billing/Finance
+- [ ] Check for open/unbilled encounters on codes being retired
+- [ ] Confirm RIS/modality worklist mapping updated
+- [ ] Sign off merge map (Master Data Steward)
+- [ ] Freeze new-code creation for these study types for 30 days post-merge
+- [ ] Communicate new base + modifier structure to billing and radiology front desk`,
+
+vendor: `## Proposed canonical list
+
+| Canonical vendor code (proposed) | Canonical name | GSTIN |
+|---|---|---|
+| VEN-1001 | Kerala Surgical Agencies | 32AACFK1234L1Z5 |
+| VEN-1102 | MedSupply India Ltd | 29AAECM5678R1ZP |
+| VEN-1201 | Southern Pharma Distributors | 32AAJFS9988Q1ZM |
+| VEN-1350 | Trivandrum Medical Traders | 32AACFT7766J1ZN |
+| VEN-1401 | National Diagnostics Supplies | 07AABCN2233K1ZL |
+| VEN-1501 | Coastal Biomedical Co | 32AADFC1122M1ZQ |
+
+## Merge map (old → new)
+
+| Old code | Old name | GSTIN match | Merge into | Times used | Notes |
+|---|---|---|---|---|---|
+| VEN-1044 | Kerala Surgicals Agencies Pvt Ltd | Same | VEN-1001 | 88 | Same GSTIN, legal-suffix variant |
+| VEN-1088 | KSA Surgical Agencies | Same | VEN-1001 | 21 | Same GSTIN, abbreviation + different city on file (Ernakulam vs Kochi — same metro area) |
+| VEN-1130 | Med Supply India Limited | Same | VEN-1102 | 56 | Same GSTIN, spacing/suffix variant |
+| VEN-1244 | Southern Pharma Distributors Pvt Ltd | Same | VEN-1201 | 144 | Legal-suffix variant |
+| VEN-1288 | South Pharma Distribution | Same | VEN-1201 | 19 | Same GSTIN despite different city (Aluva) — likely a branch address, not a different vendor |
+| VEN-1355 | TVM Medical Traders | Same | VEN-1350 | 33 | Abbreviation variant |
+| VEN-1440 | National Diagnostic Supplies Pvt Ltd | Same | VEN-1401 | 44 | Singular/plural + suffix variant |
+| VEN-1550 | Coastal Bio-Medical Company | Same | VEN-1501 | 15 | Hyphenation + suffix variant, different city (Kollam) — verify branch vs separate entity |
+
+**VEN-1301 (Global Ortho Implants)** has no GSTIN match with any other row — genuinely distinct vendor, not part of any merge.
+
+## Risks
+
+- **GSTIN match is necessary but not sufficient** — VEN-1088 and VEN-1288 show a different city than their canonical pair; confirm these are branch addresses under the same GSTIN registration, not a data-entry error assigning the wrong GSTIN.
+- **Open purchase orders / GRNs:** Any PO or goods-receipt currently open against a code being retired must be closed or migrated before deactivation, or the payment will fail to match.
+- **Vendor payment history fragmentation:** Past 12-month spend is currently split across duplicate codes — MIS spend-by-vendor reports will change materially post-merge (e.g. Kerala Surgical Agencies true 12-month volume is 412+88+21 = 521, not 412).
+- **Bank/payment master linkage:** Confirm bank account details are identical across the duplicate codes before merging; if not, escalate to Finance before assuming it is the same legal entity.
+
+## Steward approval checklist
+
+- [ ] Verify GSTIN and PAN identical for each proposed merge pair
+- [ ] Confirm bank account details match across duplicates (escalate to Finance if not)
+- [ ] Check for open POs/GRNs on codes being retired
+- [ ] Sign off merge map (Master Data Steward)
+- [ ] Add a mandatory GSTIN-duplicate-check step to new vendor creation SOP
+- [ ] Communicate canonical vendor codes to Purchase and Stores teams`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const { rows, groups } = recompute();
+  const extractText = document.getElementById('extract').value;
+  const dupSummary = Object.entries(groups).filter(([,v]) => v.length > 1)
+    .map(([k,v]) => `${k}: ${v.join(' | ')}`).join('\n');
+  const prompt = `You are assisting the IT & Data Governance master-data steward team at VPS Lakeshore Hospital, Kochi with a ${key === 'proc' ? 'procedure/service' : 'vendor/item'} master clean-up.
+
+Master extract (${HEADERS[key].join(' | ')}):
+${extractText}
+
+Candidate-duplicate groups detected by normalised-name matching:
+${dupSummary}
+
+Provide: (1) a proposed canonical list, (2) a merge map (old code → new code) with reasoning, (3) ${key === 'proc' ? 'which entries should become a base code vs an add-on modifier' : 'which GSTIN matches are strong vs need manual verification'}, (4) risks (tariff/price differences, open bills or POs), (5) a master-data steward approval checklist. Be specific to the rows shown.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a senior hospital master-data steward at a large Indian multi-specialty hospital, expert in HIS procedure/service masters and vendor/item masters built up over many years of manual entry.',
+    prompt, demo: DEMO[key], manualMinutes: 240,
+  });
+});
+</script>
+</body>
+</html>
