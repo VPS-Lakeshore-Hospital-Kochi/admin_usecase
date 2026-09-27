@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online reputation monitor</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .kpi-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .kpi { flex:1; min-width:140px; background: var(--surface); border:1px solid var(--border); border-radius: var(--radius); padding:10px 14px; }
+  .kpi .n { font-size:1.3rem; font-weight:700; color: var(--navy); }
+  .kpi .l { font-size:12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Online reputation monitor</h1>
+    <p>Track Google/Practo/Facebook reviews and mentions for Lakeshore vs two competitors, and turn them into share-of-voice, themes and reply drafts.</p>
+  </section>
+
+  <div class="kpi-row" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample review feed</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="week">Weekly pulse — mixed sentiment, transplant mention goes viral locally</option>
+          <option value="incident">Post-incident spike — ER wait-time complaint trending</option>
+        </select>
+      </div>
+      <label>Reviews & mentions (editable)</label>
+      <textarea id="feed" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic reviews for demonstration only. "Competitor A" and "Competitor B" are fictional placeholders, not real hospitals.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Marketing & Comms', title: 'Online reputation monitor' });
+
+const SCENARIOS = {
+  week: `[Google] Lakeshore ★5 "Dr. Ramesh Pillai's robotic team gave my father a new life after liver transplant. Nursing care in ICU was outstanding." — Fahad, Malé
+[Google] Lakeshore ★2 "Billing desk took 3 hours to clear discharge summary. Otherwise doctors were good."
+[Practo] Lakeshore ★5 "Cardiology OPD — Dr. Anjali Nair explained everything patiently, got angioplasty done same week."
+[Facebook] Lakeshore ★4 "Good hospital but parking is a nightmare on weekdays."
+[Google] Competitor A ★4 "Clean rooms, friendly staff, slightly expensive pharmacy."
+[Google] Competitor A ★3 "Doctor was rushed, only got 5 minutes."
+[Practo] Competitor A ★5 "Best maternity experience in Kochi."
+[Google] Competitor B ★2 "Long wait for CT scan report, 2 days delay."
+[Google] Competitor B ★4 "Robotics surgery unit is impressive, recovered fast."
+[Facebook] Competitor B ★1 "Insurance desk gave wrong information twice."
+[Local FB group] "Anyone considering liver transplant — heard great things about Lakeshore's transplant team this week, 40+ likes on the thread."`,
+  incident: `[Google] Lakeshore ★1 "Waited 2 hours in ER with my mother having chest pain before a doctor saw us. Unacceptable for a hospital this size."
+[Google] Lakeshore ★1 "Same ER wait issue as other reviews below, we left and went elsewhere."
+[Twitter/X] "Lakeshore ER wait times getting worse, saw 3 people complain this week alone #Kochi #healthcare"
+[Google] Lakeshore ★5 "Despite the ER story going around, my cardiac surgery experience was flawless. Dr. Priya Varghese is excellent."
+[Practo] Lakeshore ★3 "OPD fine, but heard ER is overwhelmed on weekends."
+[Google] Competitor A ★4 "ER triage was quick, seen within 20 minutes."
+[Google] Competitor A ★5 "New emergency wing looks great."
+[Facebook] Competitor B ★3 "ER okay but billing desk confusing."
+[Google] Competitor B ★4 "Good emergency response for a road accident case."`,
+};
+
+function counts(text) {
+  const brands = ['Lakeshore', 'Competitor A', 'Competitor B'];
+  const res = {};
+  brands.forEach(b => res[b] = { n: 0, sum: 0 });
+  text.split('\n').forEach(line => {
+    const stars = (line.match(/★(\d)/) || [])[1];
+    brands.forEach(b => {
+      if (line.includes(b)) {
+        res[b].n++;
+        if (stars) res[b].sum += Number(stars);
+      }
+    });
+  });
+  return res;
+}
+
+function renderKPIs(text) {
+  const c = counts(text);
+  const total = Object.values(c).reduce((a, b) => a + b.n, 0) || 1;
+  const box = document.getElementById('kpis');
+  box.innerHTML = Object.entries(c).map(([brand, v]) => {
+    const avgRating = v.n ? (v.sum / v.n) : 0;
+    const sov = Math.round((v.n / total) * 100);
+    return `<div class="kpi">
+      <div class="l">${Hub.esc(brand)}</div>
+      <div class="n">${v.n} mentions</div>
+      <div class="l">avg ★ ${avgRating ? avgRating.toFixed(1) : '—'} · SoV ${sov}%</div>
+    </div>`;
+  }).join('');
+}
+
+function loadScenario(key) {
+  document.getElementById('feed').value = SCENARIOS[key];
+  renderKPIs(SCENARIOS[key]);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('feed').addEventListener('input', e => renderKPIs(e.target.value));
+loadScenario('week');
+
+const DEMO = {
+week: `## Share of voice (this week)
+
+| Brand | Mentions | Avg rating | Share of voice |
+|---|---|---|---|
+| Lakeshore | 5 | 4.0 | 45% |
+| Competitor A | 3 | 4.0 | 27% |
+| Competitor B | 3 | 2.3 | 27% |
+
+Lakeshore leads on volume, driven by the viral local Facebook thread about the liver transplant case — this is free earned media worth amplifying.
+
+## Praised themes
+- **Clinical outcomes & doctor rapport** (Dr. Ramesh Pillai, Dr. Anjali Nair) — repeatedly named by patients, a differentiator vs both competitors who get generic "friendly staff" praise.
+- **Robotics/transplant program** — the transplant mention is the single strongest asset this week; Competitor B's robotics review is comparable but has none of the organic word-of-mouth spread.
+
+## Criticised themes
+- **Billing/discharge delay** (3-hour clearance) — recurring pain point; matches Competitor B's insurance-desk complaints, so this is an industry-wide weak spot Lakeshore can win by fixing first.
+- **Parking** — low severity but frequently mentioned; cheap fix with outsized reputational payoff.
+
+## Reply drafts
+
+**To the ★2 billing review:** *"We're sorry discharge took longer than it should have, [Name]. We've shared this with our billing team for review — could you share your admission ID via DM so we can look into what caused the delay?"*
+
+**To the ★5 transplant review:** *"Thank you for trusting our transplant team with your father's care, Fahad. We're glad the outcome was so positive — wishing him continued good health."*
+
+## Content ideas
+1. Short video/testimonial featuring the liver transplant case (with consent) — ride the organic FB thread momentum.
+2. "Know before you visit" post on parking + shuttle info to pre-empt recurring complaints.
+3. Doctor-spotlight reel on Dr. Anjali Nair's same-week angioplasty pathway — turns a review into evergreen content.`,
+incident: `## Share of voice (this week)
+
+| Brand | Mentions | Avg rating | Share of voice |
+|---|---|---|---|
+| Lakeshore | 5 | 2.0 | 56% |
+| Competitor A | 2 | 4.5 | 22% |
+| Competitor B | 2 | 3.5 | 22% |
+
+Lakeshore's share of voice is inflated by a negative cluster — high visibility, poor sentiment. This is a reputation-risk week, not a growth week.
+
+## Praised themes
+- Cardiac surgery outcomes (Dr. Priya Varghese) still draws a strong ★5, showing clinical trust is intact even amid the ER complaints — worth surfacing to balance the narrative.
+
+## Criticised themes
+- **ER wait time** — the dominant theme, echoed on Twitter/X and Google, now a multi-channel pile-on. Competitor A's "20-minute triage" reviews make the contrast worse if left unaddressed.
+- Risk of narrative hardening: 3+ independent posts in one week on the same issue signals a trend, not a one-off.
+
+## Reply drafts
+
+**To the ★1 ER reviews:** *"We're sorry for the distress this caused during an already difficult moment. ER triage delays are being actively reviewed by our medical superintendent's office — please DM your visit date so we can follow up directly with you."*
+
+**To the Twitter/X thread:** *"We take this seriously and are reviewing ER triage capacity on weekends. Please reach out to our Patient Relations desk at [number] so we can address your specific experience."*
+
+## Content ideas
+1. Publish a short, factual note on ER triage improvements underway (extra weekend staffing) — transparency defuses pile-on threads faster than silence.
+2. Push the cardiac-surgery testimonial to rebalance search/social sentiment this week.
+3. Set up a same-day escalation SOP: any ★1/★2 ER mention gets a Patient Relations reply within 4 hours — track this as a KPI.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const feed = document.getElementById('feed').value;
+  const prompt = `You are the Marketing & Comms team at VPS Lakeshore Hospital, Kochi, monitoring online reputation. Here is this week's review/mention feed across Google, Practo, Facebook and social media for Lakeshore and two competitors ("Competitor A", "Competitor B"):
+
+${feed}
+
+Provide: (1) a share-of-voice table (mentions, avg rating, % share) per brand, (2) praised themes vs competitors, (3) criticised themes vs competitors, (4) two draft replies to specific reviews above, (5) three content ideas for this week. Use ₹ only if costs come up; otherwise focus on sentiment and themes.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital marketing & digital reputation manager at a 350-bed Kerala hospital with international patients.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

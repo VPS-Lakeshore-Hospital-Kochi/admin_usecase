@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Staff policy Q&A</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Staff policy Q&amp;A</h1>
+    <p>Ask a question against the hospital's HR policy excerpts and get a cited answer, or a clear "policy is silent" flag with a routing contact.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Policy excerpts (editable)</h2>
+      <textarea id="policyText" rows="16"></textarea>
+      <label>Question</label>
+      <div class="row">
+        <select id="scenario" style="flex:1">
+          <option value="el">Can I carry forward my earned leave (EL)?</option>
+          <option value="posh">How do I raise a POSH complaint?</option>
+          <option value="night">Am I eligible for night-shift allowance on a rotating roster?</option>
+        </select>
+      </div>
+      <textarea id="question" rows="2"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic policy excerpts for demonstration only — not the actual VPS Lakeshore HR manual.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Human Resources', title: 'Staff policy Q&A' });
+
+const POLICY_TEXT = `--- Leave Policy (Section 4) ---
+4.1 Earned Leave (EL): 18 days/year, credited monthly. Maximum carry-forward is 45 days; balance beyond 45 days lapses each 31-March unless leave encashment is opted.
+4.2 Casual Leave (CL): 12 days/year, non-cumulative, lapses at year end.
+4.3 Sick Leave (SL): 12 days/year, max carry-forward 24 days, medical certificate required beyond 2 consecutive days.
+
+--- Night-Shift Allowance Policy (Section 7) ---
+7.1 Staff rostered for night shift (10 PM–6 AM) for 4 or more nights in a calendar month are eligible for a flat allowance of ₹150/night.
+7.2 Rotating-roster staff qualify pro-rata based on actual night shifts logged in the biometric roster, not on shift-pattern designation alone.
+7.3 Allowance is not payable for on-call/standby hours not physically worked at the hospital.
+
+--- POSH (Prevention of Sexual Harassment) Policy (Section 9) ---
+9.1 Any employee may file a written or verbal complaint with the Internal Committee (IC) within 3 months of the incident (extendable to 6 months for sufficient cause).
+9.2 Complaints may be routed via: (a) the IC Presiding Officer, (b) HR Business Partner, or (c) the anonymous drop-box at the HR office, 2nd floor Admin Block.
+9.3 The IC must complete inquiry within 90 days of complaint receipt; strict confidentiality is maintained throughout.
+
+--- Grievance Redressal Policy (Section 11) ---
+11.1 Grievances are first raised with the immediate reporting manager; unresolved matters escalate to the department HOD within 7 working days.
+11.2 If unresolved at HOD level, the matter is referred to the Grievance Committee, which meets fortnightly.
+
+--- Code of Conduct (Section 2) ---
+2.4 Staff must not accept gifts or hospitality above ₹1,000 in value from vendors, patients or their families.
+2.7 Dual employment / moonlighting requires prior written HR approval.`;
+
+const QUESTIONS = {
+  el: 'Can I carry forward my earned leave (EL) to next year, and how much?',
+  posh: 'How do I raise a POSH complaint, and what is the timeline?',
+  night: 'I work a rotating roster with mostly day shifts but 3 nights this month — am I eligible for night-shift allowance?',
+};
+
+function loadScenario(key) {
+  document.getElementById('question').value = QUESTIONS[key];
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('policyText').value = POLICY_TEXT;
+loadScenario('el');
+
+function renderKpis() {
+  const sections = (document.getElementById('policyText').value.match(/^--- .* ---$/gm) || []).length;
+  const words = document.getElementById('policyText').value.split(/\s+/).filter(Boolean).length;
+  const box = document.getElementById('kpis');
+  box.innerHTML = `
+    <div class="kpi"><div class="label">Policy sections loaded</div><div class="value">${sections}</div></div>
+    <div class="kpi"><div class="label">Excerpt length</div><div class="value">${words} words</div></div>
+    <div class="kpi"><div class="label">Mode</div><div class="value" style="font-size:1.1rem">Answer + cite</div></div>`;
+}
+document.getElementById('policyText').addEventListener('input', renderKpis);
+renderKpis();
+
+const DEMO = {
+el: `## Answer
+
+Yes — you can carry forward Earned Leave, **up to a maximum of 45 days**. Any EL balance beyond 45 days lapses at the end of the leave year (31 March) unless you have opted for leave encashment.
+
+**Cited clause:** Leave Policy, Section 4.1 (Earned Leave).
+
+## What this doesn't cover
+
+The excerpt does not specify the exact encashment formula or deadline for opting into encashment before the 31-March cutoff — this detail is **policy-silent** in the excerpt provided.
+
+## Where to go next
+
+For the encashment opt-in process and deadline, contact your **HR Business Partner** or the Payroll desk (ext. 2210) before 15-March each year.`,
+
+posh: `## Answer
+
+You may raise a POSH complaint in **writing or verbally** with the Internal Committee (IC), within **3 months of the incident** (extendable up to 6 months for sufficient cause, at the IC's discretion). You can route it through any of three channels:
+
+1. The IC Presiding Officer directly
+2. Your HR Business Partner
+3. The anonymous drop-box at the HR office, 2nd floor Admin Block
+
+Once received, the IC is required to complete its inquiry within **90 days**, and strict confidentiality is maintained throughout the process.
+
+**Cited clause:** POSH Policy, Section 9.1–9.3.
+
+## What this doesn't cover
+
+The excerpt doesn't name the current IC Presiding Officer or list committee members — this is **policy-silent** in the text provided.
+
+## Where to go next
+
+Contact **HR (POSH Cell)**, ext. 2245, or email the confidential POSH mailbox for the current IC composition and to initiate a complaint formally.`,
+
+night: `## Answer
+
+Based on the policy as excerpted: for **rotating-roster staff**, eligibility for the night-shift allowance is determined **pro-rata on actual night shifts logged in the biometric roster** — not by your overall shift-pattern label. Since you have logged 3 night shifts this month, you would be eligible for a pro-rata allowance for those 3 nights, i.e. **3 × ₹150 = ₹450**, provided the biometric roster confirms actual attendance during the 10 PM–6 AM window.
+
+Note the general flat-rate eligibility (₹150/night) explicitly applies to staff rostered for **4 or more nights**; the excerpt states rotating-roster staff qualify **pro-rata**, which this hospital's practice reads as applying even below the 4-night threshold — but the excerpt does not give an explicit minimum-nights floor for pro-rata payment.
+
+**Cited clause:** Night-Shift Allowance Policy, Section 7.1–7.2.
+
+## What this doesn't cover
+
+Whether pro-rata payment has its own minimum-nights floor (e.g. at least 1 or 2 nights) is **policy-silent** in the excerpt.
+
+## Where to go next
+
+Confirm your biometric log and pro-rata computation with **Payroll/HR**, ext. 2210, before the monthly payroll cut-off.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const policy = document.getElementById('policyText').value;
+  const question = document.getElementById('question').value;
+  const prompt = `You are an HR policy assistant for staff at VPS Lakeshore Hospital, Kochi. Answer the employee's question using ONLY the policy excerpts below, citing the specific clause/section number.
+
+Policy excerpts:
+${policy}
+
+Employee question: ${question}
+
+If the excerpts don't fully answer the question, clearly say the policy is silent on that point, then route the employee to the right HR contact.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an HR policy Q&A assistant at a 350-bed Kerala hospital. Always cite the clause you rely on and never invent policy detail not present in the excerpt.',
+    prompt, demo: DEMO[key], manualMinutes: 15,
+  });
+});
+</script>
+</body>
+</html>

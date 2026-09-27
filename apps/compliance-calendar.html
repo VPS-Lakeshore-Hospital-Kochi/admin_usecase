@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statutory compliance calendar</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Statutory compliance calendar</h1>
+    <p>Track licences, registrations and statutory filings across the hospital and flag what needs action before it lapses.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Register of licences &amp; filings</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q3">Q3 renewals &amp; filings snapshot</option>
+          <option value="q4">Q4 renewals &amp; filings snapshot</option>
+        </select>
+      </div>
+      <label>Register (editable, one row per line: Item | Authority | Due/Expiry | Owner)</label>
+      <textarea id="register" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic data for demonstration only. Authorities, dates and owners are illustrative, not the hospital's actual compliance status.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Legal & Secretarial', title: 'Statutory compliance calendar' });
+
+const TODAY = new Date('2026-09-27');
+
+const SCENARIOS = {
+  q3: {
+    label: 'Q3 renewals & filings snapshot',
+    register: `Fire NOC (Kerala Fire & Rescue Services) | Kerala Fire & Rescue Dept | 2026-10-05 | Ms. Anjali Nair, Admin
+Kerala PCB Consent to Operate (Water & Air) | Kerala State Pollution Control Board | 2026-11-20 | Mr. Rajesh Pillai, Facilities
+Bio-Medical Waste (BMW) Authorisation | Kerala PCB | 2026-10-15 | Mr. Rajesh Pillai, Facilities
+AERB Licence — CT Scanner (Radiology) | Atomic Energy Regulatory Board | 2027-01-10 | Dr. Suresh Kumar, Radiology
+AERB Licence — Cath Lab (Cardiology) | Atomic Energy Regulatory Board | 2026-09-30 | Dr. Meera Thomas, Cardiology
+Drug Licence (Retail + Wholesale Pharmacy) | Kerala Drugs Control Dept | 2026-12-31 | Ms. Divya Menon, Pharmacy
+Blood Bank Licence | Drugs Controller / State Blood Transfusion Council | 2026-10-25 | Dr. Arun Nair, Blood Bank
+PNDT Registration (Genetic Clinic/Imaging) | District PNDT Appropriate Authority | 2026-11-05 | Dr. Suresh Kumar, Radiology
+Lift Licence (x6 lifts) | Kerala Electrical Inspectorate | 2026-10-02 | Mr. Rajesh Pillai, Facilities
+Clinical Establishment Registration | Kerala Clinical Establishments Authority | 2027-03-15 | Ms. Anjali Nair, Admin
+GST Returns (GSTR-3B, monthly) | GST Dept, Govt of India | 2026-10-20 | Mr. Biju Varghese, Finance
+TDS Return (Form 26Q, Q2) | Income Tax Dept | 2026-10-31 | Mr. Biju Varghese, Finance
+MCA Annual Filing — AOC-4 | Registrar of Companies, Kerala | 2026-10-29 | Ms. Anjali Nair, Company Secretary
+MCA Annual Filing — MGT-7 | Registrar of Companies, Kerala | 2026-11-28 | Ms. Anjali Nair, Company Secretary`,
+  },
+  q4: {
+    label: 'Q4 renewals & filings snapshot',
+    register: `Fire NOC (Kerala Fire & Rescue Services) | Kerala Fire & Rescue Dept | 2027-01-05 | Ms. Anjali Nair, Admin
+Kerala PCB Consent to Operate (Water & Air) | Kerala State Pollution Control Board | 2026-10-10 | Mr. Rajesh Pillai, Facilities
+Bio-Medical Waste (BMW) Authorisation | Kerala PCB | 2027-01-15 | Mr. Rajesh Pillai, Facilities
+AERB Licence — CT Scanner (Radiology) | Atomic Energy Regulatory Board | 2026-10-08 | Dr. Suresh Kumar, Radiology
+AERB Licence — Cath Lab (Cardiology) | Atomic Energy Regulatory Board | 2027-02-20 | Dr. Meera Thomas, Cardiology
+Drug Licence (Retail + Wholesale Pharmacy) | Kerala Drugs Control Dept | 2026-10-01 | Ms. Divya Menon, Pharmacy
+Blood Bank Licence | Drugs Controller / State Blood Transfusion Council | 2027-01-25 | Dr. Arun Nair, Blood Bank
+PNDT Registration (Genetic Clinic/Imaging) | District PNDT Appropriate Authority | 2026-09-20 | Dr. Suresh Kumar, Radiology
+Lift Licence (x6 lifts) | Kerala Electrical Inspectorate | 2027-01-02 | Mr. Rajesh Pillai, Facilities
+Clinical Establishment Registration | Kerala Clinical Establishments Authority | 2027-03-15 | Ms. Anjali Nair, Admin
+GST Returns (GSTR-3B, monthly) | GST Dept, Govt of India | 2026-10-20 | Mr. Biju Varghese, Finance
+TDS Return (Form 26Q, Q3) | Income Tax Dept | 2027-01-31 | Mr. Biju Varghese, Finance
+MCA Annual Filing — AOC-4 | Registrar of Companies, Kerala | 2026-10-29 | Ms. Anjali Nair, Company Secretary
+MCA Annual Filing — MGT-7 | Registrar of Companies, Kerala | 2026-11-28 | Ms. Anjali Nair, Company Secretary`,
+  },
+};
+
+function parseRegister(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [item, authority, due, owner] = l.split('|').map(s => s.trim());
+    const dueDate = new Date(due);
+    const days = Math.round((dueDate - TODAY) / 86400000);
+    let status;
+    if (days < 0) status = 'overdue';
+    else if (days <= 30) status = 'due30';
+    else if (days <= 90) status = 'due90';
+    else status = 'ok';
+    return { item, authority, due, owner, days, status };
+  });
+}
+
+function statusTag(status, days) {
+  if (status === 'overdue') return `<span class="tag bad">Overdue ${Math.abs(days)}d</span>`;
+  if (status === 'due30') return `<span class="tag warn">Due in ${days}d</span>`;
+  if (status === 'due90') return `<span class="tag ok">Due in ${days}d</span>`;
+  return `<span class="tag">Due in ${days}d</span>`;
+}
+
+function renderKPIs(rows) {
+  const overdue = rows.filter(r => r.status === 'overdue').length;
+  const due30 = rows.filter(r => r.status === 'due30').length;
+  const due90 = rows.filter(r => r.status === 'due90').length;
+  const el = document.getElementById('kpis');
+  el.innerHTML = `
+    <div class="kpi"><div class="label">Overdue</div><div class="value">${overdue}</div><div class="delta down">Lapsed — immediate risk</div></div>
+    <div class="kpi"><div class="label">Due within 30 days</div><div class="value">${due30}</div><div class="delta">Action this week</div></div>
+    <div class="kpi"><div class="label">Due within 90 days</div><div class="value">${due90}</div><div class="delta">Plan renewal</div></div>
+    <div class="kpi"><div class="label">Total tracked items</div><div class="value">${rows.length}</div></div>`;
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('register').value = s.register;
+  const rows = parseRegister(s.register);
+  renderKPIs(rows);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('q3');
+document.getElementById('register').addEventListener('input', () => renderKPIs(parseRegister(document.getElementById('register').value)));
+
+const DEMO = {
+q3: `## Prioritised action plan (today: 27 Sep 2026)
+
+| Priority | Item | Status | Owner |
+|---|---|---|---|
+| 1 | AERB Licence — Cath Lab | **Overdue** — must not operate cath lab without valid licence; halt elective cardiac procedures until renewed | Dr. Meera Thomas |
+| 2 | Lift Licence (x6 lifts) | Due in 5 days | Mr. Rajesh Pillai |
+| 3 | Fire NOC | Due in 8 days | Ms. Anjali Nair |
+| 4 | BMW Authorisation | Due in 18 days | Mr. Rajesh Pillai |
+| 5 | Blood Bank Licence | Due in 28 days | Dr. Arun Nair |
+| 6 | GSTR-3B (monthly) | Due in 23 days | Mr. Biju Varghese |
+| 7 | MCA AOC-4 | Due in 32 days | Ms. Anjali Nair (CS) |
+| 8 | PNDT Registration | Due in 39 days | Dr. Suresh Kumar |
+| 9 | Kerala PCB Consent to Operate | Due in 54 days | Mr. Rajesh Pillai |
+
+## Document checklist per renewal (top 3)
+
+**AERB Cath Lab licence:** RSO certificate, TLD badge records, equipment QA report, prior licence copy, floor plan with shielding certificate, application Form II.
+**Lift licence (x6):** Annual maintenance contract copy, electrical inspector's last report, load test certificate per lift, fee challan.
+**Fire NOC:** Fire audit report, hydrant/sprinkler test certificate, refilled extinguisher log, evacuation drill record, building plan approval copy.
+
+## Risk if lapsed
+
+- **AERB Cath Lab (already overdue):** Operating without a valid AERB licence is a criminal offence under the Atomic Energy Act — insurers may also deny liability cover for radiation-linked claims. Cardiology procedures using the cath lab's fluoroscopy should be paused for elective cases pending renewal confirmation.
+- **Lift licence lapse:** Kerala Electrical Inspectorate can seal lifts; patient transport between floors (incl. ICU/OT) would be disrupted.
+- **Fire NOC lapse:** NABH re-accreditation and hospital insurance renewal both require a valid Fire NOC; lapse risks a compliance flag at the next NABH surveillance visit.
+
+## Weekly reminder email (draft)
+
+*Subject: Compliance calendar — action needed this week (Legal & Secretarial)*
+
+Dear team,
+
+This week's compliance priorities: the **AERB Cath Lab licence is overdue** and needs immediate escalation to Dr. Meera Thomas and Biomedical Engineering. The **lift licence renewal (6 units)** is due in 5 days — Facilities to submit the application by Wednesday. **Fire NOC** renewal is due in 8 days; please confirm the fire audit has been scheduled.
+
+Please revert with status by EOD Friday so I can update the register for next week's review.
+
+Regards,
+Legal & Secretarial`,
+
+q4: `## Prioritised action plan (today: 27 Sep 2026)
+
+| Priority | Item | Status | Owner |
+|---|---|---|---|
+| 1 | PNDT Registration | **Overdue** — imaging services for antenatal/genetic scans must stop until re-registered; statutory offence under PC-PNDT Act | Dr. Suresh Kumar |
+| 2 | Drug Licence (Retail + Wholesale) | Due in 4 days | Ms. Divya Menon |
+| 3 | AERB Licence — CT Scanner | Due in 11 days | Dr. Suresh Kumar |
+| 4 | Kerala PCB Consent to Operate | Due in 13 days | Mr. Rajesh Pillai |
+| 5 | GSTR-3B (monthly) | Due in 23 days | Mr. Biju Varghese |
+| 6 | MCA AOC-4 | Due in 32 days | Ms. Anjali Nair (CS) |
+| 7 | Lift Licence (x6) | Due in 97 days | Mr. Rajesh Pillai |
+| 8 | Fire NOC | Due in 100 days | Ms. Anjali Nair |
+
+## Document checklist per renewal (top 3)
+
+**PNDT re-registration:** Machine-wise inventory (Form D), radiologist's MBBS/qualification proof, prior Form B certificate, undertaking against sex determination, site inspection report.
+**Drug Licence renewal:** Pharmacist registration certificate, storage/cold-chain compliance photos, stock register extract, premises fitness certificate, renewal fee challan.
+**AERB CT Scanner licence:** RSO certificate, shielding compliance report, TLD badge history, service/AMC contract, Form II application.
+
+## Risk if lapsed
+
+- **PNDT (already overdue):** Continuing antenatal ultrasound without valid registration attracts criminal liability under the PC-PNDT Act for both the hospital and the radiologist — this is the single highest-severity item this quarter and should be escalated to the Medical Director today.
+- **Drug Licence lapse:** Pharmacy cannot legally dispense or stock scheduled drugs; in-house pharmacy would need to suspend billing, disrupting inpatient medication supply.
+- **AERB CT lapse:** CT imaging must stop; diverts emergency trauma/stroke imaging to external centres, delaying care and creating a patient-safety risk.
+
+## Weekly reminder email (draft)
+
+*Subject: Compliance calendar — urgent action (Legal & Secretarial)*
+
+Dear team,
+
+**PNDT registration is overdue** — Radiology must confirm whether antenatal imaging has been paused pending re-registration; this needs Medical Director sign-off today. **Drug licence renewal is due in 4 days** — Pharmacy to submit documents by tomorrow to avoid a lapse. **AERB CT Scanner licence** is due in 11 days; RSO to confirm TLD records are current.
+
+Please treat the PNDT item as top priority and confirm status by end of day.
+
+Regards,
+Legal & Secretarial`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const registerText = document.getElementById('register').value;
+  const rows = parseRegister(registerText);
+  renderKPIs(rows);
+  const summary = rows.map(r => `${r.item} | ${r.authority} | ${r.due} | ${r.owner} | ${r.status.toUpperCase()} (${r.days}d)`).join('\n');
+  const prompt = `You are assisting Legal & Secretarial at VPS Lakeshore Hospital (LHRC), Kochi with the statutory compliance calendar. Today is 27 Sep 2026.
+
+Register (item | authority | due/expiry | owner | computed status/days):
+${summary}
+
+Provide: (1) a prioritised action plan ordered by urgency, (2) a document checklist for the top 3 most urgent renewals, (3) risk if each of the overdue/most urgent items lapses (regulatory, patient-safety, NABH implications), (4) a short draft weekly reminder email to the responsible owners. Use ₹ where relevant and keep it board-appropriate.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital company secretary / compliance officer at a 350-bed NABH-accredited Kerala hospital, expert in healthcare regulatory licensing (AERB, PCB, PNDT, drug licences) and MCA secretarial compliance.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

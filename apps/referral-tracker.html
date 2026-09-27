@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Referral & camp tracker</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Referral & camp tracker</h1>
+    <p>Track referring doctors/clinics and health camps, compute conversion and revenue per camp, and plan next quarter's outreach.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample referral & camp data</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q2">Q2 FY26 — mixed referring clinics & camps across districts</option>
+          <option value="q3">Q3 FY26 — new camps, one referring doctor going cold</option>
+        </select>
+      </div>
+      <label>Referring source / camp (row per line: name | location | referrals | IP conversions | revenue ₹)</label>
+      <textarea id="data" rows="14"></textarea>
+      <label>Computed conversion & revenue</label>
+      <div id="kpiTable"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic referral and camp data for demonstration only. Doctor, clinic and camp names are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Marketing & Comms', title: 'Referral & camp tracker' });
+
+const SCENARIOS = {
+  q2: `Dr. Suresh Kurup Clinic | Aluva | 22 | 9 | 1850000
+Sunrise Family Clinic | Thrissur | 14 | 3 | 420000
+Dr. Beena Thomas | Kochi (Kaloor) | 30 | 14 | 3120000
+Malabar Diagnostics | Kozhikode | 8 | 1 | 95000
+Camp: Cardiac Screening — Perumbavoor | Perumbavoor | 180 | 11 | 2640000
+Camp: Diabetes & Eye Check — Muvattupuzha | Muvattupuzha | 140 | 4 | 610000
+Camp: Women's Health — Angamaly | Angamaly | 95 | 7 | 1580000
+Dr. Rajeev Panicker | Alappuzha | 12 | 2 | 260000`,
+  q3: `Dr. Suresh Kurup Clinic | Aluva | 25 | 10 | 2050000
+Sunrise Family Clinic | Thrissur | 6 | 1 | 110000
+Dr. Beena Thomas | Kochi (Kaloor) | 34 | 16 | 3580000
+Camp: Cardiac Screening — Kolenchery | Kolenchery | 160 | 9 | 2180000
+Camp: Orthopaedic & Knee — Kothamangalam | Kothamangalam | 120 | 13 | 3050000
+Camp: General Health — Piravom | Piravom | 210 | 5 | 720000
+Dr. Rajeev Panicker | Alappuzha | 3 | 0 | 0
+New: Dr. Fathima Beevi Clinic | Perumbavoor | 18 | 6 | 1240000`,
+};
+
+function parseRows(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const p = l.split('|').map(s => s.trim());
+    return { name: p[0], loc: p[1], ref: Number(p[2] || 0), conv: Number(p[3] || 0), rev: Number(p[4] || 0) };
+  });
+}
+
+function renderTable(text) {
+  const rows = parseRows(text);
+  const box = document.getElementById('kpiTable');
+  box.innerHTML = `<div class="table-wrap"><table><thead><tr>
+    <th>Source</th><th>Location</th><th>Referrals</th><th>Conversions</th><th>Conv %</th><th>Revenue</th>
+  </tr></thead><tbody>${rows.map(r => {
+    const pct = r.ref ? Math.round((r.conv / r.ref) * 100) : 0;
+    const tag = pct >= 20 ? 'ok' : pct >= 8 ? 'warn' : 'bad';
+    return `<tr><td>${Hub.esc(r.name)}</td><td>${Hub.esc(r.loc)}</td><td>${r.ref}</td><td>${r.conv}</td>
+      <td><span class="tag ${tag}">${pct}%</span></td><td>${Hub.inr(r.rev)}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('data').value = SCENARIOS[key];
+  renderTable(SCENARIOS[key]);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('data').addEventListener('input', e => renderTable(e.target.value));
+loadScenario('q2');
+
+const DEMO = {
+q2: `## Top referrers this quarter
+
+| Source | Referrals | Conversions | Conv % | Revenue |
+|---|---|---|---|---|
+| Dr. Beena Thomas | 30 | 14 | 47% | ₹31.2 lakh |
+| Dr. Suresh Kurup Clinic | 22 | 9 | 41% | ₹18.5 lakh |
+| Camp: Cardiac Screening, Perumbavoor | 180 | 11 | 6% | ₹26.4 lakh |
+
+**Dr. Beena Thomas** is the strongest individual referrer by both conversion rate and revenue-per-referral (~₹2.2 lakh/referral) — worth a personal relationship-management visit and priority OPD slot access for her referrals.
+
+## Declining / weak referrers
+
+- **Malabar Diagnostics** (Kozhikode) — 8 referrals, only 1 conversion (12.5%), ₹95,000 revenue, and distance from Kochi likely hurts conversion; consider a Kozhikode-side liaison or drop if it stays flat next quarter.
+- **Dr. Rajeev Panicker** (Alappuzha) — 12 referrals but only 2 conversions (17%); check whether patients are being lost to a nearer competitor after referral.
+
+## Camps to repeat / drop
+
+- **Repeat: Cardiac Screening, Perumbavoor** — despite a low 6% conversion, absolute revenue (₹26.4 lakh) is the highest of all camps; cardiac screenings convert slowly but high-value, so repeat with better lead nurturing (SMS/call follow-up within 48 hrs).
+- **Repeat: Women's Health, Angamaly** — 7% conversion but strong ₹1.58 lakh average revenue per conversion; good ROI camp.
+- **Drop or redesign: Diabetes & Eye Check, Muvattupuzha** — 140 footfall, only 4 conversions (2.9%), ₹6.1 lakh lowest revenue-per-footfall; likely attracting screening-only crowd with no follow-through offer.
+
+## Outreach plan by district
+
+| District | Action | Owner |
+|---|---|---|
+| Ernakulam (Aluva/Kaloor) | Deepen relationship with top 2 referrers — quarterly CME sponsorship | Marketing lead |
+| Muvattupuzha | Redesign camp with an on-the-spot consult booking desk to lift conversion | Camps team |
+| Kozhikode | Evaluate whether to continue given distance and low conversion; pilot one more quarter with a dedicated coordinator | BD manager |
+| Alappuzha | Personal visit to Dr. Panicker to understand referral drop-off | Marketing lead |
+
+## Thank-you note draft (to Dr. Beena Thomas)
+
+*"Dear Dr. Thomas, thank you for continuing to trust VPS Lakeshore with your patients' care this quarter. Your referrals have consistently converted into excellent outcomes, and we'd love to have you visit our new cath lab facility — would a short visit next week work for you?"*`,
+q3: `## Top referrers this quarter
+
+| Source | Referrals | Conversions | Conv % | Revenue |
+|---|---|---|---|---|
+| Dr. Beena Thomas | 34 | 16 | 47% | ₹35.8 lakh |
+| Camp: Orthopaedic & Knee, Kothamangalam | 120 | 13 | 11% | ₹30.5 lakh |
+| Dr. Suresh Kurup Clinic | 25 | 10 | 40% | ₹20.5 lakh |
+
+**Camp: Orthopaedic & Knee, Kothamangalam** stands out — much higher conversion (11%) than typical screening camps, suggesting targeted-specialty camps (with a clear procedure ask) convert far better than general screening camps.
+
+## Declining / weak referrers — urgent
+
+- **Dr. Rajeev Panicker** (Alappuzha) — collapsed from 12 referrals/2 conversions last quarter to **3 referrals/0 conversions** this quarter. This is a red flag: likely lost to a competitor or a relationship lapse. Needs an immediate in-person visit.
+- **Sunrise Family Clinic** (Thrissur) — dropped from 14→6 referrals and 3→1 conversion; second consecutive soft quarter.
+
+## New referrer to nurture
+
+- **Dr. Fathima Beevi Clinic** (new, Perumbavoor) — 18 referrals, 6 conversions (33%) in its first quarter — a strong start; onboard with a welcome package and direct OPD coordinator contact.
+
+## Camps to repeat / drop
+
+- **Repeat & scale: Orthopaedic & Knee, Kothamangalam** — best conversion-to-footfall ratio this quarter; consider running 2 more specialty-specific camps (e.g., cardiac, knee) instead of general health camps.
+- **Drop or redesign: General Health, Piravom** — 210 footfall but only 5 conversions (2.4%), ₹720,000 revenue — lowest yield camp, likely too broad an audience.
+- **Repeat with tweaks: Cardiac Screening, Kolenchery** — moderate conversion (5.6%) but strong revenue; add same follow-up protocol as Perumbavoor camp.
+
+## Outreach plan by district
+
+| District | Action | Owner |
+|---|---|---|
+| Alappuzha | Emergency visit to Dr. Panicker within the week — understand root cause | Marketing lead |
+| Perumbavoor | Formal onboarding of Dr. Fathima Beevi Clinic; explore a joint camp | BD manager |
+| Kothamangalam | Replicate specialty-camp format for cardiac/urology next quarter | Camps team |
+| Piravom | Pause general-health camp format; redesign around a named specialty | Camps team |
+
+## Thank-you note draft (to Dr. Fathima Beevi Clinic)
+
+*"Dear Dr. Beevi, thank you for your trust in referring patients to VPS Lakeshore this quarter — your patients have had excellent outcomes with us. We'd welcome the opportunity to set up a direct coordination line for faster scheduling of your referrals going forward."*`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const data = document.getElementById('data').value;
+  const prompt = `You are the Marketing & Comms / business-development team at VPS Lakeshore Hospital, Kochi, reviewing this quarter's referring doctor/clinic and health camp performance (name | location | referrals | IP conversions | revenue ₹):
+
+${data}
+
+Provide: (1) top referrers table with conversion %, (2) declining/weak referrers to flag, (3) which camps to repeat vs drop with reasoning, (4) an outreach plan by district (table with action + owner), (5) a short thank-you note draft to the best referrer. Use ₹ lakh/crore formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital business-development / marketing manager at a 350-bed Kerala hospital running referral and health-camp outreach programs.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

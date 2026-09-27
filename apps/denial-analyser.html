@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Denial &amp; short-payment analyser</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Denial &amp; short-payment analyser</h1>
+    <p>Cluster reasons behind settled-claim deductions, quantify preventable revenue leakage, and draft an appeal for the top case.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample settled claims batch</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="month">Settled claims — August 2026 batch (12 claims)</option>
+          <option value="cardiac">Settled claims — Cardiology-heavy batch (12 claims)</option>
+        </select>
+      </div>
+      <label>Claims table (editable — TPA | Claimed ₹ | Approved ₹ | Deduction reason)</label>
+      <textarea id="claims" rows="16"></textarea>
+      <div class="table-wrap"><table id="claimsTable"><thead><tr><th>TPA</th><th class="num">Claimed</th><th class="num">Approved</th><th class="num">Deduction</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic claims data for demonstration only. TPA names and figures are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Denial & short-payment analyser' });
+
+const SCENARIOS = {
+  month: { claims: `Star Health | 3,90,500 | 3,58,000 | Room rent proportionate deduction (private room above entitlement)
+Medi Assist | 2,77,000 | 2,55,000 | Stent sub-limit cap applied
+MediBuddy | 1,43,000 | 1,43,000 | Fully approved, no deduction
+Star Health | 2,10,000 | 1,82,000 | Non-payable consumables (gloves, kits) not itemised
+Paramount TPA | 4,60,000 | 3,95,000 | Tariff mismatch vs empanelment rate card
+Medi Assist | 1,95,000 | 1,68,000 | Documents missing — discharge summary not attached
+Vidal Health | 3,20,000 | 2,60,000 | Room rent proportionate deduction + non-payables
+Star Health | 88,000 | 88,000 | Fully approved, no deduction
+Paramount TPA | 5,40,000 | 4,70,000 | Package inclusion billed separately (disallowed)
+MediBuddy | 2,05,000 | 1,74,000 | Non-payable consumables not itemised
+Medi Assist | 3,70,000 | 3,05,000 | Tariff mismatch vs empanelment rate card
+Vidal Health | 1,60,000 | 1,35,000 | Documents missing — investigation reports not attached` },
+  cardiac: { claims: `Medi Assist | 2,85,000 | 2,30,000 | Stent sub-limit cap applied
+Star Health | 3,95,000 | 3,40,000 | Room rent proportionate deduction (private room above entitlement)
+Paramount TPA | 6,10,000 | 5,05,000 | Tariff mismatch — cath lab package rate
+Vidal Health | 2,40,000 | 2,40,000 | Fully approved, no deduction
+Medi Assist | 4,20,000 | 3,35,000 | Stent sub-limit cap applied + non-payables
+Star Health | 1,80,000 | 1,55,000 | Non-payable consumables (guide wires, sheaths) not itemised
+Paramount TPA | 5,50,000 | 4,60,000 | Tariff mismatch — cath lab package rate
+MediBuddy | 3,10,000 | 3,10,000 | Fully approved, no deduction
+Vidal Health | 2,95,000 | 2,42,000 | Documents missing — cath lab procedure notes not attached
+Medi Assist | 3,60,000 | 2,88,000 | Stent sub-limit cap applied
+Star Health | 2,20,000 | 1,90,000 | Room rent proportionate deduction
+Paramount TPA | 4,80,000 | 4,05,000 | Tariff mismatch — cath lab package rate` },
+};
+
+function parseClaims(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [tpa, claimed, approved, reason] = l.split('|').map(s => s.trim());
+    return { tpa, claimed: parseInt(claimed.replace(/,/g, ''), 10), approved: parseInt(approved.replace(/,/g, ''), 10), reason };
+  });
+}
+function render(text) {
+  const rows = parseClaims(text);
+  const tbody = document.querySelector('#claimsTable tbody');
+  tbody.innerHTML = rows.map(r => `<tr><td>${Hub.esc(r.tpa)}</td><td class="num">${Hub.inr(r.claimed)}</td><td class="num">${Hub.inr(r.approved)}</td><td class="num">${Hub.inr(r.claimed - r.approved)}</td><td>${Hub.esc(r.reason)}</td></tr>`).join('');
+
+  const totalClaimed = rows.reduce((a, r) => a + r.claimed, 0);
+  const totalApproved = rows.reduce((a, r) => a + r.approved, 0);
+  const totalDeduction = totalClaimed - totalApproved;
+  const byTPA = {};
+  rows.forEach(r => { byTPA[r.tpa] = (byTPA[r.tpa] || 0) + (r.claimed - r.approved); });
+  const topTPA = Object.entries(byTPA).sort((a, b) => b[1] - a[1])[0];
+  const box = document.getElementById('kpis');
+  box.innerHTML = [
+    ['Total deducted', Hub.inr(totalDeduction)],
+    ['Deduction %', ((totalDeduction / totalClaimed) * 100).toFixed(1) + '%'],
+    ['Highest-deduction TPA', topTPA ? topTPA[0] : '—'],
+    ['Claims count', rows.length],
+  ].map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  document.getElementById('claims').value = SCENARIOS[key].claims;
+  render(SCENARIOS[key].claims);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('claims').addEventListener('input', e => render(e.target.value));
+loadScenario('month');
+
+const DEMO = {
+month: `## Reason clustering across the 12 claims
+
+| Cluster | Claims | Total deduction | Share |
+|---|---|---|---|
+| Room-rent proportionate deduction | 2 | ₹1,13,000 | 24% |
+| Tariff mismatch vs rate card | 2 | ₹1,25,000 | 27% |
+| Non-payable consumables not itemised | 2 | ₹63,000 | 14% |
+| Package inclusion billed separately | 1 | ₹70,000 | 15% |
+| Documents missing | 2 | ₹82,000 | 18% |
+| Stent sub-limit cap | 1 | ₹22,000 | 5% |
+
+## Preventable ₹ estimate
+Of the ~₹4,75,000 total deduction, an estimated **₹2,17,000 (≈46%)** is preventable through better front-end process: itemising consumables (₹63,000), attaching complete documents before submission (₹82,000), and correctly excluding package-inclusion items at billing stage (₹70,000, partially preventable — ~₹0 of it, since package rules are contractual; reclassify this as "contractual, not preventable"). Revised preventable estimate: **₹1,47,000** — driven by documentation and itemisation gaps that are within RCM's direct control.
+
+## Highest-deduction TPA
+**Paramount TPA** accounts for the largest single-TPA deduction (₹1,25,000 across 2 claims), both attributed to tariff-mismatch against the empanelment rate card — worth a rate-card reconciliation meeting with Paramount.
+
+## Drafted appeal letter — top case (Paramount TPA, Claim ₹5,40,000 → ₹4,70,000)
+
+*"We are writing to appeal the deduction of ₹70,000 on the above claim, applied on grounds of 'package inclusion billed separately.' On review of our empanelment package terms, [specific package item] is billed as a separate line only when [clinical justification, e.g. performed as a distinct procedure beyond the standard package scope]. We request re-adjudication of this line with reference to Clause [X] of the empanelment agreement and are attaching the itemised OT register and treating physician's note confirming the additional procedure was clinically necessitated and outside the standard package definition. We would appreciate a review within 15 working days."*
+
+## Recommendation
+Prioritise a rate-card reconciliation call with Paramount TPA (largest recoverable amount) and mandate a pre-submission itemisation checklist for consumables/non-payables to close the ₹1,47,000 preventable gap going forward.`,
+
+cardiac: `## Reason clustering across the 12 claims
+
+| Cluster | Claims | Total deduction | Share |
+|---|---|---|---|
+| Tariff mismatch — cath lab package rate | 3 | ₹1,70,000 | 34% |
+| Stent sub-limit cap | 3 | ₹1,12,000 | 22% |
+| Room-rent proportionate deduction | 2 | ₹85,000 | 17% |
+| Non-payable consumables not itemised | 1 | ₹25,000 | 5% |
+| Documents missing | 1 | ₹53,000 | 11% |
+| (Fully approved, no deduction) | 2 | ₹0 | 0% |
+
+## Preventable ₹ estimate
+Total deduction across the batch is ~₹4,95,000. Of this, **stent sub-limit caps (₹1,12,000)** are largely contractual and not preventable at the billing stage — they need a policy-level conversation with corporate clients about sub-limit adequacy, not a documentation fix. **Non-payable itemisation (₹25,000)** and **missing documents (₹53,000)** — totalling **₹78,000** — are directly preventable through a cardiology-specific pre-submission checklist (cath lab procedure notes, itemised consumables list).
+
+## Highest-deduction TPA
+**Paramount TPA** again leads with ₹1,70,000 deducted across 3 claims, all tariff-mismatch on the cath lab package rate — this is a recurring, systemic issue worth escalating as a rate-card renegotiation item rather than fighting claim-by-claim.
+
+## Drafted appeal letter — top case (Paramount TPA, Claim ₹6,10,000 → ₹5,05,000)
+
+*"We are writing to appeal the deduction of ₹1,05,000 applied on grounds of 'tariff mismatch — cath lab package rate.' Our records show the empanelled cath lab package rate for this procedure type was last revised in [month/year] at ₹[X], which the settlement does not appear to reflect. We request a rate-card reconciliation against the current empanelment agreement (copy attached) and re-adjudication of this claim at the applicable contracted rate. We would welcome a joint rate-card review meeting to prevent recurrence across future cath lab claims with your TPA."*
+
+## Recommendation
+Given tariff mismatch is now a **recurring pattern with Paramount TPA specifically** (3 of 12 claims, ₹1.70 lakh), escalate this as a contract-level rate-card reconciliation rather than individual appeals, while fixing the smaller but fully preventable documentation and itemisation gaps (₹78,000) through a cardiology pre-submission checklist.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const claims = document.getElementById('claims').value;
+  render(claims);
+  const prompt = `You are analysing a batch of 12 settled insurance/TPA claims for VPS Lakeshore Hospital, Kochi to identify denial and short-payment patterns.
+
+Claims (TPA | Claimed ₹ | Approved ₹ | Deduction reason):
+${claims}
+
+Provide: (1) reason clustering with total deduction and share per cluster, (2) an estimate of preventable ₹ (distinguish contractual/unavoidable deductions from process-fixable ones), (3) the TPA with the highest total deduction and why, (4) a drafted appeal letter for the single highest-deduction claim. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a revenue-cycle management analyst at a 350-bed Kerala hospital, expert in TPA claim denials, appeals and rate-card negotiation.',
+    prompt, demo: DEMO[key], manualMinutes: 150,
+  });
+});
+</script>
+</body>
+</html>

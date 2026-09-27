@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendor contract summariser</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Vendor contract summariser</h1>
+    <p>Paste an AMC/CMC or service contract and get key terms, risks and renewal alerts in seconds.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample contract</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="mri">MRI CMC — Siemens Healthineers</option>
+          <option value="house">Housekeeping outsourcing — CleanCare FM Services</option>
+          <option value="lab">Lab reagent rental — Diagnova Systems</option>
+        </select>
+      </div>
+      <label>Contract text (editable)</label>
+      <textarea id="contractText" rows="14"></textarea>
+      <div class="row" style="margin-top:12px"><button class="primary" id="runBtn">Run with Claude</button></div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Contract register — days to expiry</h2>
+    <div id="register"></div>
+  </div>
+  <p class="footer-note">Synthetic contract text and vendor names for demonstration only.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Purchase & Stores', title: 'Vendor contract summariser' });
+
+const SCENARIOS = {
+  mri: {
+    text: `COMPREHENSIVE MAINTENANCE CONTRACT (CMC)
+Vendor: Siemens Healthineers India Pvt Ltd
+Equipment: MRI Magnetom Skyra 3T, S/N SMR-2291
+Contract period: 01-Apr-2026 to 31-Mar-2027 (annual, auto-renewal unless terminated 90 days prior)
+Contract value: ₹38,50,000 per annum + GST
+Escalation clause: 6% YoY from year 2 onwards
+Uptime guarantee: 95% monthly uptime; penalty of 1% of quarterly CMC value per 1% shortfall below guarantee, capped at 10% of quarterly value
+Response time: 4 hours for critical breakdown (Kochi metro), 24 hours for parts requiring import
+Scope: preventive maintenance (quarterly), all parts except helium refill and RF coil physical damage, unlimited breakdown calls
+Exclusions: cryogen/helium top-up billed separately (~₹4,80,000/refill), consumable coils on physical damage
+Exit clause: either party may terminate with 90 days written notice; vendor to hand over service manuals and calibration records on exit
+Payment terms: quarterly advance, 30 days grace before penalty interest of 1.5%/month applies`,
+  },
+  house: {
+    text: `HOUSEKEEPING & FACILITY MANAGEMENT SERVICES AGREEMENT
+Vendor: CleanCare FM Services Pvt Ltd
+Scope: Housekeeping, waste management support, pest control coordination across 350-bed facility, 45 deployed staff
+Contract period: 01-Jan-2026 to 31-Dec-2026, auto-renews for 1 year unless either party gives 60 days notice
+Monthly billing: ₹18,20,000 (staff cost + supervision + consumables markup 12%)
+Escalation: linked to Kerala minimum wage notification, typically 8-10% annually, applied automatically on notification
+Manpower guarantee: minimum 42 of 45 staff present daily; shortfall billed back at 1.5x daily rate per absent staff
+Penalty clause: NABH-linked hygiene audit score below 85% for 2 consecutive months triggers 5% monthly fee reduction
+Termination for cause: immediate on 2 consecutive failed hygiene audits or any reportable infection-control lapse
+Exit transition: 30 days handover period, vendor must retain deployed staff during transition if hospital requests
+Insurance: vendor to maintain workmen compensation policy, certificate renewable annually — last submitted Jan-2026`,
+  },
+  lab: {
+    text: `REAGENT RENTAL & EQUIPMENT PLACEMENT AGREEMENT
+Vendor: Diagnova Systems Ltd
+Equipment placed: 2x automated biochemistry analysers, 1x CLIA immunoassay analyser (rent-free, cost recovered via reagent purchase)
+Contract period: 01-Jul-2025 to 30-Jun-2028 (3-year, no auto-renewal — fresh RFQ required at expiry)
+Minimum reagent commitment: ₹14,00,000 per quarter; shortfall billed as penalty at 100% of shortfall value
+Price protection: reagent rates locked for 3 years, no escalation clause
+Uptime guarantee: 98% analyser uptime; below this, vendor provides loaner instrument within 48 hours at no cost
+Exit clause: on expiry or termination, vendor removes equipment within 15 days; hospital has right to retain critical stock of reagents already purchased
+Termination for convenience: hospital may exit with 6 months notice if minimum commitment not met for 2 consecutive quarters by mutual agreement
+Data ownership: all patient result data remains hospital property; vendor's middleware access revoked within 24 hours of exit notice`,
+  },
+};
+
+const REGISTER = [
+  { name: 'MRI CMC — Siemens Healthineers', expiry: '2027-03-31' },
+  { name: 'Housekeeping — CleanCare FM Services', expiry: '2026-12-31' },
+  { name: 'Lab reagent rental — Diagnova Systems', expiry: '2028-06-30' },
+  { name: 'Cath lab AMC — Philips Healthcare', expiry: '2026-11-15' },
+  { name: 'Lift AMC — Kone Elevators', expiry: '2026-10-05' },
+  { name: 'Dialysis water plant AMC — AquaPure Systems', expiry: '2027-01-20' },
+];
+
+function renderRegister() {
+  const today = new Date('2026-09-27');
+  const rows = REGISTER.map(r => {
+    const days = Math.round((new Date(r.expiry) - today) / 86400000);
+    const tag = days < 45 ? ['bad', 'Renew now'] : days < 90 ? ['warn', 'Alert'] : ['ok', 'On track'];
+    return `<tr><td>${Hub.esc(r.name)}</td><td>${r.expiry}</td><td class="num">${days}</td><td><span class="tag ${tag[0]}">${tag[1]}</span></td></tr>`;
+  }).join('');
+  document.getElementById('register').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Contract</th><th>Expiry</th><th class="num">Days left</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+renderRegister();
+
+function loadScenario(key) {
+  document.getElementById('contractText').value = SCENARIOS[key].text;
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('mri');
+
+const DEMO = {
+mri: `## Key terms
+
+| Term | Value |
+|---|---|
+| Annual value | ₹38,50,000 + GST |
+| Escalation | 6% YoY from year 2 |
+| Uptime guarantee | 95% monthly, penalty 1% of quarterly value per 1% shortfall (capped 10%) |
+| Response time | 4 hrs critical (Kochi), 24 hrs for imported parts |
+| Exit notice | 90 days written notice, either party |
+| Auto-renewal | Yes, unless terminated 90 days prior |
+
+## Risks
+- **Helium/cryogen top-up excluded** (~₹4.8L/refill) — a major MRI cost is off-contract; budget separately, don't assume CMC covers it.
+- **24-hour response for imported parts** can mean multi-day MRI downtime on major component failure — no penalty escalation defined beyond the uptime formula for extended import delays.
+- **Auto-renewal trap**: must issue termination notice 90 days before 31-Mar-2027 (i.e. by ~31-Dec-2026) if renegotiating rates, or it silently renews at the escalated rate.
+
+## Renewal-alert dates
+- **31-Dec-2026** — last date to serve 90-day termination/renegotiation notice.
+- **31-Mar-2027** — contract expiry / auto-renewal trigger.
+
+## Negotiation points
+1. Push for a cryogen top-up cap or bundled annual allowance instead of pure pass-through.
+2. Request a stricter SLA for imported-parts response (e.g., loaner coil/part within 72 hours) given no MRI backup on site.
+3. Cap escalation at CPI or 4%, whichever is lower, rather than a flat 6%.`,
+
+house: `## Key terms
+
+| Term | Value |
+|---|---|
+| Monthly billing | ₹18,20,000 (cost + 12% markup) |
+| Escalation | Tied to Kerala minimum wage notification (~8-10%/yr), automatic |
+| Manpower guarantee | 42/45 staff daily; shortfall billed back at 1.5x |
+| Penalty | 5% monthly fee cut if NABH hygiene score <85% for 2 consecutive months |
+| Termination for cause | Immediate on 2 failed audits or infection-control lapse |
+| Auto-renewal | Yes, unless 60 days notice given |
+
+## Risks
+- **Escalation is automatic and uncapped** — tied directly to government wage notifications with no negotiated ceiling; budget variance risk each year.
+- **Insurance certificate overdue for review** — last submitted Jan-2026, renewal date not explicit; verify current workmen's comp coverage before next incident.
+- **NABH-linked penalty only bites after 2 consecutive months** — a single bad audit month has no financial consequence, weakening the deterrent.
+
+## Renewal-alert dates
+- **~01-Nov-2026** — last date to serve 60-day non-renewal notice ahead of 31-Dec-2026 expiry.
+- **31-Dec-2026** — contract expiry / auto-renewal trigger.
+
+## Negotiation points
+1. Request insurance certificate renewal proof as a standing quarterly deliverable, not just at contract signing.
+2. Negotiate a single-month hygiene-score penalty trigger (not 2 consecutive) to sharpen the incentive.
+3. Cap wage-linked escalation pass-through at the notified percentage only — exclude any additional markup increase.`,
+
+lab: `## Key terms
+
+| Term | Value |
+|---|---|
+| Minimum commitment | ₹14,00,000/quarter, 100% shortfall penalty |
+| Price protection | Reagent rates locked for full 3-year term |
+| Uptime guarantee | 98%, loaner instrument within 48 hrs if breached |
+| Contract term | 3 years, no auto-renewal (fresh RFQ at expiry) |
+| Exit | Vendor removes equipment within 15 days; hospital retains reagent stock |
+
+## Risks
+- **100% shortfall penalty is steep** — if lab volumes dip (e.g., seasonal, competitor referral loss), the hospital pays the full gap with no partial credit or carry-forward.
+- **No escalation clause works in hospital's favour** but also means vendor has no revenue upside — watch for service-quality drift over the 3-year term as a way vendor recovers margin.
+- **Data/middleware exit clause is strong** (24-hour revocation) — good for data governance, but confirm operational continuity plan if vendor uninstalls before hospital LIS/HIS integration is repointed.
+
+## Renewal-alert dates
+- **~31-Dec-2027** — target date to begin fresh RFQ process (6 months ahead of 30-Jun-2028 expiry, since no auto-renewal exists).
+- **30-Jun-2028** — contract expiry, equipment removal begins.
+
+## Negotiation points
+1. Negotiate a lower shortfall penalty tier (e.g., 50-75% of gap) with volume review at 18 months.
+2. Add a mid-term service-level review checkpoint given the long 3-year no-escalation term.
+3. Request an explicit reagent stock buffer clause so hospital isn't left short during the 15-day equipment removal window.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const text = document.getElementById('contractText').value;
+  const prompt = `You are assisting Purchase & Stores at VPS Lakeshore Hospital, Kochi in reviewing a vendor AMC/CMC/service contract before renewal or negotiation.
+
+Contract text:
+${text}
+
+Provide: (1) a key-terms table (term, value, escalation, uptime guarantee, penalties, exit clause, auto-renewal), (2) risks to flag, (3) renewal-alert dates (when notice must be served and when the contract expires), (4) negotiation points for the next cycle. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital procurement/contracts officer at a 350-bed Kerala hospital, expert in AMC/CMC and outsourced-service contract review.',
+    prompt, demo: DEMO[key], manualMinutes: 60,
+  });
+});
+</script>
+</body>
+</html>

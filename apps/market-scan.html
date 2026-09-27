@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Competitor & market scan</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Competitor &amp; market scan</h1>
+    <p>Turn pasted news snippets and peer financials into a board-ready positioning and strategy note for LHRC.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Market notes &amp; peer financials</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="fy26">FY26 half-year scan</option>
+          <option value="fy25">FY25 full-year scan</option>
+        </select>
+      </div>
+      <label>Pasted news / notes (editable)</label>
+      <textarea id="notes" rows="9"></textarea>
+      <label>Financials table (editable, one per line: Name | Beds | Revenue ₹Cr | EBITDA % | ARPOB ₹/day | New launches)</label>
+      <textarea id="financials" rows="6"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Computed comparison</h2>
+    <div id="compTable"></div>
+  </div>
+
+  <p class="footer-note">Synthetic data for demonstration only. "Peer A" and "Peer B" are fictional composites, not real Kochi hospitals. No real competitor names used.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Management Office', title: 'Competitor & market scan' });
+
+const SCENARIOS = {
+  fy26: {
+    label: 'FY26 half-year scan',
+    notes: `- Local business daily (Sep 2026): "Peer A – Kochi" announced a new 60-bed oncology block, opening Q1 FY27, positioned as the city's largest dedicated cancer centre.
+- Trade press: "Peer B – Kochi" tied up with a Gulf insurance TPA network to expand cashless access for GCC-origin patients, mirroring a channel LHRC already has via Maldives/GCC referral desks.
+- Industry note: Kerala's medical tourism inflow (Maldives, GCC, East Africa) grew ~14% YoY in H1 FY26, driven by cardiac and transplant referrals.
+- Peer A is reportedly raising private equity to fund the oncology expansion; no confirmed valuation yet.
+- LHRC's robotics-assisted surgery programme (urology, gynaec) remains the only one of its kind among the three in Kochi as of this scan.
+- Anecdotal: Peer B has faced 2 relevant regulatory queries this year (AERB-related) reported in local press, unconfirmed impact on operations.`,
+    financials: `LHRC – Kochi | 350 | 612 | 24.5 | 14200 | Robotics-assisted surgery programme (urology, gynaec); transplant accreditation renewal
+Peer A – Kochi | 400 | 545 | 21.0 | 12800 | New 60-bed oncology block (opening Q1 FY27)
+Peer B – Kochi | 300 | 468 | 19.5 | 11600 | Gulf TPA tie-up for cashless GCC patient access`,
+  },
+  fy25: {
+    label: 'FY25 full-year scan',
+    notes: `- Annual industry report: Kochi private tertiary care market grew ~11% YoY in FY25, with cardiac and orthopaedic bundles as the fastest-growing service lines.
+- "Peer A – Kochi" completed a 250-crore capex cycle in FY25 (new diagnostic tower), reporting a temporary EBITDA dip due to depreciation and ramp-up costs.
+- "Peer B – Kochi" opened a second outpatient satellite centre in a fast-growing Kochi suburb, aimed at capturing referral volume before it reaches tertiary hospitals.
+- LHRC's international patient volume (Maldives/GCC/Africa) grew ~18% YoY in FY25, now ~9% of total inpatient revenue.
+- NABH re-accreditation cycle completed for LHRC in FY25 with no major non-conformities; unclear if peers hold equivalent accreditation currency.
+- Anecdotal press mentions both peers exploring insurance-company equity investment for expansion capital; no confirmed deals.`,
+    financials: `LHRC – Kochi | 340 | 545 | 23.0 | 13100 | NABH re-accreditation completed; international patient desk expansion
+Peer A – Kochi | 380 | 498 | 17.5 | 11900 | Completed new diagnostic tower (250 Cr capex, FY25)
+Peer B – Kochi | 280 | 402 | 20.0 | 10800 | New OP satellite centre in Kochi suburb`,
+  },
+};
+
+function parseFinancials(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [name, beds, revenue, ebitdaPct, arpob, launch] = l.split('|').map(s => s.trim());
+    return { name, beds: Number(beds), revenue: Number(revenue), ebitdaPct: Number(ebitdaPct), arpob: Number(arpob), launch };
+  });
+}
+
+function renderComparison(rows) {
+  const lhrc = rows.find(r => r.name.startsWith('LHRC'));
+  let html = '<div class="table-wrap"><table><thead><tr><th>Player</th><th class="num">Beds</th><th class="num">Revenue (₹Cr)</th><th class="num">EBITDA %</th><th class="num">EBITDA (₹Cr)</th><th class="num">ARPOB (₹/day)</th><th class="num">Rev/bed (₹Cr)</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    const ebitdaCr = (r.revenue * r.ebitdaPct / 100).toFixed(1);
+    const revPerBed = (r.revenue / r.beds).toFixed(2);
+    const isLhrc = r.name.startsWith('LHRC');
+    html += `<tr${isLhrc ? ' style="font-weight:700"' : ''}><td>${Hub.esc(r.name)}</td><td class="num">${r.beds}</td><td class="num">${r.revenue}</td><td class="num">${r.ebitdaPct}%</td><td class="num">${ebitdaCr}</td><td class="num">${r.arpob.toLocaleString('en-IN')}</td><td class="num">${revPerBed}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  if (lhrc) {
+    const others = rows.filter(r => r !== lhrc);
+    const avgPeerMargin = others.reduce((s, r) => s + r.ebitdaPct, 0) / others.length;
+    const marginGap = (lhrc.ebitdaPct - avgPeerMargin).toFixed(1);
+    html += `<p class="compl">LHRC EBITDA margin is <b>${marginGap >= 0 ? '+' : ''}${marginGap} pts</b> vs the peer average (${avgPeerMargin.toFixed(1)}%). LHRC ARPOB leads both peers by ₹${(lhrc.arpob - Math.max(...others.map(o=>o.arpob))).toLocaleString('en-IN')}/day at the nearest peer.</p>`;
+  }
+  document.getElementById('compTable').innerHTML = html;
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('notes').value = s.notes;
+  document.getElementById('financials').value = s.financials;
+  renderComparison(parseFinancials(s.financials));
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('fy26');
+document.getElementById('financials').addEventListener('input', () => {
+  try { renderComparison(parseFinancials(document.getElementById('financials').value)); } catch (e) {}
+});
+
+const DEMO = {
+fy26: `## Positioning summary
+
+LHRC leads the Kochi tertiary-care set on both profitability and yield: **24.5% EBITDA margin** (vs 21.0% Peer A, 19.5% Peer B) and the highest **ARPOB at ₹14,200/day**, on a 350-bed base that is leaner than Peer A's 400 beds but more productive per bed. LHRC's robotics-assisted surgery programme remains a genuine point of difference — neither peer has announced a comparable capability. The Maldives/GCC/Africa referral franchise is a structural advantage that Peer B is now explicitly trying to replicate via its Gulf TPA tie-up.
+
+## Threats
+
+1. **Peer A's oncology expansion (60 beds, Q1 FY27)** could reposition it as the city's cancer-care destination, drawing referral volume LHRC does not currently compete hard for.
+2. **Peer B's Gulf TPA tie-up** directly targets LHRC's differentiated GCC patient channel — if it gains traction, LHRC's international-patient growth rate could slow.
+3. Peer A raising PE capital suggests it is preparing for further aggressive capacity expansion, which LHRC should track for potential bed-count catch-up in 18-24 months.
+
+## Opportunities
+
+1. Peer B's reported AERB-related regulatory queries create a near-term credibility gap LHRC can use to court GCC insurers and TPAs currently weighing both hospitals.
+2. Kerala's 14% YoY growth in medical tourism inflow (cardiac/transplant-led) plays directly to LHRC's existing strengths — an opportunity to grow share without new capex, purely via referral desk expansion in Maldives/GCC/East Africa.
+3. LHRC's robotics programme is a marketing and referral-desk asset that is currently under-leveraged in international patient acquisition materials.
+
+## 3 strategic moves
+
+1. **Defend the GCC/Maldives channel** — fast-track LHRC's own direct TPA/insurer relationships in the Gulf before Peer B's tie-up matures, using the AERB query concern as a credibility differentiator in insurer conversations.
+2. **Selectively enter oncology** — evaluate a smaller, differentiated oncology service line (e.g., cardiac-oncology overlap, or a day-care chemo unit) rather than competing bed-for-bed with Peer A's 60-bed block, preserving capital discipline.
+3. **Market the robotics moat** — build a dedicated international-patient-facing campaign around robotics-assisted urology/gynaec, positioning LHRC as the only Kochi hospital offering it, ahead of any peer response.
+
+## Board one-pager
+
+**LHRC market position (H1 FY26):** #1 on EBITDA margin (24.5%) and ARPOB (₹14,200/day) among tracked Kochi peers; only Kochi provider with a robotics-assisted surgery programme. Two watch-items: Peer A's 60-bed oncology block (Q1 FY27) and Peer B's Gulf TPA tie-up targeting LHRC's core GCC channel. **Recommended board action:** approve exploratory scoping for a differentiated oncology day-care service and accelerate direct Gulf insurer/TPA relationships in H2 FY26, ahead of Peer B's channel maturing.`,
+
+fy25: `## Positioning summary
+
+LHRC ended FY25 as the most profitable of the three tracked Kochi players — **23.0% EBITDA margin** and **₹13,100/day ARPOB**, both ahead of Peer A (17.5%, ₹11,900) and Peer B (20.0%, ₹10,800) — while carrying the smallest bed base (340 vs Peer A's 380). International patient revenue (Maldives/GCC/Africa) grew 18% YoY and now represents ~9% of inpatient revenue, a genuine structural differentiator neither peer has matched publicly. LHRC's NABH re-accreditation with no major non-conformities also strengthens its position with international insurers who weight accreditation currency heavily.
+
+## Threats
+
+1. **Peer A's ₹250 Cr diagnostic tower** completed in FY25 signals a capacity and technology upgrade cycle; even with a temporary EBITDA dip from depreciation, this could reset the competitive baseline on imaging/diagnostics once fully ramped.
+2. **Peer B's new OP satellite centre** is a referral-capture play aimed upstream of tertiary admissions — if successful, it could reduce the organic referral pool reaching LHRC and Peer A alike.
+3. Both peers reportedly exploring insurer equity investment could bring in capital and payer-relationship advantages LHRC does not currently have.
+
+## Opportunities
+
+1. Kerala's 11% market growth, led by cardiac and orthopaedic bundles, plays to LHRC's existing clinical strengths (cardiology, robotics) — organic growth capacity exists without matching peers' capex cycles.
+2. LHRC's NABH accreditation currency (freshly renewed, no major NCs) is a differentiator that can be marketed directly to GCC/Maldives insurers and corporate TPAs who require current accreditation for empanelment.
+3. Peer A's temporary EBITDA dip from its capex cycle creates a 12-18 month window where LHRC's margin/ARPOB lead is likely to widen further — useful for competitive positioning with payers and referral partners.
+
+## 3 strategic moves
+
+1. **Double down on the international patient franchise** — formalise a dedicated Maldives/GCC/Africa growth plan targeting >12% of inpatient revenue within 2 years, building on the 18% YoY growth already achieved.
+2. **Counter Peer B's satellite play with a referral-desk network** — rather than building competing OP centres, strengthen direct referral relationships with feeder clinics/GPs in the suburbs Peer B is targeting.
+3. **Market the accreditation and clinical differentiation together** — package NABH currency + robotics + transplant capability into a single positioning narrative for insurer and corporate-TPA renewals happening in FY26.
+
+## Board one-pager
+
+**LHRC market position (FY25):** Highest EBITDA margin (23.0%) and ARPOB (₹13,100/day) among tracked Kochi peers, on the smallest bed base; international patient revenue grew 18% YoY to ~9% of inpatient revenue. Two watch-items: Peer A's completed diagnostic-tower capex cycle and Peer B's new OP satellite centre. **Recommended board action:** approve a formal international-patient growth plan and a suburb-facing referral-desk initiative for FY26, capitalising on the current margin lead before peers' capex cycles mature.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const notes = document.getElementById('notes').value;
+  const finText = document.getElementById('financials').value;
+  const rows = parseFinancials(finText);
+  renderComparison(rows);
+  const finSummary = rows.map(r => `${r.name}: ${r.beds} beds, ₹${r.revenue} Cr revenue, ${r.ebitdaPct}% EBITDA margin, ARPOB ₹${r.arpob}/day, notable: ${r.launch}`).join('\n');
+  const prompt = `You are assisting the Management Office at VPS Lakeshore Hospital (LHRC), Kochi with a competitor and market scan for the board.
+
+Pasted market notes:
+${notes}
+
+Peer financials:
+${finSummary}
+
+Provide: (1) a positioning summary for LHRC vs the two Kochi peers, (2) threats, (3) opportunities, (4) 3 concrete strategic moves, (5) a short board-ready one-pager summarising position and recommended board action. Use ₹ lakh/crore formatting. Do not use real hospital names — refer only to the peers as given.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital strategy / management office analyst at a 350-bed NABH-accredited Kerala hospital, expert in competitive positioning and board communication.',
+    prompt, demo: DEMO[key], manualMinutes: 240,
+  });
+});
+</script>
+</body>
+</html>

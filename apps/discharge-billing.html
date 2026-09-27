@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discharge bill checker</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Discharge bill checker</h1>
+    <p>Cross-check the interim IP bill against the clinical service log before final approval, to catch unbilled items and duplicate/misclassified charges.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample discharge case</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="ortho">Ortho TKR — discharge in 2 hours</option>
+          <option value="cardiac">Cardiac PTCA — discharge tomorrow AM</option>
+        </select>
+      </div>
+      <label>Interim IP bill lines (editable)</label>
+      <textarea id="bill" rows="10"></textarea>
+      <label>Clinical service log (editable)</label>
+      <textarea id="log" rows="8"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic case data for demonstration only. No real patient identifiers.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Discharge bill checker' });
+
+const SCENARIOS = {
+  ortho: {
+    bill: `Room rent (5 days, private AC @ ₹6,500/day): ₹32,500
+Implant (cemented titanium, standard): ₹1,45,000
+OT & anaesthesia charges: ₹58,000
+Surgeon & anaesthetist professional fee: ₹95,000
+Physiotherapy (in-patient, 3 sessions billed): ₹7,200
+Pharmacy & consumables (lump sum): ₹41,000
+Investigations (pre-op panel + X-ray): ₹9,800
+TOTAL BILLED SO FAR: ₹3,88,500`,
+    log: `Day 1: Admission, pre-op investigations (CBC, RFT, LFT, ECG, X-ray knee AP/Lat) — all done.
+Day 2: TKR surgery performed by Dr. Anil Menon. OT consumables issued: 1x cemented titanium implant, bone cement 2 packs, surgical drape kit, sterile gown set x4.
+Day 2 (post-op): 1 unit of physiotherapy session (bedside mobilisation).
+Day 3: Physiotherapy session #2 (standing/walker training). Pharmacy: IV antibiotics (3 doses), analgesics.
+Day 4: Physiotherapy session #3. Pharmacy: oral antibiotics, analgesics continued.
+Day 5: Physiotherapy session #4 (stair-climbing practice) — nursing notes confirm session done. Wound dressing change x2 (Day 3 and Day 5) — dressing kit charged separately per hospital tariff, not yet on bill.
+Discharge planned: Day 5 evening, TPA cashless case (Star Health), room-rent entitlement is Twin Sharing per policy.`,
+  },
+  cardiac: {
+    bill: `ICU/CCU charges (2 days @ ₹9,500/day): ₹19,000
+Drug-eluting stent (1x, imported): ₹65,000
+Cath lab / procedure charges: ₹1,10,000
+Cardiologist & anaesthetist professional fee: ₹45,000
+Medicines & investigations: ₹31,000
+TOTAL BILLED SO FAR: ₹2,70,000`,
+    log: `Day 1 (Emergency, 02:40 hrs): Admission, STEMI protocol, ECG + troponin x2, emergency PTCA performed same night — 1 DES stent (LAD).
+Cath lab consumables issued: 1x DES stent, 2x guiding catheters, 1x guidewire, 2x balloon catheters, contrast dye 100ml — only stent currently reflected in "cath lab/procedure charges" as a lump sum; guiding catheters and balloons not separately itemised on bill.
+Day 1 (post-procedure): Shifted to CCU, continuous cardiac monitoring.
+Day 2: Repeat troponin, ECG, stable — plan to shift to step-down room this evening, discharge tomorrow AM.
+Nursing note: 1 additional troponin repeat (Day 2 evening) not yet reflected in investigations line.
+Policy: Corporate GHI via Medi Assist, DES stent sub-limit ₹45,000 per policy schedule (patient/family informed verbally, not yet documented in file).`,
+  },
+};
+
+function computeKPIs() {
+  const bill = document.getElementById('bill').value;
+  const log = document.getElementById('log').value;
+  const totalM = bill.match(/TOTAL BILLED SO FAR:\s*₹\s*([\d,]+)/);
+  const total = totalM ? parseInt(totalM[1].replace(/,/g, ''), 10) : 0;
+  const physioLogSessions = (log.match(/[Pp]hysiotherapy session #?\d/g) || []).length;
+  const physioBilledM = bill.match(/Physiotherapy.*?(\d+)\s*sessions? billed/i);
+  const physioBilled = physioBilledM ? parseInt(physioBilledM[1], 10) : null;
+  const dressingMentioned = /dressing.*not yet on bill|not yet reflected|not.*separately itemised/i.test(log);
+  const box = document.getElementById('kpis');
+  const rows = [
+    ['Bill total so far', Hub.inr(total)],
+    ['Physio sessions in log', physioLogSessions || '—'],
+    physioBilled !== null ? ['Physio sessions billed', physioBilled] : ['Items flagged unbilled', dressingMentioned ? '1+' : '0'],
+    ['Discharge readiness', 'Pending checks'],
+  ];
+  box.innerHTML = rows.map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('bill').value = s.bill;
+  document.getElementById('log').value = s.log;
+  computeKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('bill').addEventListener('input', computeKPIs);
+document.getElementById('log').addEventListener('input', computeKPIs);
+loadScenario('ortho');
+
+const DEMO = {
+ortho: `## Unbilled items detected
+- **Physiotherapy: only 3 of 4 sessions billed** (₹7,200 for 3 sessions ≈ ₹2,400/session). Session #4 (Day 5, stair-climbing) is confirmed in nursing notes but missing from the bill — add ~₹2,400 before final invoice.
+- **Wound dressing changes x2 (Day 3, Day 5)** — explicitly noted in the log as "charged separately per hospital tariff, not yet on bill." Confirm hospital tariff rate and add both dressing charges.
+
+## Duplicate charges
+- None detected in the current lines — implant, OT, professional fee and room rent each appear once and match the service log (1 surgery, 1 implant).
+
+## Package inclusions wrongly billed
+- No package-inclusion errors detected — pharmacy/consumables line is a lump sum; recommend itemising bone cement and drape/gown sets separately for insurer transparency, though this is a presentation issue, not an overbilling one.
+
+## TPA non-payables to collect from patient
+- **Room-rent proportionate deduction risk:** Patient is in a Private AC room but policy entitlement is Twin Sharing. Star Health will likely apply a proportionate deduction on room rent *and* related charges (OT, professional fees) — estimate the patient's out-of-pocket exposure (~₹15,000–20,000) and inform the family **before** discharge billing is finalised, not after.
+- Standard non-payables (surgical drape kit, gown sets) embedded in the pharmacy lump sum should be flagged as likely non-payable and collected from the patient if the TPA disallows them.
+
+## Final-approval readiness
+**Not ready.** Add the missing physiotherapy session and 2 dressing charges (~₹2,700–3,500 combined) to the bill, and get written (not verbal) confirmation to the family on the room-rent proportionate deduction exposure before submitting the final bill for TPA approval. Estimated delay to fix: 15–20 minutes.`,
+
+cardiac: `## Unbilled items detected
+- **Cath lab consumables under-itemised:** guiding catheters (2x), balloon catheters (2x), guidewire and contrast dye are issued per the log but only the stent appears distinctly — the rest are folded into a lump "cath lab/procedure charges" line. Itemise before submission; TPAs frequently query lump cath-lab lines and this delays discharge.
+- **Repeat troponin (Day 2 evening)** — confirmed in nursing note but not yet reflected in the investigations line. Add before finalising.
+
+## Duplicate charges
+- None detected — one stent, one procedure episode; ICU/CCU days (2) match the log's Day 1–Day 2 stay.
+
+## Package inclusions wrongly billed
+- No inclusion errors identified in current lines; however, confirm cath lab package definition with Medi Assist to ensure guiding catheters/balloons are payable separately and not deemed "included" in the procedure charge — a common ambiguity that causes post-approval disputes if not clarified now.
+
+## TPA non-payables to collect from patient
+- **DES stent sub-limit gap (highest priority):** Policy sub-limit is ₹45,000 but the stent costs ₹65,000 — a **₹20,000 shortfall** the patient/family must be informed of. The log notes this was communicated verbally only; **get written acknowledgment on file before discharge** to avoid a dispute at billing.
+- Contrast dye and non-DES consumables may be partially non-payable depending on Medi Assist's cath-lab schedule — flag for TPA desk confirmation.
+
+## Final-approval readiness
+**Not ready.** Complete itemisation of cath lab consumables, add the missing repeat troponin charge, and — most importantly — obtain a signed patient acknowledgment of the ₹20,000 stent sub-limit shortfall before discharge tomorrow morning. Estimated time to close: 20–30 minutes, should be done tonight, not at discharge.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const bill = document.getElementById('bill').value;
+  const log = document.getElementById('log').value;
+  computeKPIs();
+  const prompt = `You are checking a patient's interim IP bill against the clinical service log at VPS Lakeshore Hospital, Kochi before final discharge billing/TPA approval.
+
+Interim IP bill lines:
+${bill}
+
+Clinical service log:
+${log}
+
+Identify: (1) unbilled items (services in the log not reflected in the bill), (2) duplicate charges, (3) package inclusions wrongly billed separately, (4) TPA non-payables that must be collected from the patient, (5) an overall final-approval readiness verdict with what must be fixed first. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced IP billing auditor at a 350-bed Kerala hospital, expert in reconciling clinical service logs against discharge bills before TPA final approval.',
+    prompt, demo: DEMO[key], manualMinutes: 40,
+  });
+});
+</script>
+</body>
+</html>

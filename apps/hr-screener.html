@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resume screener & interview kit</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .scn-btns { margin-bottom: 10px; }
+  .scn-btns button { margin-right: 6px; margin-bottom: 6px; }
+  .scn-btns button.active { background: var(--magenta); border-color: var(--magenta); color: #fff; }
+  .cand-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 14px; }
+  .cand { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .cand .cname { font-weight: 700; color: var(--navy); }
+  .cand .cmeta { color: var(--muted); font-size: 12px; }
+  textarea#jdInput { min-height: 110px; font-size: 13px; }
+  textarea.resume { min-height: 130px; font-size: 12.5px; font-family: ui-monospace, monospace; }
+  .cand-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Resume screener & interview kit</h1>
+    <p>Pick a role, review/edit the job description and candidate resumes, then let Claude produce a ranked
+      shortlist with evidence, red flags, tailored interview questions and a draft email to the hiring manager.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample input — role & candidates</h2>
+      <div class="row scn-btns" id="scnBtns"></div>
+      <label for="jdInput">Job description (editable)</label>
+      <textarea id="jdInput" spellcheck="false"></textarea>
+      <label>Candidate resumes (editable — one per box)</label>
+      <div class="cand-grid" id="candGrid"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+        <span class="small" style="color:var(--muted)">Bias-safe screening: age, gender, religion, marital status and photos are ignored by design.</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude's shortlist & interview kit</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Candidate snapshot (deterministic, no Claude)</h2>
+    <p class="small" style="color:var(--muted);margin:0 0 8px">Quick keyword-based checks computed directly from the resume text — not a substitute for Claude's judged shortlist below.</p>
+    <div class="table-wrap"><table id="snapTable"></table></div>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · all candidate names and resumes are fictional sample data.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Human Resources', title: 'Resume screener & interview kit' });
+
+const SCENARIOS = {
+  nurse: {
+    label: 'Staff Nurse — ICU',
+    jd: `POSITION: Staff Nurse - ICU (Adult & Cardiac)
+DEPARTMENT: Critical Care | REPORTS TO: ICU Nurse Manager | LOCATION: VPS Lakeshore Hospital, Kochi
+
+Must-have:
+- BSc Nursing (or GNM with 3+ yrs ICU experience)
+- Valid registration with Kerala Nurses & Midwives Council (KNMC) or eligible for transfer
+- BLS certification mandatory; ACLS strongly preferred
+- Minimum 1 year ICU/Critical Care experience (post-registration)
+- Willingness to work rotational shifts incl. nights
+
+Good to have:
+- Experience with ventilator management, IABP, CRRT
+- Exposure to post-cardiac-surgery or transplant ICU care
+- Basic computer literacy for HIS/EMR charting
+
+We value: patient safety mindset, calm under pressure, teamwork, communication with families of critically ill patients.`,
+    candidates: [
+      { name: 'Anjali Mathew', text: `ANJALI MATHEW | Kochi, Kerala | 4 years experience
+EDUCATION: BSc Nursing, Believers Church Medical College, 2020-2024 (First Class)
+REGISTRATION: Kerala Nurses & Midwives Council - Reg No. KNMC/2024/xxxxx (Active)
+CERTIFICATIONS: BLS (AHA, renewed 2026), ACLS (2025)
+EXPERIENCE:
+- Staff Nurse, ICU - Lisie Hospital, Kochi (Aug 2024 - Present, 2 yrs 1 mo)
+  Adult ICU incl. post-cardiac-surgery patients, ventilator management, arterial lines, CRRT assist
+- Staff Nurse Intern, Medical ICU - Believers Church Medical College (rotational, 2023-2024)
+NOTICE PERIOD: 30 days (as per current employer)
+CURRENT CTC: Rs 3.6 LPA | EXPECTED: Rs 4.5 LPA
+NOTE: Applying to relocate closer to family in Ernakulam; currently commuting 90 min daily.` },
+      { name: 'Bincy Thomas', text: `BINCY THOMAS | Thrissur, Kerala | 6 years experience
+EDUCATION: GNM (General Nursing & Midwifery), St. James School of Nursing, 2016-2019
+REGISTRATION: Kerala Nurses & Midwives Council - Reg No. KNMC/2019/xxxxx (Active, renewed 2025)
+CERTIFICATIONS: BLS (2024, expired - renewal pending per candidate note)
+EXPERIENCE:
+- Staff Nurse, ICU - Jubilee Mission Medical College, Thrissur (2019-2022, 3 yrs)
+- Staff Nurse, General Ward - Private clinic, Thrissur (2022-2023, 11 months)
+- Staff Nurse, ICU - Amala Institute (2023-2025, 1 yr 8 mo)
+- Currently: Home nursing / freelance (2025-present, ~10 months)
+NOTICE PERIOD: Immediate
+CURRENT CTC: Not disclosed | EXPECTED: Rs 4.0 LPA
+NOTE: Resume shows 4 role changes in 6 years, including an 11-month gap into general ward and a recent gap into freelance home nursing.` },
+      { name: 'Christina Joseph', text: `CHRISTINA JOSEPH | Kottayam, Kerala | 1.5 years experience
+EDUCATION: BSc Nursing, Caritas College of Nursing, 2019-2023
+REGISTRATION: Karnataka Nursing Council (worked in Bengaluru post-graduation); KNMC transfer application submitted, in process (per candidate)
+CERTIFICATIONS: BLS (2023), ACLS - not certified
+EXPERIENCE:
+- Staff Nurse, ICU - Manipal Hospital, Bengaluru (2023-2025, 1 yr 8 mo)
+  Adult ICU, ventilator care, sepsis protocols
+NOTICE PERIOD: 60 days
+CURRENT CTC: Rs 3.8 LPA | EXPECTED: Rs 4.2 LPA
+NOTE: Moving back to Kerala for family reasons. KNMC registration transfer typically takes 4-8 weeks.` },
+      { name: 'Divya Nair', text: `DIVYA NAIR | Kochi, Kerala | 9 years experience
+EDUCATION: BSc Nursing, Kerala University, 2013-2017; Post-basic diploma in Critical Care Nursing, 2018
+REGISTRATION: Kerala Nurses & Midwives Council - Reg No. KNMC/2017/xxxxx (Active)
+CERTIFICATIONS: BLS (2026), ACLS (2026), CCRN-eligible (US cert, self-study, not sat for exam)
+EXPERIENCE:
+- Senior Staff Nurse, Cardiac ICU - Periyar Institute of Medical Sciences, Kochi (2017-Present, 9 yrs)
+  Post-CABG and post-transplant ICU care, IABP management, mentoring junior nurses, night shift in-charge
+NOTICE PERIOD: 90 days (senior role, per hospital policy)
+CURRENT CTC: Rs 5.8 LPA | EXPECTED: Rs 6.5 LPA
+NOTE: Strong tenure and cardiac-ICU specialisation directly relevant; higher expected CTC and longer notice than JD band typically budgets for.` },
+    ],
+  },
+  tpa: {
+    label: 'Senior Executive — Insurance/TPA Desk',
+    jd: `POSITION: Senior Executive - Insurance & TPA Desk
+DEPARTMENT: Revenue Cycle Management | REPORTS TO: Manager - Insurance & TPA | LOCATION: VPS Lakeshore Hospital, Kochi
+
+Must-have:
+- Graduate (any discipline); commerce/finance background preferred
+- Minimum 3 years' experience in hospital TPA/insurance desk, specifically cashless pre-authorisation and claims
+- Working knowledge of IRDAI cashless guidelines (incl. 1-hour authorisation turnaround norms), major TPA portals (MDIndia, Paramount, Medi Assist, Vidal Health), and PMJAY/govt scheme billing
+- Strong follow-up and documentation discipline; comfortable with denial/rejection management and appeals
+
+Good to have:
+- Exposure to international patient insurance/embassy billing (GCC, Maldives)
+- Experience with HIS billing modules
+- Team handling / SOP documentation experience
+
+We value: attention to detail, patience with repetitive follow-up, ability to explain financial matters to anxious families.`,
+    candidates: [
+      { name: 'Rahul Menon', text: `RAHUL MENON | Kochi, Kerala | 5 years experience
+EDUCATION: B.Com, Mahatma Gandhi University, 2016-2019
+EXPERIENCE:
+- Senior Executive, TPA Desk - Harbourview Medical Centre, Kochi (2021-Present, 5 yrs)
+  Cashless pre-auth for MDIndia, Paramount, Medi Assist, Vidal Health portals; denial management;
+  handled international patient insurance queries (Maldives, GCC embassy-sponsored cases) for 2 years
+- Executive, Billing - Harbourview Medical Centre (2019-2021, 2 yrs, prior to above role)
+NOTICE PERIOD: 30 days
+CURRENT CTC: Rs 4.2 LPA | EXPECTED: Rs 5.2 LPA
+NOTE: Direct competitor hospital in same city, directly relevant international-patient TPA experience.` },
+      { name: 'Sona Varghese', text: `SONA VARGHESE | Ernakulam, Kerala | 2 years experience
+EDUCATION: BBA, St. Teresa's College, 2018-2021; PG Diploma in Hospital Administration, 2021-2022
+EXPERIENCE:
+- Executive, Insurance Desk - Renai Medicity, Kochi (2023-Present, 2 yrs)
+  Cashless pre-auth (general, not incl. PMJAY); basic TPA portal navigation
+NOTICE PERIOD: 45 days
+CURRENT CTC: Rs 3.0 LPA | EXPECTED: Rs 3.8 LPA
+NOTE: JD asks for minimum 3 years TPA-specific experience; candidate has 2 years. No PMJAY or international-patient exposure mentioned.` },
+      { name: 'Mohammed Faisal', text: `MOHAMMED FAISAL | Kozhikode, Kerala | 4 years experience
+EDUCATION: B.Com, Calicut University, 2015-2018
+EXPERIENCE:
+- Team Lead, TPA & Insurance - Baby Memorial Hospital, Kozhikode (2022-Present, 4 yrs, promoted from Executive in 2023)
+  Team of 4 executives; PMJAY billing; SOP documentation for pre-auth turnaround; MDIndia, Star Health portals
+- Executive, Front Office Billing - Baby Memorial Hospital (2018-2022, 4 yrs)
+NOTICE PERIOD: 60 days
+CURRENT CTC: Rs 4.6 LPA | EXPECTED: Rs 5.5 LPA
+NOTE: Strong team-handling and SOP background; no direct international/embassy billing experience mentioned; would need to relocate from Kozhikode to Kochi.` },
+      { name: 'Priya Pillai', text: `PRIYA PILLAI | Thiruvananthapuram, Kerala | 3.5 years experience
+EDUCATION: M.Com, Kerala University, 2017-2019
+EXPERIENCE:
+- Executive, TPA Desk - Malabar Heart Institute Hospital, Thiruvananthapuram (2022-Present, 3.5 yrs)
+  Cashless pre-auth incl. IRDAI 1-hour turnaround compliance tracking, denial appeals, PMJAY billing
+- Junior Accountant, Retail firm (2019-2022, 3 yrs, unrelated to healthcare)
+NOTICE PERIOD: 30 days
+CURRENT CTC: Rs 3.9 LPA | EXPECTED: Rs 4.6 LPA
+NOTE: Meets minimum experience bar; would relocate from Thiruvananthapuram to Kochi; no stated international-patient billing exposure.` },
+    ],
+  },
+  developer: {
+    label: 'IT — Full-stack Developer (HIS integration)',
+    jd: `POSITION: Full-stack Developer - HIS Integration
+DEPARTMENT: IT | REPORTS TO: IT Manager - Applications | LOCATION: VPS Lakeshore Hospital, Kochi
+
+Must-have:
+- B.Tech/BE/MCA in Computer Science or related field
+- 3+ years professional experience with Java (Spring Boot) and React
+- Experience integrating with third-party/vendor systems via REST APIs, HL7 or similar interoperability standards
+- Working SQL skills (any RDBMS); understanding of data security for healthcare (PII/PHI handling)
+- Comfortable working with existing HIS (Hospital Information System) vendors and troubleshooting integration issues
+
+Good to have:
+- Prior experience in healthcare/HIS/EMR domain specifically
+- Exposure to HL7/FHIR standards
+- DevOps basics (CI/CD, Docker)
+
+We value: ownership, clear documentation, careful handling of patient data, ability to work with non-technical clinical staff.`,
+    candidates: [
+      { name: 'Arjun Krishnan', text: `ARJUN KRISHNAN | Kochi, Kerala | 4 years experience
+EDUCATION: B.Tech Computer Science, Cochin University of Science & Technology, 2018-2022
+EXPERIENCE:
+- Full-stack Developer - Suvida Health Tech, Bengaluru (remote from Kochi, 2022-Present, 4 yrs)
+  Java Spring Boot + React on a hospital EMR product; built HL7 v2 interface engine integrations
+  with 6 partner hospitals; SQL (PostgreSQL); handled PHI encryption-at-rest implementation
+NOTICE PERIOD: 30 days
+CURRENT CTC: Rs 9.5 LPA | EXPECTED: Rs 12 LPA
+NOTE: Direct healthcare/HIS/HL7 experience, strong technical match; expected CTC likely above a typical hospital IT band - to be discussed with Finance.` },
+      { name: 'Neha Suresh', text: `NEHA SURESH | Kochi, Kerala | 3 years experience
+EDUCATION: MCA, Cochin University, 2019-2022
+EXPERIENCE:
+- Software Engineer - Fintech startup, Kochi (2022-Present, 3 yrs)
+  Java Spring Boot + React, REST API integrations with payment gateways, SQL (MySQL)
+  No healthcare-domain or HL7/FHIR experience
+NOTICE PERIOD: 60 days
+CURRENT CTC: Rs 7.2 LPA | EXPECTED: Rs 8.5 LPA
+NOTE: Strong core stack match (Java/React/REST/SQL) but zero healthcare-domain or interoperability-standard exposure; would need ramp-up time on HL7/FHIR concepts.` },
+      { name: 'Vishnu Prasad', text: `VISHNU PRASAD | Thrissur, Kerala | 6 years experience
+EDUCATION: BE Computer Science, Anna University, 2014-2018
+EXPERIENCE:
+- Senior Developer - Multiple short stints:
+  - TechNova Solutions (2018-2019, 10 mo) - Java
+  - QuickBuild IT Services (2019-2020, 8 mo) - Java/React
+  - Freelance (2020-2021, 9 mo)
+  - Digital Health Systems Pvt Ltd (2021-2023, 1 yr 6 mo) - HIS vendor, Java Spring Boot, HL7 v2 basics
+  - Currently: Bright Cloud Technologies (2023-Present, 2 yrs 3 mo) - Java/React, e-commerce domain
+NOTICE PERIOD: 30 days
+CURRENT CTC: Rs 8.0 LPA | EXPECTED: Rs 9.5 LPA
+NOTE: Some past HIS/HL7 exposure (2021-2023) but frequent job changes (5 employers in 6 years) - notable job-hopping pattern to probe in interview.` },
+      { name: 'Fathima Rasheed', text: `FATHIMA RASHEED | Kochi, Kerala | 2.5 years experience
+EDUCATION: B.Tech Information Technology, Government Engineering College, Thrissur, 2017-2021
+EXPERIENCE:
+- Full-stack Developer - Malabar Digital Solutions, Kozhikode (2021-Present, 2.5 yrs)
+  Java (Spring Boot) + React; internal ERP tools; SQL (Oracle); no third-party API/interoperability
+  integration experience mentioned specifically, though has built internal REST APIs
+NOTICE PERIOD: 45 days
+CURRENT CTC: Rs 6.0 LPA | EXPECTED: Rs 7.5 LPA
+NOTE: Below the JD's 3-year minimum by 6 months; solid core stack; no HIS/HL7/FHIR exposure; would need relocation from Kozhikode to Kochi.` },
+    ],
+  },
+};
+
+let current = 'nurse';
+const scnBtns = document.getElementById('scnBtns');
+scnBtns.innerHTML = Object.entries(SCENARIOS).map(([k, v]) =>
+  `<button type="button" data-k="${k}" class="${k === current ? 'active' : ''}">${Hub.esc(v.label)}</button>`).join('');
+
+const jdInput = document.getElementById('jdInput');
+const candGrid = document.getElementById('candGrid');
+
+function loadScenario(key) {
+  current = key;
+  scnBtns.querySelectorAll('button').forEach(x => x.classList.toggle('active', x.dataset.k === key));
+  jdInput.value = SCENARIOS[key].jd;
+  candGrid.innerHTML = SCENARIOS[key].candidates.map((c, i) =>
+    `<div><label style="margin-top:0">Candidate ${i + 1}: ${Hub.esc(c.name)}</label>
+     <textarea class="resume" data-idx="${i}" spellcheck="false">${Hub.esc(c.text)}</textarea></div>`).join('');
+  document.getElementById('out').innerHTML = '';
+  renderSnapshot();
+}
+scnBtns.querySelectorAll('button').forEach(b => b.onclick = () => loadScenario(b.dataset.k));
+loadScenario(current);
+
+function getCandidateTexts() {
+  return Array.from(candGrid.querySelectorAll('textarea.resume')).map(t => t.value);
+}
+
+function renderSnapshot() {
+  const texts = getCandidateTexts();
+  const rows = texts.map(t => {
+    const nameMatch = t.match(/^([A-Z][A-Za-z\s.]+?)\s*\|/);
+    const name = nameMatch ? nameMatch[1].trim() : 'Candidate';
+    const expMatch = t.match(/\|\s*([\d.]+)\s*years? experience/i);
+    const exp = expMatch ? expMatch[1] + ' yr' : '—';
+    const noticeMatch = t.match(/NOTICE PERIOD:\s*([^\n]+)/i);
+    const notice = noticeMatch ? noticeMatch[1].trim() : '—';
+    const jobsCount = (t.match(/\n-\s/g) || []).length;
+    const hasBLS = /BLS/i.test(t);
+    const hasKNMC = /KNMC|Kerala Nurses/i.test(t);
+    const flags = [];
+    if (jobsCount >= 4) flags.push('multiple roles');
+    if (/expired|pending|process|not disclosed/i.test(t)) flags.push('cert/status pending');
+    return { name, exp, notice, jobsCount, hasBLS, hasKNMC, flags };
+  });
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Candidates</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Avg. experience</div><div class="value">${(rows.reduce((s,r)=>s+parseFloat(r.exp)||0,0)/rows.length).toFixed(1)} yr</div></div>
+    <div class="kpi"><div class="label">With flags to probe</div><div class="value">${rows.filter(r=>r.flags.length).length}</div></div>`;
+  document.getElementById('snapTable').innerHTML = `
+    <thead><tr><th>Candidate</th><th class="num">Experience</th><th>Notice period</th><th>Prior roles listed</th><th>Flags to probe</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td>${Hub.esc(r.name)}</td>
+      <td class="num">${r.exp}</td>
+      <td>${Hub.esc(r.notice)}</td>
+      <td>${r.jobsCount}</td>
+      <td>${r.flags.length ? `<span class="tag warn">${r.flags.map(Hub.esc).join(', ')}</span>` : '<span class="tag ok">none obvious</span>'}</td>
+    </tr>`).join('')}</tbody>`;
+}
+candGrid.addEventListener('input', renderSnapshot);
+
+const DEMOS = {
+  nurse: `## Ranked shortlist — Staff Nurse, ICU (Adult & Cardiac)
+
+| Rank | Candidate | Fit score | Key evidence |
+|---|---|---|---|
+| 1 | **Divya Nair** | 92/100 | 9 yrs, current Senior Staff Nurse in Cardiac ICU at Periyar Institute (post-CABG, post-transplant, IABP) — directly matches "good to have" list almost entirely; active KNMC, BLS+ACLS current |
+| 2 | **Anjali Mathew** | 84/100 | 2+ yrs ICU incl. post-cardiac-surgery, active KNMC & BLS/ACLS, shortest notice (30 days), stable single-employer tenure |
+| 3 | **Christina Joseph** | 68/100 | Solid ICU experience (Manipal Bengaluru) but KNMC registration only "in process" — must-have gap; no ACLS |
+| 4 | **Bincy Thomas** | 51/100 | Meets years-of-experience but BLS expired, 4 employer changes in 6 years incl. non-ICU gap and current freelance status — needs probing |
+
+### Must-have gaps
+- **Christina Joseph**: KNMC registration not yet active (currently Karnataka-registered, transfer "in process"). Must have written proof of transfer completion or expected date before an offer can be confirmed for a clinical role — this is a hard compliance gate, not negotiable.
+- **Bincy Thomas**: BLS certification shown as expired with "renewal pending" — cannot be rostered for ICU duty until renewed and evidenced.
+
+### Red flags to probe at interview
+- **Bincy Thomas**: 4 role changes in 6 years including an 11-month general-ward stint and a recent ~10-month gap into freelance home nursing. Ask directly about reasons for each move and the freelance gap — could be personal circumstances (fully acceptable) or a pattern worth understanding before a critical-care placement.
+- **Divya Nair**: Expects ₹6.5 LPA and a 90-day notice (per current employer's senior-role policy) — both above what this vacancy may be budgeted/timed for. Confirm budget flexibility and whether a shorter notice can be negotiated with her current employer before proceeding, so time isn't lost.
+- **Anjali Mathew**: Stated relocation reason (family, shorter commute) is a positive retention signal — low flight-risk hire.
+
+### Tailored interview questions
+
+**Divya Nair** (Cardiac ICU specialist)
+1. Walk us through your approach to a patient in the first 24 hours post-transplant — what are you watching for that a general ICU nurse might miss?
+2. You'd be moving from a senior/in-charge role to a staff nurse role here — how do you see that transition, and what would keep you engaged long-term?
+3. Given the notice period and compensation gap, what would it take for you to join within 6-8 weeks?
+
+**Anjali Mathew** (strong, cost-effective fit)
+1. Describe a time a ventilator alarm or CRRT alert needed your immediate judgment before the physician arrived — what did you do?
+2. How do you communicate with anxious family members of a critically ill cardiac patient, especially when the news isn't good?
+3. Your current CTC is ₹3.6L and expectation ₹4.5L — talk us through how you arrived at that number.
+
+### Draft shortlist email to Hiring Manager
+
+**To:** ICU Nurse Manager
+**Subject:** Shortlist — Staff Nurse (ICU) requisition
+
+Hi [Manager],
+
+Screened 4 applications against the ICU requisition. Recommend proceeding to interview with, in priority order:
+
+1. **Divya Nair** — 9 yrs, current Cardiac ICU senior nurse at Periyar Institute, strongest technical match, but note her expected CTC (₹6.5L) and 90-day notice may need budget/timeline discussion before we invest interview time.
+2. **Anjali Mathew** — 2+ yrs directly relevant post-cardiac-surgery ICU experience, clean record, 30-day notice, within typical band.
+
+Christina Joseph is promising but her KNMC registration transfer is still in process — worth a screening call to get a realistic timeline before committing an interview slot. Bincy Thomas has an expired BLS certification and a fragmented recent work history; recommend a screening call first to understand the gaps before deciding on an interview.
+
+All four resumes and evidence notes attached for your reference.
+
+Regards,
+HR Team
+
+*Screening applied consistently across candidates without regard to age, gender, marital status or religion — evaluation based solely on qualifications, registration status, and relevant clinical experience.*`,
+
+  tpa: `## Ranked shortlist — Senior Executive, Insurance/TPA Desk
+
+| Rank | Candidate | Fit score | Key evidence |
+|---|---|---|---|
+| 1 | **Rahul Menon** | 90/100 | 5 yrs TPA desk incl. 2 yrs on international patient (Maldives/GCC) insurance — directly matches JD's "good to have" and hospital's international patient volume |
+| 2 | **Mohammed Faisal** | 78/100 | 4 yrs incl. promotion to Team Lead, PMJAY billing + SOP documentation experience; would need relocation |
+| 3 | **Priya Pillai** | 71/100 | Meets minimum experience, IRDAI 1-hour compliance tracking specifically mentioned; would need relocation from Trivandrum |
+| 4 | **Sona Varghese** | 48/100 | Only 2 yrs vs. JD's 3-year minimum; no PMJAY or international-patient exposure — below bar |
+
+### Must-have gaps
+- **Sona Varghese**: Falls short of the stated 3-year minimum TPA-specific experience (has 2 years) and has no PMJAY billing exposure mentioned. Does not meet the must-have bar as currently written — consider only if the pipeline is thin, with a lower starting band.
+
+### Red flags to probe at interview
+- **Rahul Menon**: Currently at a direct competitor hospital in the same city — standard for this market, but confirm no active non-compete/notice complications, and be mindful of confidentiality boundaries on both sides during interview.
+- **Mohammed Faisal**: Would need to relocate from Kozhikode to Kochi — confirm relocation willingness and timeline concretely, not just on paper, given the 60-day notice already adds time.
+- **Priya Pillai**: 3 years in an unrelated retail accounting role before entering healthcare TPA work — not a red flag itself, but worth understanding the career-change motivation and whether it signals stability going forward.
+
+### Tailored interview questions
+
+**Rahul Menon** (top match)
+1. Walk us through a recent cashless case for a GCC or Maldivian patient — what made the embassy/insurance coordination different from a domestic case?
+2. IRDAI mandates a 1-hour cashless turnaround — describe a case where you nearly missed that window and what you did.
+3. What would you want to know about our international patient volumes before joining, and what's your notice situation with your current employer?
+
+**Mohammed Faisal** (team-lead potential)
+1. You've led a team of 4 — describe an SOP you personally wrote or revised for pre-auth turnaround, and what problem it solved.
+2. This role is an individual-contributor Senior Executive position, not a team-lead role initially — how do you feel about that, and where do you see growth here?
+3. What's driving your interest in relocating from Kozhikode to Kochi at this stage?
+
+### Draft shortlist email to Hiring Manager
+
+**To:** Manager - Insurance & TPA Desk
+**Subject:** Shortlist — Senior Executive, Insurance/TPA Desk
+
+Hi [Manager],
+
+Screened 4 applications. Recommend interviewing, in priority order:
+
+1. **Rahul Menon** — 5 yrs TPA desk experience at a comparable Kochi hospital, including 2 years specifically on international patient insurance (Maldives/GCC), which is a strong match for our patient mix. Currently at a competitor hospital — worth confirming notice terms early.
+2. **Mohammed Faisal** — 4 yrs incl. a promotion to Team Lead and SOP documentation experience; would need to relocate from Kozhikode, so timeline needs confirming.
+
+Priya Pillai is a solid third option if either of the above doesn't work out, though she'd also need to relocate. Sona Varghese does not currently meet the 3-year minimum experience requirement in the JD — not recommending for this cycle.
+
+Regards,
+HR Team
+
+*Screening applied consistently without regard to age, gender, marital status or religion — evaluation based solely on relevant experience and role fit.*`,
+
+  developer: `## Ranked shortlist — Full-stack Developer, HIS Integration
+
+| Rank | Candidate | Fit score | Key evidence |
+|---|---|---|---|
+| 1 | **Arjun Krishnan** | 91/100 | 4 yrs Java/React on a hospital EMR product, built HL7 v2 integrations with 6 partner hospitals, PHI encryption experience — near-exact domain match |
+| 2 | **Neha Suresh** | 66/100 | Strong core stack (Java/React/REST/SQL) but zero healthcare/HL7/FHIR exposure — would need ramp-up |
+| 3 | **Vishnu Prasad** | 58/100 | Some past HIS/HL7 exposure (2021-23) but 5 employers in 6 years — significant job-hopping pattern to probe |
+| 4 | **Fathima Rasheed** | 54/100 | Below the 3-year minimum by 6 months; solid stack but no HIS/interoperability exposure; would need relocation |
+
+### Must-have gaps
+- **Fathima Rasheed**: 2.5 years experience vs. the JD's 3-year minimum — a modest gap, not disqualifying on its own, but combined with no HIS/HL7 exposure it places her behind the field for this specific integration-heavy role.
+
+### Red flags to probe at interview
+- **Vishnu Prasad**: 5 employers in 6 years (10-month, 8-month, 9-month freelance, 1.5-year, and current 2.25-year stints). Ask directly about the reasons behind each move — some may be genuine (contract roles, freelance by choice), but the pattern needs a clear, consistent explanation before considering for a role expected to own long-term HIS integration relationships.
+- **Arjun Krishnan**: Expected CTC (₹12L) is likely above a typical hospital IT band for this level — flag to Finance/IT Manager before interviewing to avoid a late-stage mismatch, and be transparent with the candidate about the band early.
+- **Neha Suresh**: No healthcare-domain exposure at all — if shortlisted, interview should specifically probe her ability to learn PHI-handling discipline and interoperability concepts quickly, since the "good to have" skills are entirely absent from her resume.
+
+### Tailored interview questions
+
+**Arjun Krishnan** (top match)
+1. Walk us through the HL7 v2 interface engine you built — what message types did you handle, and how did you deal with a partner hospital sending malformed segments?
+2. How did you approach PHI encryption-at-rest — what was your threat model, and what would you do differently at a smaller IT team like ours?
+3. Our budget band for this role is below your stated expectation — what flexibility do you have, and what matters most to you beyond compensation?
+
+**Vishnu Prasad** (needs job-hopping clarified)
+1. Take us through each move between 2018 and now — what specifically drove each transition?
+2. During your HIS-vendor stint (2021-2023), what HL7 message types or integration issues did you personally resolve?
+3. What would make this role different from your last four, such that you'd stay and build long-term ownership here?
+
+### Draft shortlist email to Hiring Manager
+
+**To:** IT Manager - Applications
+**Subject:** Shortlist — Full-stack Developer, HIS Integration
+
+Hi [Manager],
+
+Screened 4 applications against the HIS integration requisition. Recommend interviewing, in priority order:
+
+1. **Arjun Krishnan** — near-exact domain match: 4 yrs building HL7 v2 integrations on a hospital EMR product, with PHI security experience. Flagging early that his expected CTC (₹12L) is likely above our typical band for this level — worth confirming budget flexibility with Finance before scheduling, so we don't lose time.
+2. **Neha Suresh** — strong core Java/React/SQL stack, but zero healthcare-domain exposure; a reasonable second option if we're comfortable with a ramp-up period on HL7/FHIR concepts.
+
+Vishnu Prasad has some relevant past HIS experience but a pattern of five employers in six years that needs to be understood clearly at interview before proceeding further. Fathima Rasheed is 6 months short of the stated experience minimum and has no HIS exposure — not recommending for this specific requisition, but worth keeping on file for a more general dev role.
+
+Regards,
+HR Team
+
+*Screening applied consistently without regard to age, gender, marital status or religion — evaluation based solely on technical fit and relevant experience.*`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const scenario = SCENARIOS[current].label;
+  const jd = jdInput.value;
+  const candTexts = getCandidateTexts();
+  const candBlock = candTexts.map((t, i) => `--- Candidate ${i + 1} ---\n${t}`).join('\n\n');
+  Hub.run({
+    out: '#out',
+    button: '#runBtn',
+    manualMinutes: 90,
+    system: 'You are an HR screening assistant for VPS Lakeshore Hospital, Kochi. You screen resumes against a job description, produce a ranked shortlist with fit scores and specific evidence, flag must-have gaps and red flags (career gaps, job-hopping, missing registrations/certifications), write tailored interview questions per top candidate, and draft a shortlist email to the hiring manager. You explicitly practice bias-safe screening: ignore age, gender, religion, marital status and any non-job-relevant personal detail, and state this in your output.',
+    prompt: `Role: ${scenario}\n\nJob description:\n${jd}\n\nCandidate resumes:\n${candBlock}\n\nPlease produce:\n1. A ranked shortlist table with a fit score (0-100) and specific evidence per candidate.\n2. Must-have gaps for any candidate who doesn't meet a mandatory requirement.\n3. Red flags to probe at interview (gaps, job-hopping, notice period issues, expectation mismatches) — factual and fair, not speculative about protected characteristics.\n4. Tailored interview questions (2-3 each) for the top 2 candidates.\n5. A draft shortlist email to the hiring manager summarising the recommendation.\n6. A short closing note confirming bias-safe screening practice was followed (ignoring age, gender, religion, marital status).`,
+    demo: DEMOS[current],
+  });
+});
+</script>
+</body>
+</html>

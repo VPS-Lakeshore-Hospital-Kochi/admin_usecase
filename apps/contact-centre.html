@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Call centre & WhatsApp agent</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .chat-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; margin: 6px 0; font-size: 14px; }
+  .chat-bubble.patient { background: var(--accent-soft); margin-right: auto; }
+  .chat-bubble.agent { background: var(--ok-bg); margin-left: auto; text-align: right; }
+  .kb-item { font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .kb-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Call centre & WhatsApp agent</h1>
+    <p>Draft a reply, tag intent, suggest a booking slot, and flag anything clinical/urgent to escalate — for incoming patient messages in English, Malayalam or Manglish.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Knowledge base + incoming message</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="usg">Manglish — USG prep question</option>
+          <option value="pkg">Malayalam — health check package pricing</option>
+          <option value="urgent">English — chest pain, needs escalation</option>
+        </select>
+      </div>
+      <label>Knowledge base (editable)</label>
+      <textarea id="kb" rows="8"></textarea>
+      <label>Incoming message (editable)</label>
+      <textarea id="msg" rows="3"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+      <label>Chat preview</label>
+      <div class="card" id="chatBox" style="background:var(--bg)"></div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic messages for demonstration only. Not for real clinical use — always route urgent/clinical queries to the ER line.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Patient Experience', title: 'Call centre & WhatsApp agent' });
+
+const KB = `OPD timings: Mon–Sat 8:00 AM–7:00 PM, Sunday 9:00 AM–1:00 PM (emergency 24x7)
+Cardiology OPD: Dr. Anjali Nair (Mon/Wed/Fri 10–1), Dr. Priya Varghese (Tue/Thu/Sat 4–7)
+Orthopaedics OPD: Dr. Anil Menon (Mon–Sat 9–12)
+USG abdomen prep: 6-hour fasting required; drink water to keep bladder full 1 hr before scan; no fasting needed for pregnancy USG
+CT scan prep: 4-hour fasting if contrast is used; inform desk if allergic to iodine/contrast dye
+Endoscopy (upper GI) prep: 8-hour fasting, avoid blood thinners 3 days prior (only on doctor's advice)
+Health check packages: Basic ₹2,500 | Executive ₹6,500 | Senior Citizen ₹5,500 | Cardiac Advanced ₹9,500
+Parking: Basement + open lot, first 30 min free, ₹20/hr after, valet available at main entrance
+Emergency (ER) number: 0484-XXX-1234, available 24x7
+Booking: Slots available via phone, WhatsApp, or walk-in registration desk`;
+
+const SCENARIOS = {
+  usg: { kb: KB, msg: 'hi doctor naale USG scan undu, food kazhikkamo? engane prepare cheyyanam' },
+  pkg: { kb: KB, msg: 'നമസ്കാരം, ഹെൽത്ത് ചെക്കപ്പ് പാക്കേജിന്റെ വില എത്രയാണ്? സീനിയർ സിറ്റിസൺ പാക്കേജ് ഉണ്ടോ?' },
+  urgent: { kb: KB, msg: 'My father is having severe chest pain and sweating right now, what should we do??' },
+};
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('kb').value = s.kb;
+  document.getElementById('msg').value = s.msg;
+  renderChat(s.msg);
+}
+function renderChat(msg) {
+  document.getElementById('chatBox').innerHTML =
+    `<div class="chat-bubble patient">${Hub.esc(msg)}</div>
+     <div class="chat-bubble agent" style="color:var(--muted)"><i>agent reply appears after you run Claude…</i></div>`;
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('msg').addEventListener('input', e => renderChat(e.target.value));
+loadScenario('usg');
+
+const DEMO = {
+usg: `## Reply
+
+"Hi! Yes, for tomorrow's USG abdomen scan please avoid food for 6 hours before the appointment (water is fine). About 1 hour before the scan, please drink water and try not to urinate, so your bladder is full for the scan. Would you like me to check available slots for tomorrow?"
+
+## Intent tag
+**Pre-procedure preparation query — USG abdomen** (non-clinical, informational)
+
+## Suggested booking slot
+Tomorrow, USG suite: **10:30 AM or 3:00 PM** (both currently open per today's schedule) — confirm if either works.
+
+## Escalation flag
+**Not required.** This is a standard preparation question fully covered by the knowledge base; no clinical judgment involved.
+
+## Internal note
+Manglish query, routine USG prep, resolved via KB. No follow-up needed unless patient requests slot confirmation.`,
+pkg: `## Reply
+
+"നമസ്കാരം! ഞങ്ങളുടെ ഹെൽത്ത് ചെക്കപ്പ് പാക്കേജുകൾ: Basic ₹2,500, Executive ₹6,500, Cardiac Advanced ₹9,500, കൂടാതെ Senior Citizen പാക്കേജ് ₹5,500-നും ലഭ്യമാണ്. ഏതെങ്കിലും ഒരു പാക്കേജിന്റെ വിശദാംശങ്ങൾ വേണോ, അല്ലെങ്കിൽ ബുക്ക് ചെയ്യണോ?"
+
+*(Translation: Hello! Our health check packages are: Basic ₹2,500, Executive ₹6,500, Cardiac Advanced ₹9,500, and yes — a Senior Citizen package is available at ₹5,500. Would you like details on any package, or to book one?)*
+
+## Intent tag
+**Pricing/package enquiry — Health check packages** (non-clinical, informational)
+
+## Suggested booking slot
+Health check packages are walk-in friendly; suggest **any weekday morning, 8:00–11:00 AM** for fasting-based packages, or offer to book a specific date via WhatsApp.
+
+## Escalation flag
+**Not required.** Pure pricing enquiry, fully answerable from KB.
+
+## Internal note
+Malayalam query re: Senior Citizen package pricing. Interested lead — flag to health-check desk for follow-up call if no booking within 48 hrs.`,
+urgent: `## Reply
+
+"I understand this is very concerning. Please call our Emergency number **0484-XXX-1234 immediately**, or bring your father to our Emergency department right now — this needs urgent in-person medical attention. I'm not able to give medical advice over chat, but our ER team is available 24x7 and ready to help the moment you arrive or call."
+
+## Intent tag
+**URGENT — Possible cardiac emergency (chest pain + diaphoresis)**
+
+## Suggested booking slot
+**Not applicable — this is not a booking scenario.** Direct to Emergency department / ER helpline immediately, no appointment queue.
+
+## Escalation flag
+**ESCALATE IMMEDIATELY.** Chest pain with sweating is a red-flag symptom (possible acute coronary event). Agent must not attempt any clinical guidance — route to ER number 0484-XXX-1234 and advise coming to hospital directly. Log as high-priority in CRM and notify shift supervisor.
+
+## Internal note
+Urgent escalation — chest pain/sweating reported live in chat. Routed to ER line per protocol. Supervisor notified at time of escalation.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const kb = document.getElementById('kb').value;
+  const msg = document.getElementById('msg').value;
+  const prompt = `You are a patient experience call-centre/WhatsApp agent at VPS Lakeshore Hospital, Kochi. Use only the knowledge base below to answer; you cannot give medical advice.
+
+Knowledge base:
+${kb}
+
+Incoming message (may be in English, Malayalam or Manglish):
+"${msg}"
+
+Provide: (1) a reply in the patient's language/style with an English translation if not in English, (2) an intent tag, (3) a suggested booking slot if relevant (or say not applicable), (4) an escalation flag — if the message suggests anything clinical/urgent, say you cannot give medical advice and must route to the ER number, and mark ESCALATE. Use ₹ formatting for prices.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a hospital call-centre/WhatsApp support agent at a 350-bed Kerala hospital, strictly limited to non-clinical information and KB-based answers.',
+    prompt, demo: DEMO[key], manualMinutes: 10,
+  }).then(text => {
+    const firstLine = (text.match(/## Reply\s*\n+([^\n]+)/) || [])[1] || '(see output)';
+    document.getElementById('chatBox').innerHTML =
+      `<div class="chat-bubble patient">${Hub.esc(msg)}</div>
+       <div class="chat-bubble agent">${Hub.esc(firstLine.replace(/^"|"$/g, ''))}</div>`;
+  });
+});
+</script>
+</body>
+</html>

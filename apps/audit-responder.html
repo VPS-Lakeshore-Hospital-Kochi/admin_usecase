@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audit query responder</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Audit query responder</h1>
+    <p>Draft structured, evidence-backed responses to statutory/internal auditor queries with risk rating and owner assignment.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample audit query list</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="stat">Statutory audit — FY25-26 year-end queries</option>
+          <option value="internal">Internal audit — Q2 FY26-27 review</option>
+        </select>
+      </div>
+      <label>Auditor query list (editable)</label>
+      <textarea id="queries" rows="12"></textarea>
+      <label>Supporting notes (editable)</label>
+      <textarea id="notes" rows="6"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic audit data for demonstration only. Vendor, doctor and figure references are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Finance & Accounts', title: 'Audit query responder' });
+
+const SCENARIOS = {
+  stat: {
+    queries: `1. TDS mismatch: Form 26AS shows TDS credit of ₹8,42,000 for Q3 FY25-26, but books reflect ₹7,95,000 deducted by parties. Explain the ₹47,000 variance.
+2. Unreconciled TPA receivables: ₹1.86 crore of TPA/insurer receivables outstanding for more than 180 days as on 31-Mar-2026. Provide ageing-wise reconciliation and provisioning policy.
+3. Fixed-asset tagging: Physical verification of medical equipment (FY25-26) could not locate barcode tags on 14 assets (cumulative gross block ₹2.1 crore) out of the sample of 60 tested. Explain.
+4. Doctor fee payments without agreement: Professional fee payments totalling ₹34 lakh made to 3 visiting consultants (Cardiology, Nephrology, Ortho) during the year without a signed consultancy agreement on file.
+5. Related-party transactions: Payments to a diagnostic vendor part-owned by a hospital director not disclosed in related-party register for H1 FY25-26.`,
+    notes: `- TDS variance: likely timing difference — 2 corporate clients deducted TDS in March but credit reflects in Q4 26AS, not Q3. Ledger recon in progress with accounts team.
+- TPA receivables: top 3 contributors are Star Health (₹62L), Medi Assist (₹48L), and a corporate GHI desk (₹41L); disputes mainly on non-payable deductions and one closed TPA branch causing delay.
+- Asset tagging: hospital moved to a new barcode vendor in Nov-2025; re-tagging exercise is ~70% complete, remaining 14 assets are in ICU/Cath Lab (equipment could not be taken offline during the tagging window).
+- Doctor agreements: 2 of 3 consultants have expired agreements pending renewal (renewal drafts with Legal since 6 weeks); 1 consultant (Ortho, locum basis) never had one issued.
+- RPT: vendor relationship was known internally but omitted from the FY25-26 RPT register by oversight; Company Secretary has been informed and register is being updated.`,
+  },
+  internal: {
+    queries: `1. Petty cash: Cash-in-hand physical count (Pharmacy counter) exceeded book balance by ₹18,400 on surprise verification date.
+2. Purchase order bypass: 9 purchase invoices totalling ₹22 lakh (consumables, general stores) processed without a corresponding PO in the system during Q2.
+3. Duplicate vendor master: Same vendor (a linen supplier) found registered twice in vendor master with different bank account numbers.
+4. Leave encashment provisioning: Actuarial leave encashment liability not revalued since FY23-24; current provision may be understated.
+5. IT access control: 4 former employees (resigned in Q1-Q2) still had active login credentials to the HIS billing module as of audit date.`,
+    notes: `- Petty cash variance under review; likely an unrecorded miscellaneous receipt from a patient refund reversal, being traced with pharmacy cashier.
+- PO bypass cases were mostly emergency consumable purchases (stock-out situations) routed through manual approval by Materials Manager, retrospective PO not raised.
+- Duplicate vendor: second entry created by a different purchase executive unaware of existing master; one bank account is stale (old account, since closed by vendor).
+- Leave encashment: last actuarial valuation was FY23-24; HR has initiated a fresh valuation with the actuary, report expected in 3 weeks.
+- IT access: HIS access de-provisioning is manual and tied to HR exit-clearance form sign-off, which was delayed for these 4 cases; IT has since disabled all 4 accounts.`,
+  },
+};
+
+const RISK_WORDS = { high: ['RPT', 'related-party', 'access control', 'HIS billing', 'unreconciled', '180 days'], medium: ['TDS', 'tagging', 'PO bypass', 'purchase order'], low: ['petty cash', 'duplicate vendor'] };
+function computeKPIs(queries) {
+  const items = queries.split(/\n(?=\d+\.)/).filter(x => x.trim());
+  let high = 0, medium = 0, low = 0;
+  items.forEach(q => {
+    const ql = q.toLowerCase();
+    if (RISK_WORDS.high.some(w => ql.includes(w.toLowerCase()))) high++;
+    else if (RISK_WORDS.medium.some(w => ql.includes(w.toLowerCase()))) medium++;
+    else low++;
+  });
+  return { n: items.length, high, medium, low };
+}
+function renderKPIs() {
+  const k = computeKPIs(document.getElementById('queries').value);
+  const box = document.getElementById('kpis');
+  const rows = [['Total queries', k.n], ['Likely high-risk', k.high], ['Likely medium-risk', k.medium], ['Likely low-risk', k.low]];
+  box.innerHTML = rows.map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('queries').value = s.queries;
+  document.getElementById('notes').value = s.notes;
+  renderKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('queries').addEventListener('input', renderKPIs);
+loadScenario('stat');
+
+const DEMO = {
+stat: `## Drafted responses, documents to attach, risk & owner
+
+| # | Query | Drafted response summary | Documents to attach | Risk | Owner |
+|---|---|---|---|---|---|
+| 1 | TDS mismatch (₹47,000) | Variance arises from timing difference — TDS deducted by 2 corporate clients in March but reflected in Q4 26AS instead of Q3. Full reconciliation being completed against party-wise 26AS. | Party-wise TDS reconciliation sheet, Form 26AS extracts, client remittance advices | Medium | Accounts Manager (Taxation) |
+| 2 | TPA receivables >180 days (₹1.86 cr) | Ageing dominated by Star Health, Medi Assist and a corporate desk, largely disputed non-payable deductions plus one TPA branch closure delaying settlement. Provisioning to be assessed against expected recovery. | TPA-wise ageing report, dispute correspondence, provisioning policy note | High | Manager — Revenue Cycle/TPA |
+| 3 | Fixed-asset tagging (14 assets, ₹2.1 cr) | New barcode vendor onboarded Nov-2025; re-tagging ~70% complete. Remaining 14 (ICU/Cath Lab) equipment could not be taken offline during the tagging window; a completion plan with dates will be shared. | Tagging completion tracker, vendor changeover note, revised schedule | Medium | Asset/Stores In-charge |
+| 4 | Doctor fees without agreement (₹34 lakh, 3 consultants) | 2 agreements expired and are pending renewal with Legal (6 weeks); 1 locum consultant never had an agreement issued. Interim control: fee payment hold pending agreement execution proposed. | Draft renewal agreements, Legal correspondence, fee payment ledger | High | Medical Administration + Legal |
+| 5 | RPT non-disclosure (diagnostic vendor) | Relationship known internally but inadvertently omitted from FY25-26 RPT register; Company Secretary informed, register being updated, retrospective disclosure and Audit Committee note to follow. | Updated RPT register, board/audit committee note, vendor agreement | High | Company Secretary |
+
+## Overall risk summary
+Two items are load-bearing for the audit opinion: **TPA receivable ageing/provisioning** and the **RPT disclosure gap** — both should be closed with documented evidence before the exit meeting. Doctor-agreement gaps also carry compliance and DoP exposure and should be escalated to Medical Administration this week.
+
+## Suggested next steps
+1. Complete TDS and TPA reconciliations with dated sign-off (Accounts + Revenue Cycle) — target 5 working days.
+2. Issue interim written communication for RPT correction to the Audit Committee ahead of the exit meeting.
+3. Freeze further doctor-fee disbursement to the 3 consultants until agreements are executed or a documented exception is approved by Medical Administration.`,
+
+internal: `## Drafted responses, documents to attach, risk & owner
+
+| # | Query | Drafted response summary | Documents to attach | Risk | Owner |
+|---|---|---|---|---|---|
+| 1 | Petty cash variance (₹18,400) | Likely an unrecorded patient-refund reversal at the pharmacy counter; being traced with the cashier and expected to reconcile within the week. | Cash count sheet, refund reversal register, cashier statement | Low | Pharmacy Finance Executive |
+| 2 | PO bypass (9 invoices, ₹22 lakh) | Cases were emergency stock-out purchases approved manually by the Materials Manager; retrospective POs not raised. Process gap to be closed by mandating retrospective PO within 48 hours for emergency buys. | Manual approval slips, stock-out justification notes, revised SOP draft | Medium | Materials Manager |
+| 3 | Duplicate vendor master (linen supplier) | Second entry created by a different purchase executive unaware of the existing master; one bank account is stale/closed. Duplicate to be merged and stale account deactivated. | Vendor master screenshots, bank confirmation of closed account | Medium | Purchase/Vendor Master Admin |
+| 4 | Leave encashment provisioning (stale since FY23-24) | Fresh actuarial valuation initiated with the actuary; report expected in 3 weeks, provision to be revised on receipt. | Actuary engagement letter, prior valuation report, HR leave-balance data | Medium | HR / Payroll Manager |
+| 5 | IT access — 4 ex-employees active on HIS billing | De-provisioning is tied to HR exit-clearance sign-off, which was delayed; all 4 accounts have since been disabled by IT. Control gap: automate access revocation trigger from HR exit workflow. | Exit clearance forms, IT access-log extract showing disable timestamps | High | IT Security + HR |
+
+## Overall risk summary
+The **IT access control gap** is the most significant finding — active billing-module credentials for departed staff is a data-integrity and fraud-risk issue and should be reported as a priority finding with a committed remediation date (automated HR-IT exit trigger).
+
+## Suggested next steps
+1. IT to submit a signed closure note confirming all 4 accounts disabled, with log evidence.
+2. Materials department to issue a written SOP update on retrospective PO timelines for emergency purchases.
+3. HR to expedite the actuarial valuation and share an interim provisioning estimate if the full report will exceed 3 weeks.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const queries = document.getElementById('queries').value;
+  const notes = document.getElementById('notes').value;
+  renderKPIs();
+  const prompt = `You are the finance team lead at VPS Lakeshore Hospital, Kochi preparing responses to an auditor's query list.
+
+Auditor queries:
+${queries}
+
+Supporting internal notes:
+${notes}
+
+For each query provide: a drafted response (2-3 sentences, ready to share with the auditor), documents to attach as evidence, a risk rating (High/Medium/Low), and the responsible owner. End with an overall risk summary and suggested next steps. Use ₹ lakh/crore formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital finance controller at a 350-bed Kerala hospital (NABH accredited), skilled in statutory and internal audit response management.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

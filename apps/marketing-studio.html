@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content studio — Marketing & Comms</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .chk { display:flex; align-items:center; gap:6px; font-weight:400; color:var(--text); font-size:14px; }
+  .chk input { width:auto; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .scenario-btn { flex:1; min-width:140px; text-align:left; }
+  .scenario-btn.active { border-color:#9F003A; background:var(--accent-soft); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Content studio</h1>
+    <p>Turn a one-line brief into ready-to-post copy in the "In good hands" voice — plain, observed, warm, no clichés or unverifiable claims — across every channel, plus a compliance check before it goes out.</p>
+  </section>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>1. Pick a scenario</h2>
+      <div class="chips" id="scenarioBtns"></div>
+
+      <label for="brief">Brief</label>
+      <textarea id="brief"></textarea>
+
+      <label for="audience">Audience</label>
+      <input id="audience" value="">
+
+      <label>Channels</label>
+      <div class="row" id="channels"></div>
+
+      <label for="lang">Language</label>
+      <select id="lang">
+        <option value="English">English</option>
+        <option value="Malayalam">Malayalam</option>
+        <option value="Arabic">Arabic</option>
+        <option value="Dhivehi">Dhivehi</option>
+      </select>
+
+      <div class="row" style="margin-top:14px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+
+      <div class="kpis" style="margin-top:16px">
+        <div class="kpi"><div class="label">Channels selected</div><div class="value" id="kpiChannels">0</div></div>
+        <div class="kpi"><div class="label">Brief length</div><div class="value" id="kpiWords">0 words</div></div>
+        <div class="kpi"><div class="label">Compliance flags to check</div><div class="value" id="kpiFlags">3</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Claude's draft pack</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · sample data only · all names and figures fictional · content must clear Corporate Comms + Medical Superintendent sign-off before publishing (NMC/ASCI advertising norms).</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Marketing & Comms', title: 'Content studio' });
+
+const CHANNELS = ['Instagram', 'LinkedIn', 'Facebook', 'WhatsApp broadcast', 'Press note', 'Doctor profile'];
+
+const SCENARIOS = {
+  robotic: {
+    label: '500th robotic surgery',
+    brief: 'VPS Lakeshore has completed its 500th robotic surgery (da Vinci platform), spanning urology, gynaecology, GI and cardiac cases over 4 years. Milestone crossed this week with a robotic-assisted nephrectomy performed by Dr. Arjun Menon\'s team. Want to mark the milestone across channels — tone should be measured, credit the team, avoid overclaiming outcomes.',
+    audience: 'Existing patients, referring doctors, Kochi general public, prospective international patients',
+    channels: ['Instagram', 'LinkedIn', 'Press note', 'Doctor profile'],
+    lang: 'English',
+  },
+  heart: {
+    label: 'World Heart Day screening camp',
+    brief: 'World Heart Day (29 Sept) — VPS Lakeshore is running a free cardiac screening camp on 29-30 Sept at the hospital atrium: BP check, ECG, lipid profile at concessional rate, and a consult with a cardiologist for those flagged. Slots limited to 200/day, registration via phone or WhatsApp. Want to drive footfall from Kochi residents 40+ and their families.',
+    audience: 'Kochi residents aged 40+, their adult children, corporate HR wellness contacts',
+    channels: ['Instagram', 'Facebook', 'WhatsApp broadcast', 'Press note'],
+    lang: 'English',
+  },
+  lounge: {
+    label: 'International patient lounge for Maldives',
+    brief: 'New International Patient Lounge opening next month — dedicated waiting area near the international patient desk with Dhivehi-speaking coordinator, prayer room access, tea/refreshments, and assistance with visa extension letters and currency exchange guidance. Aimed at patients travelling from Maldives for cardiology, orthopaedics and fertility treatment. Want warm, reassuring tone, not a hard sell.',
+    audience: 'Maldivian patients and families, Male\' referral clinics, medical travel facilitators',
+    channels: ['Instagram', 'WhatsApp broadcast', 'Press note'],
+    lang: 'Dhivehi',
+  },
+};
+
+let current = 'robotic';
+
+function loadScenario(key) {
+  current = key;
+  const s = SCENARIOS[key];
+  document.getElementById('brief').value = s.brief;
+  document.getElementById('audience').value = s.audience;
+  document.getElementById('lang').value = s.lang;
+  document.querySelectorAll('#channels input').forEach(cb => { cb.checked = s.channels.includes(cb.value); });
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  updateKpis();
+}
+
+function renderChannelChecks() {
+  document.getElementById('channels').innerHTML = CHANNELS.map(c => `
+    <label class="chk"><input type="checkbox" value="${c}"> ${c}</label>`).join('');
+  document.querySelectorAll('#channels input').forEach(cb => cb.addEventListener('change', updateKpis));
+}
+
+function updateKpis() {
+  const n = document.querySelectorAll('#channels input:checked').length;
+  document.getElementById('kpiChannels').textContent = n;
+  const words = document.getElementById('brief').value.trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('kpiWords').textContent = words + ' words';
+}
+
+document.getElementById('scenarioBtns').innerHTML = Object.entries(SCENARIOS).map(([k, s]) =>
+  `<button type="button" class="scenario-btn" data-key="${k}">${s.label}</button>`).join('');
+document.querySelectorAll('.scenario-btn').forEach(b => b.addEventListener('click', () => loadScenario(b.dataset.key)));
+renderChannelChecks();
+loadScenario('robotic');
+document.getElementById('brief').addEventListener('input', updateKpis);
+
+function selectedChannels() {
+  return Array.from(document.querySelectorAll('#channels input:checked')).map(cb => cb.value);
+}
+
+const SYSTEM = `You are the Marketing & Comms content assistant for VPS Lakeshore Hospital, Kochi. Brand voice is "In good hands": plain, observed, warm — never use clichés like "state-of-the-art", "world-class" or "miracle", and never make unverifiable medical claims. Stay within NMC (National Medical Commission) and ASCI advertising norms for healthcare: no outcome guarantees, no comparative superiority claims, no patient testimonials without documented consent, no before/after imagery claims. Always end a press note with "— Ends —". Always include a compliance checklist covering claims made, patient-story consent, and image rights.`;
+
+function buildPrompt() {
+  const brief = document.getElementById('brief').value;
+  const audience = document.getElementById('audience').value;
+  const channels = selectedChannels();
+  const lang = document.getElementById('lang').value;
+  return `Brief: ${brief}\n\nTarget audience: ${audience}\nChannels required: ${channels.join(', ') || 'Instagram'}\nAdditional language required: ${lang}\n\nProduce, in this order:\n1. Ready-to-post copy for each requested channel (with hashtags where relevant, and character-appropriate length per channel).\n2. A short press note ending with "— Ends —".\n3. A ${lang} translation of the press note (or lead social post if press note wasn't requested).\n4. A compliance checklist: claims made and whether each is verifiable, patient-story/image consent status, image rights, and any NMC/ASCI flags.`;
+}
+
+const DEMO = {
+  robotic: () => `## Instagram
+**Post 1**
+500 robotic surgeries. One team, four years, steady hands.
+
+This week our robotic surgery team completed its 500th procedure — a robotic-assisted nephrectomy led by Dr. Arjun Menon and team. Over four years the programme has covered urology, gynaecology, GI and cardiac cases.
+
+Grateful to every patient who trusted us, and to the OT, anaesthesia and nursing teams behind each case.
+
+#VPSLakeshore #RoboticSurgery #InGoodHands #Kochi #500Milestone
+
+**Post 2 (carousel — team photo + timeline)**
+Slide 1: "500 robotic surgeries."
+Slide 2: "4 years. 4 specialities: urology, gynaecology, GI, cardiac."
+Slide 3: "Led by Dr. Arjun Menon and the robotic surgery team."
+Slide 4: "Thank you for trusting us with your care."
+
+## LinkedIn
+VPS Lakeshore Hospital's robotic surgery programme has completed its 500th procedure this week — a robotic-assisted nephrectomy performed by Dr. Arjun Menon and team.
+
+Since the da Vinci platform was introduced four years ago, the programme has extended across urology, gynaecology, gastrointestinal and cardiac surgery, built on close coordination between our surgical, anaesthesia and nursing teams.
+
+We thank our patients, referring doctors and staff for being part of this journey.
+
+#Healthcare #RoboticSurgery #Kochi #VPSLakeshore
+
+## Press note
+**VPS Lakeshore Hospital completes 500th robotic surgery**
+
+Kochi, [date] — VPS Lakeshore Hospital, Kochi, has completed its 500th robotic-assisted surgery, a nephrectomy performed this week by a team led by Dr. Arjun Menon. The hospital introduced its robotic surgery programme four years ago and has since used it across urology, gynaecology, gastrointestinal and cardiac procedures.
+
+"Every one of these 500 cases is a patient who chose to trust our team," said Dr. Arjun Menon, lead robotic surgeon. "The credit sits with the full team around the table — surgeons, anaesthesia, nursing and OT staff."
+
+VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala.
+
+For media queries: corpcomm@vpslakeshore.example
+
+— Ends —
+
+## Malayalam version (press note lead)
+വിപിഎസ് ലേക്‌ഷോർ ഹോസ്പിറ്റൽ 500-ാമത് റോബോട്ടിക് ശസ്ത്രക്രിയ പൂർത്തിയാക്കി
+
+കൊച്ചി — വിപിഎസ് ലേക്‌ഷോർ ഹോസ്പിറ്റൽ ഈ ആഴ്ച 500-ാമത് റോബോട്ടിക് ശസ്ത്രക്രിയ പൂർത്തിയാക്കി, ഡോ. അർജുൻ മേനോന്റെ നേതൃത്വത്തിലുള്ള സംഘമാണ് ഇത് നിർവഹിച്ചത്. നാല് വർഷം മുൻപ് ആരംഭിച്ച ഈ പ്രോഗ്രാം യൂറോളജി, ഗൈനക്കോളജി, ജിഐ, കാർഡിയാക് ശസ്ത്രക്രിയകളിലേക്ക് വ്യാപിച്ചു.
+
+## Doctor profile — Dr. Arjun Menon
+Dr. Arjun Menon leads the robotic surgery programme at VPS Lakeshore Hospital, Kochi. Over the past four years, he and his team have performed procedures spanning urology, gynaecology, GI and cardiac surgery on the da Vinci platform, reaching 500 cases this week. He trained in minimally invasive and robotic urology and joined VPS Lakeshore in [year].
+
+## Compliance checklist
+| Item | Status | Note |
+|---|---|---|
+| Claim: "500 robotic surgeries completed" | Verifiable | Confirm exact count with OT register before publishing |
+| Claim: outcome/success language | None used | Copy avoids success-rate or superiority claims — keep it that way |
+| Patient-story consent | N/A | No named patient referenced; confirm before any future case story |
+| Image rights (team photo) | Needs check | Confirm consent from all staff shown in OT/team photos |
+| Doctor quote approval | Pending | Get Dr. Menon's sign-off on quoted text before release |
+| NMC/ASCI flag | Clear | No comparative or guarantee language present |`,
+  heart: () => `## Instagram
+Free heart check this World Heart Day.
+
+BP, ECG and lipid profile at a concessional rate — 29–30 Sept, VPS Lakeshore atrium. Anyone flagged gets a same-day cardiologist consult.
+
+200 slots a day. Call [number] or WhatsApp [number] to register.
+
+#WorldHeartDay #VPSLakeshore #HeartHealth #Kochi #InGoodHands
+
+## Facebook
+This World Heart Day, know your numbers.
+
+VPS Lakeshore Hospital is running a free cardiac screening camp on 29–30 September — blood pressure check, ECG and lipid profile at a concessional rate, with a cardiologist consultation for anyone flagged.
+
+Open to all, especially if you're 40+ or have a family history of heart disease. Limited to 200 slots a day — register by phone or WhatsApp.
+
+📍 VPS Lakeshore Hospital atrium
+📞 [number] · WhatsApp [number]
+
+## WhatsApp broadcast
+*VPS Lakeshore — World Heart Day Screening Camp*
+29–30 Sept | Hospital atrium
+Free BP check + ECG, lipid profile at concessional rate
+Cardiologist consult if flagged
+200 slots/day — reply YES to book, or call [number]
+
+## Press note
+**VPS Lakeshore Hospital to hold free cardiac screening camp for World Heart Day**
+
+Kochi, [date] — Ahead of World Heart Day on 29 September, VPS Lakeshore Hospital will hold a two-day cardiac screening camp on 29–30 September at its atrium, offering blood pressure checks and ECG free of charge, and a lipid profile test at a concessional rate. Anyone flagged during screening will be offered a same-day consultation with a cardiologist.
+
+The camp is open to the public and expected to draw interest from residents aged 40 and above, a group at higher risk of cardiovascular disease. Registration is by phone or WhatsApp, with 200 slots available each day.
+
+"Most heart disease we see could have been caught earlier with a simple check," said [Cardiologist name], consultant cardiologist. "This camp is about making that first check easy to get to."
+
+VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala.
+
+For media queries: corpcomm@vpslakeshore.example
+
+— Ends —
+
+## Compliance checklist
+| Item | Status | Note |
+|---|---|---|
+| Claim: "free BP/ECG, concessional lipid profile" | Verifiable | Confirm final pricing with Finance before publishing |
+| Claim: risk-group framing (40+) | Verifiable | General epidemiological framing, not a diagnosis claim |
+| Cardiologist quote | Needs name + approval | Insert real name and get sign-off before release |
+| Patient-story consent | N/A | No patient story used in this pack |
+| Image rights (camp photos, if used later) | Needs check | Get consent from attendees before posting event photos |
+| NMC/ASCI flag | Clear | No outcome guarantees; camp described as screening, not diagnosis |`,
+  lounge: () => `## Instagram
+A quieter corner for our Maldivian patients.
+
+Our new International Patient Lounge opens next month — a dedicated waiting area near the international desk, with a Dhivehi-speaking coordinator, prayer room access, and help with visa extension letters and currency guidance.
+
+For families travelling to Kochi for care, one less thing to navigate.
+
+#VPSLakeshore #InternationalPatients #Maldives #InGoodHands
+
+## WhatsApp broadcast
+*VPS Lakeshore International Patient Lounge — opening next month*
+Dedicated waiting area | Dhivehi-speaking coordinator | Prayer room access | Visa extension + currency help
+For patients travelling from Maldives for cardiology, orthopaedics, fertility care
+Details: [contact]
+
+## Press note
+**VPS Lakeshore Hospital to open dedicated lounge for international patients**
+
+Kochi, [date] — VPS Lakeshore Hospital will open a new International Patient Lounge next month, a dedicated waiting area for patients travelling from abroad, with particular focus on the hospital's Maldivian patients.
+
+The lounge will be staffed by a Dhivehi-speaking patient coordinator and offer prayer room access, refreshments, and assistance with visa extension letters and currency exchange guidance — support requested most often by families travelling for cardiology, orthopaedic and fertility treatment.
+
+"Travelling for treatment already asks a lot of a family," said [International Desk Head name], head of international patient services. "This lounge is about making the waiting part easier."
+
+VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala, with a longstanding base of patients from the Maldives, GCC and East Africa.
+
+For media queries: corpcomm@vpslakeshore.example
+
+— Ends —
+
+## Dhivehi version (press note lead)
+VPS Lakeshore ހޮސްޕިޓަލުން ބައިނަލްއަޤްވާމީ ބަލިމީހުންނަށް ހާއްސަ ލައުންޖެއް ހުޅުވަނީ
+
+ކޮޗިން — VPS Lakeshore ހޮސްޕިޓަލުން އަންނަ މަހު ބައިނަލްއަޤްވާމީ ބަލިމީހުންނަށް ހާއްސަ ލައުންޖެއް ހުޅުވުމަށް ތައްޔާރުވެއްޖެއެވެ. ދިވެހި ބަހުން ވާހަކަދައްކާ ކޯޑިނޭޓަރަކާއެކު، ނަމާދު ކުރާނެ ތަނަކާއި ވިސާ އިތުރުކުރުމަށް އެހީތެރިކަން ފޯރުކޮށްދޭނެއެވެ.
+
+## Compliance checklist
+| Item | Status | Note |
+|---|---|---|
+| Claim: lounge facilities (coordinator, prayer room, visa help) | Verifiable | Confirm final service list with International Desk before publishing |
+| Quote attribution | Needs name + approval | Insert real spokesperson name and get sign-off |
+| Patient-story consent | N/A | No named patient referenced in this pack |
+| Image rights (lounge/facility photos) | Needs check | Use render/stock or confirm consent if real photos used |
+| Dhivehi translation accuracy | Needs review | Have a native Dhivehi speaker verify before publishing |
+| NMC/ASCI flag | Clear | Describes a service facility, not a clinical outcome claim |`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  Hub.run({
+    out: '#out',
+    button: '#runBtn',
+    system: SYSTEM,
+    prompt: buildPrompt(),
+    demo: DEMO[current],
+    manualMinutes: 150,
+  });
+});
+</script>
+</body>
+</html>

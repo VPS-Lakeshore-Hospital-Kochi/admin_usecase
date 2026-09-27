@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cashless pre-auth file builder</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .timer-banner { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 14px; border-radius: var(--radius); margin-bottom:14px; font-weight:500; }
+  .timer-banner.ok { background: var(--ok-bg); color: var(--ok); }
+  .timer-banner.warn { background: var(--warn-bg); color: var(--warn); }
+  .timer-banner.bad { background: var(--bad-bg); color: var(--bad); }
+  .timer-banner .clock { font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight:700; }
+  .chk { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:14px; }
+  .chk:last-child { border-bottom:none; }
+  .chk input { width:auto; }
+  .compl { font-size:13px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Cashless pre-auth file builder</h1>
+    <p>Assemble and sanity-check a cashless pre-authorisation case before it goes to the insurer/TPA, inside the IRDAI 1-hour turnaround window.</p>
+  </section>
+
+  <div id="timerBanner" class="timer-banner ok">
+    <span>IRDAI 1-hour cashless response window:</span>
+    <span class="clock" id="clock">60:00</span>
+    <span id="timerMsg">remaining to submit a complete file</span>
+    <span class="spacer"></span>
+    <button id="resetTimer">Restart timer</button>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample case</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="knee">Elective knee replacement — Star Health</option>
+          <option value="ptca">PTCA / angioplasty (emergency) — Medi Assist (TPA)</option>
+          <option value="lap">Laparoscopic cholecystectomy — Corporate group policy</option>
+        </select>
+      </div>
+
+      <label>Case summary (editable)</label>
+      <textarea id="caseSummary" rows="8"></textarea>
+
+      <label>Estimated cost breakup (editable)</label>
+      <textarea id="costBreakup" rows="7"></textarea>
+
+      <label>Documents attached</label>
+      <div id="checklist"></div>
+      <div class="compl" id="complStatus"></div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic case data for demonstration only. No real patient identifiers. TPA/insurer names are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Cashless pre-auth file builder' });
+
+const DOC_ITEMS = [
+  'Patient ID proof (Aadhaar/Passport)',
+  'Policy card / e-card number',
+  "Doctor's clinical notes & admission advice",
+  'Investigation reports (relevant to diagnosis)',
+  'Detailed cost estimate (itemised)',
+  'Pre-auth request form (insurer/TPA format)',
+  'Past policy / proposal form (for PED check)',
+  'Employer authorisation letter (if corporate GHI)',
+];
+
+const SCENARIOS = {
+  knee: {
+    label: 'Elective knee replacement — Star Health',
+    summary: `Patient: Female, 61 yrs. Diagnosis: Bilateral osteoarthritis knee, Kellgren-Lawrence Grade IV (right knee).
+Planned procedure: Right Total Knee Replacement (TKR), elective, single implant.
+Admission type: Planned, admission date requested in 3 days.
+Insurer: Star Health Insurance | Policy: Family Health Optima, Sum Insured ₹10,00,000
+Policy age: 4th year (PED waiting period of 3 yrs completed for OA/joint replacement)
+Room category booked: Private AC room (policy allows up to Twin Sharing per room-rent clause)
+Treating surgeon: Dr. Anil Menon, Orthopaedics
+Prior treatments: Conservative management (physiotherapy, NSAIDs) x 8 months, documented.`,
+    cost: `Implant (cemented, titanium, standard make): ₹1,45,000
+OT & anaesthesia charges: ₹58,000
+Room rent (5 days, private AC @ ₹6,500/day): ₹32,500
+Surgeon & anaesthetist professional fee: ₹95,000
+Physiotherapy (in-patient, 5 sessions): ₹12,000
+Investigations, pharmacy & consumables: ₹48,000
+Estimated total package: ₹3,90,500`,
+    checked: [true, true, true, true, true, false, true, false],
+  },
+  ptca: {
+    label: 'PTCA / angioplasty (emergency) — Medi Assist (TPA)',
+    summary: `Patient: Male, 54 yrs. Diagnosis: Acute STEMI (anterior wall MI), admitted via Emergency at 02:40 hrs.
+Planned procedure: Emergency PTCA with 1 drug-eluting stent (LAD).
+Admission type: Emergency, already admitted to Cath Lab holding area.
+Insurer/TPA: Group Mediclaim via Medi Assist (TPA) | Policy: Corporate GHI, Sum Insured ₹5,00,000
+Policy status: 2nd year, no prior cardiac claims on record.
+Room category: Shared ICU/CCU bed (no room-rent capping issue expected)
+Treating cardiologist: Dr. Priya Varghese, Interventional Cardiology
+Time of first insurer contact: within 20 minutes of admission (emergency intimation raised).`,
+    cost: `Drug-eluting stent (1x, imported): ₹65,000
+Cath lab / procedure charges: ₹1,10,000
+ICU/CCU charges (2 days @ ₹9,500/day): ₹19,000
+Cardiologist & anaesthetist professional fee: ₹45,000
+Medicines, consumables & investigations: ₹38,000
+Estimated total package: ₹2,77,000`,
+    checked: [true, true, true, true, false, true, false, true],
+  },
+  lap: {
+    label: 'Laparoscopic cholecystectomy — Corporate group policy',
+    summary: `Patient: Female, 39 yrs. Diagnosis: Symptomatic cholelithiasis (gallstones) with recurrent biliary colic.
+Planned procedure: Laparoscopic Cholecystectomy, elective.
+Admission type: Planned, day-after-tomorrow admission.
+Insurer: Corporate Group Health Policy (employer-sponsored) via in-house TPA desk | Sum Insured ₹3,00,000
+Policy status: 1st year of employment-linked cover; employee also holds prior 3-year continuous cover certificate (portability).
+Room category booked: Twin sharing (within policy entitlement)
+Treating surgeon: Dr. Thomas Koshy, General & Laparoscopic Surgery
+Relevant history: One prior ultrasound-confirmed gallstone episode 6 months ago, managed conservatively.`,
+    cost: `Laparoscopic surgery package charges: ₹68,000
+OT & anaesthesia charges: ₹22,000
+Room rent (2 days, twin sharing @ ₹3,200/day): ₹6,400
+Surgeon & anaesthetist professional fee: ₹32,000
+Investigations & pharmacy: ₹14,600
+Estimated total package: ₹1,43,000`,
+    checked: [true, false, true, true, true, true, false, false],
+  },
+};
+
+let timerInterval, deadline;
+function startTimer() {
+  clearInterval(timerInterval);
+  deadline = Date.now() + 60 * 60 * 1000;
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+function tick() {
+  const remaining = Math.max(0, deadline - Date.now());
+  const m = Math.floor(remaining / 60000);
+  const s = Math.floor((remaining % 60000) / 1000);
+  document.getElementById('clock').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const banner = document.getElementById('timerBanner');
+  const msg = document.getElementById('timerMsg');
+  banner.classList.remove('ok', 'warn', 'bad');
+  if (remaining > 20 * 60000) { banner.classList.add('ok'); msg.textContent = 'remaining to submit a complete file'; }
+  else if (remaining > 5 * 60000) { banner.classList.add('warn'); msg.textContent = 'window closing — complete missing documents now'; }
+  else { banner.classList.add('bad'); msg.textContent = remaining > 0 ? 'urgent — file incomplete, escalate to duty manager' : 'IRDAI window breached — escalate immediately'; }
+  if (remaining <= 0) clearInterval(timerInterval);
+}
+document.getElementById('resetTimer').addEventListener('click', startTimer);
+
+function renderChecklist(checked) {
+  const box = document.getElementById('checklist');
+  box.innerHTML = DOC_ITEMS.map((d, i) => `
+    <label class="chk"><input type="checkbox" data-i="${i}" ${checked[i] ? 'checked' : ''}> ${Hub.esc(d)}</label>`).join('');
+  box.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateCompleteness));
+  updateCompleteness();
+}
+function updateCompleteness() {
+  const boxes = Array.from(document.querySelectorAll('#checklist input'));
+  const done = boxes.filter(b => b.checked).length;
+  const pct = Math.round((done / boxes.length) * 100);
+  const el = document.getElementById('complStatus');
+  const tag = pct === 100 ? '<span class="tag ok">Complete</span>' : pct >= 70 ? '<span class="tag warn">Nearly complete</span>' : '<span class="tag bad">Incomplete</span>';
+  el.innerHTML = `${tag} ${done}/${boxes.length} documents attached (${pct}%)`;
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('caseSummary').value = s.summary;
+  document.getElementById('costBreakup').value = s.cost;
+  renderChecklist(s.checked);
+  startTimer();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('knee');
+
+const DEMO = {
+knee: `## Missing-document flags
+
+- **Past policy / proposal form (for PED check) — MISSING.** Required to confirm the 3-year pre-existing-disease waiting period for osteoarthritis/joint replacement has genuinely lapsed. Without it, the TPA may issue a query instead of approval, costing the full 1-hour window.
+- **Employer authorisation letter — not applicable** (individual retail policy, Star Health Family Health Optima), correctly left unchecked.
+
+## Denial-risk items to pre-empt
+
+1. **PED waiting period (highest risk).** Osteoarthritis is a classic pre-existing/pre-existing-adjacent condition under most Star Health policies with a 2–4 year waiting period. Policy is in its 4th year, which should clear a standard 3-year clause — **but attach the policy inception date and continuity certificate explicitly in the pre-auth note**, don't assume the TPA desk will infer it.
+2. **Room-rent capping.** Private AC room is booked; confirm the policy's room-rent sub-limit (commonly 1% of Sum Insured/day or "up to Twin Sharing" as stated here). If the entitlement is capped at Twin Sharing, the insurer will apply a **proportionate deduction** across surgeon fee, OT charges and consumables too, not just room rent — this can silently cut ₹15,000–25,000 from the approved amount if not flagged upfront.
+3. **Implant cost reasonableness.** ₹1,45,000 for a standard cemented titanium implant is within typical TPA-approved bands (₹1.1–1.6L), but insurers frequently query implant invoices separately — attach the implant invoice/HSN details proactively.
+4. **Non-payables.** Standard non-payable items (gloves, syringes, admission kit, etc.) embedded in the ₹48,000 consumables line should be itemised — a lumped consumables figure is a common reason for partial approval / query-back.
+
+## Draft pre-auth justification text
+
+*"Patient is a 61-year-old female with Grade IV bilateral osteoarthritis (right knee), symptomatic for over 2 years, having failed an 8-month trial of conservative management (physiotherapy and NSAIDs) as documented in attached clinical notes. Elective Right Total Knee Replacement is planned by Dr. Anil Menon (Orthopaedics). The policy (Family Health Optima, 4th policy year) has completed the applicable waiting period for joint replacement under pre-existing disease clauses; continuity is evidenced by the attached policy schedule. Estimated package cost of ₹3,90,500 includes implant, OT/anaesthesia, 5-day stay in a room within policy entitlement, and standard peri-operative care. Kindly authorise cashless approval for the estimated amount."*
+
+## Cost-estimate sanity check
+
+| Line item | Estimate | Typical range (TKR, tier-1 Kerala hospital) | Flag |
+|---|---|---|---|
+| Implant | ₹1,45,000 | ₹1,10,000–1,60,000 | Within range |
+| OT & anaesthesia | ₹58,000 | ₹45,000–65,000 | Within range |
+| Room rent (5 days) | ₹32,500 | Depends on entitlement | **Confirm against room-rent clause before submission** |
+| Surgeon/anaesthetist fee | ₹95,000 | ₹70,000–1,00,000 | Within range, slightly high — attach fee schedule if queried |
+| Total package | ₹3,90,500 | ₹3,20,000–4,10,000 | Reasonable, low denial risk on quantum |
+
+**Recommendation:** Attach the missing PED/continuity document before submission — this alone determines whether the file clears in one pass or triggers a query that eats into the 1-hour window.`,
+
+ptca: `## Missing-document flags
+
+- **Detailed cost estimate (itemised) — MISSING.** For an emergency PTCA, TPAs still require an itemised estimate (even if provisional) within the intimation — a lumped verbal estimate risks the file being marked incomplete on the portal.
+- **Pre-auth request form (insurer/TPA format) — not yet attached.** For emergency cases, Medi Assist typically accepts telephonic/portal intimation first, but the formal form must follow within the same window — flag to the insurance desk to file it in parallel with this justification, not after.
+
+## Denial-risk items to pre-empt
+
+1. **Time-of-intimation documentation (critical for emergency cases).** The 1-hour IRDAI clock for emergency admissions starts at the time of intimation, not admission. Ensure the system timestamp of the 02:40 hrs admission and the ~20-minute-later insurer contact are both recorded — TPAs sometimes dispute "emergency" classification if intimation looks delayed relative to admission.
+2. **Stent brand/type payability.** Imported drug-eluting stents are payable under most GHI policies, but **confirm the policy's stent sub-limit** (some corporate GHI policies cap DES reimbursement at ₹40,000–50,000 regardless of actual cost) — a ₹65,000 stent against a ₹45,000 sub-limit means a **proportionate/hard deduction of ~₹20,000** the patient's family should be informed of now, not at discharge.
+3. **Non-payables in cath lab charges.** Balloon catheters, guide wires and sheaths bundled into "cath lab / procedure charges" are frequently reclassified as non-payable consumables by TPAs — itemise this line before submission to avoid a post-approval short-payment.
+4. **No prior cardiac claims on record** works in the patient's favour (no PED dispute expected for a first acute MI event) — state this explicitly in the justification to pre-empt a PED query.
+
+## Draft pre-auth justification text
+
+*"Patient is a 54-year-old male admitted as an emergency at 02:40 hrs with acute STEMI (anterior wall MI), confirmed by ECG and cardiac biomarkers. Emergency PTCA with placement of one drug-eluting stent to the LAD is being performed by Dr. Priya Varghese (Interventional Cardiology) on an emergency, life-saving basis. Insurer intimation was raised within 20 minutes of admission. This is the patient's first cardiac event with no prior related claims under this policy. Estimated package cost is ₹2,77,000, covering stent, cath lab procedure, CCU stay and professional fees. Given the emergency nature and life-threatening diagnosis, urgent cashless authorisation is requested within the IRDAI-mandated window."*
+
+## Cost-estimate sanity check
+
+| Line item | Estimate | Typical range (PTCA + 1 DES) | Flag |
+|---|---|---|---|
+| DES stent | ₹65,000 | ₹35,000–75,000 | **Check policy stent sub-limit** |
+| Cath lab/procedure | ₹1,10,000 | ₹85,000–1,25,000 | Within range |
+| ICU/CCU (2 days) | ₹19,000 | ₹15,000–22,000 | Within range |
+| Professional fees | ₹45,000 | ₹35,000–55,000 | Within range |
+| Total package | ₹2,77,000 | ₹2,20,000–2,90,000 | Reasonable |
+
+**Recommendation:** File the formal pre-auth form and itemised estimate in parallel within the next 15 minutes — the justification text above is ready to submit now and should not wait for the paperwork.`,
+
+lap: `## Missing-document flags
+
+- **Policy card / e-card number — MISSING.** For a corporate group policy processed through an in-house TPA desk, the e-card/employee ID linkage is often the first thing checked — without it the case may not even open correctly on the TPA portal.
+- **Past policy / proposal form (for PED check) — MISSING.** The patient has a portability continuity certificate mentioned in the case notes but it is not yet attached; without it the 1st-year corporate policy could trigger an automatic PED/waiting-period query for gallstones (a condition sometimes flagged as pre-existing if diagnosed before the policy start).
+- **Employer authorisation letter — MISSING.** Required for employer-sponsored group policies to confirm the employee's active coverage status; its absence is a common reason corporate cashless requests stall.
+
+## Denial-risk items to pre-empt
+
+1. **PED classification for gallstones (highest risk here).** The patient had an ultrasound-confirmed gallstone episode 6 months ago — since the current policy is only in its 1st year, the TPA will likely ask whether this is a pre-existing condition. **The portability/continuity certificate from the prior 3-year cover must be attached** to carry forward the waiting-period credit; without it, this is the single most likely reason for an outright query or denial.
+2. **Room-rent and category entitlement.** Twin sharing is within entitlement per the case notes — low risk, but confirm the daily room-rent cap explicitly in the file to avoid a proportionate deduction on surgeon/OT charges.
+3. **Package vs itemised billing mismatch.** "Laparoscopic surgery package charges: ₹68,000" is a bundled figure; TPAs for corporate policies often prefer itemised OT/disposables breakup — pre-empt a query by splitting this into surgical package + laparoscopic disposables (trocars, clips) as a separate payable/non-payable line.
+4. **Non-payables.** Standard theatre consumables embedded in "investigations & pharmacy" should be separated out; corporate TPA desks routinely short-pay lumped consumable lines.
+
+## Draft pre-auth justification text
+
+*"Patient is a 39-year-old female with symptomatic cholelithiasis, having had a prior ultrasound-confirmed episode of biliary colic 6 months ago, managed conservatively at that time. Elective Laparoscopic Cholecystectomy is now planned by Dr. Thomas Koshy (General & Laparoscopic Surgery) given recurrent symptoms. The patient holds continuous prior health coverage for 3 years (portability certificate attached) prior to enrolment in the current employer-sponsored group policy, and therefore no fresh pre-existing-disease waiting period applies to this condition. Estimated package cost of ₹1,43,000 is requested for cashless authorisation, inclusive of surgery, anaesthesia, twin-sharing room stay and professional fees, within policy entitlement."*
+
+## Cost-estimate sanity check
+
+| Line item | Estimate | Typical range (Lap Chole, Kerala) | Flag |
+|---|---|---|---|
+| Surgery package | ₹68,000 | ₹50,000–75,000 | Within range — itemise before filing |
+| OT & anaesthesia | ₹22,000 | ₹18,000–28,000 | Within range |
+| Room rent (2 days) | ₹6,400 | Within entitlement | Low risk |
+| Professional fees | ₹32,000 | ₹25,000–38,000 | Within range |
+| Total package | ₹1,43,000 | ₹1,15,000–1,50,000 | Reasonable |
+
+**Recommendation:** Do not submit until the portability/continuity certificate and employer authorisation letter are attached — both are load-bearing for approval given the 1st-year policy status and the pre-existing gallstone episode.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const summary = document.getElementById('caseSummary').value;
+  const cost = document.getElementById('costBreakup').value;
+  const boxes = Array.from(document.querySelectorAll('#checklist input'));
+  const docsState = boxes.map((b, i) => `${b.checked ? '[x]' : '[ ]'} ${DOC_ITEMS[i]}`).join('\n');
+  const prompt = `You are assisting the insurance desk at VPS Lakeshore Hospital, Kochi with a cashless pre-authorisation request, inside the IRDAI 1-hour response window.
+
+Case summary:
+${summary}
+
+Estimated cost breakup:
+${cost}
+
+Documents attached checklist:
+${docsState}
+
+Provide: (1) missing-document flags, (2) denial-risk items to pre-empt (PED waiting period, room-rent capping, proportionate deduction, non-payables etc as relevant), (3) a drafted pre-auth justification paragraph ready to submit, (4) a cost-estimate sanity check table against typical ranges. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital insurance desk / TPA coordinator at a 350-bed Kerala hospital, expert in cashless pre-authorisation under IRDAI guidelines.',
+    prompt, demo: DEMO[key], manualMinutes: 45,
+  });
+});
+</script>
+</body>
+</html>

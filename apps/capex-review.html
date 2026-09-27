@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capex request reviewer</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .kpis .kpi .value { font-size: 1.3rem; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Capex request reviewer</h1>
+    <p>Screen FY26-27 capital expenditure requests for completeness, weak justifications and missing quotes before they go to the Capex Committee.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample capex batch</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q1">Q1 FY26-27 batch — ICU, Cath Lab, MRI, HIS, Dialysis</option>
+          <option value="q2">Q2 FY26-27 batch — Ambulance, Cafeteria, Fire safety, OT lights</option>
+        </select>
+      </div>
+      <label>Capex request lines (editable)</label>
+      <textarea id="lines" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic capex data for demonstration only. Vendor and department names are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Finance & Accounts', title: 'Capex request reviewer' });
+
+const SCENARIOS = {
+  q1: {
+    label: 'Q1 FY26-27 batch — ICU, Cath Lab, MRI, HIS, Dialysis',
+    lines: `1. Dept: Critical Care | Item: ICU complex renovation (12 beds, isolation bay) | Category: Civil + MEP | Qty: 1 lot | Cost: ₹2,25,00,000 | Pricing source: Single quote (Ferns Interiors) | Justification: "Existing ICU is old and needs upgrade" | Impact if not done: "Patients will complain" | Timeline: Q3 FY26-27
+
+2. Dept: Cardiology | Item: Cath Lab flat-panel detector upgrade | Category: Medical equipment | Qty: 1 | Cost: ₹1,85,00,000 | Pricing source: 3 quotes (Siemens, Philips, GE) attached | Justification: "Current detector is 9 yrs old, image quality degrading, OEM AMC ending, replacement parts scarce; enables higher case volume for structural heart programme" | Impact if not done: "Cath lab downtime risk within 6 months, cardiology referrals to competitor hospitals" | Timeline: Q2 FY26-27
+
+3. Dept: Radiology | Item: MRI coil (16-channel head/neck) | Category: Medical equipment accessory | Qty: 2 | Cost: ₹42,00,000 | Pricing source: OEM quote only (Siemens, no alternate vendor possible) | Justification: "Need better coil" | Impact if not done: "Some scans will be lower quality" | Timeline: Q1 FY26-27
+
+4. Dept: IT | Item: HIS application + DB servers (2x) | Category: IT infrastructure | Qty: 2 | Cost: ₹68,00,000 | Pricing source: 2 quotes (Dell, HPE) | Justification: "Current servers are out of warranty since 8 months, HIS response time degraded 40% during peak OPD hours per helpdesk logs, DR replication currently non-functional" | Impact if not done: "Risk of HIS downtime affecting billing, pharmacy and lab across all departments; no DR in case of hardware failure" | Timeline: Q1 FY26-27
+
+5. Dept: Nephrology | Item: Dialysis machines | Category: Medical equipment | Qty: 6 | Cost: ₹90,00,000 | Pricing source: Single quote (Fresenius, verbal negotiation only, no written comparison) | Justification: "Dialysis unit is expanding" | Impact if not done: "Cannot expand" | Timeline: Q3 FY26-27`,
+  },
+  q2: {
+    label: 'Q2 FY26-27 batch — Ambulance, Cafeteria, Fire safety, OT lights',
+    lines: `1. Dept: Emergency Services | Item: Advanced Life Support ambulance | Category: Vehicle | Qty: 1 | Cost: ₹38,00,000 | Pricing source: 2 quotes (Force, Tata Motors, body-builder separate) | Justification: "Existing 2 ambulances average 11 yrs old, repeated breakdowns (6 in last quarter per transport log), non-compliance with new MoHFW ALS ambulance norms" | Impact if not done: "Risk of transfer delays for critical patients, potential NABH non-conformance on emergency transport readiness" | Timeline: Q3 FY26-27
+
+2. Dept: Facilities | Item: Staff cafeteria renovation + kitchen equipment | Category: Civil + equipment | Qty: 1 lot | Cost: ₹55,00,000 | Pricing source: Single quote (local contractor, no comparison) | Justification: "Cafeteria looks outdated" | Impact if not done: "Staff will be unhappy" | Timeline: Q4 FY26-27
+
+3. Dept: Facilities / Safety | Item: Fire safety system upgrade (sprinklers, hydrants, panel) | Category: Safety/MEP | Qty: 1 lot | Cost: ₹1,10,00,000 | Pricing source: 3 quotes (Godrej, Zicom, local vendor) with fire-audit report attached | Justification: "External fire audit (Q4 FY25-26) flagged 14 non-conformances including non-functional hydrant pressure in West block; mandatory for NABH re-accreditation and fire NOC renewal due in 5 months" | Impact if not done: "Risk of fire NOC non-renewal, potential regulatory shutdown of West block, NABH non-conformance" | Timeline: Q2 FY26-27 (urgent)
+
+4. Dept: Surgery | Item: OT LED shadowless lights (replacement, 3 OTs) | Category: Medical equipment | Qty: 3 | Cost: ₹36,00,000 | Pricing source: 2 quotes (Skanray, Mindray) | Justification: "Existing lights flickering intermittently during procedures per OT nursing incident log (4 reports in 2 months); OEM confirms parts discontinued" | Impact if not done: "Patient safety risk during long-duration procedures, potential case postponement" | Timeline: Q2 FY26-27`,
+  },
+};
+
+const KPI_LABELS = ['Total requested', 'Lines with single quote', 'Weak justification (heuristic)', 'Urgent/safety flagged'];
+
+function computeKPIs(text) {
+  const blocks = text.split(/\n\s*\n/).filter(b => b.trim());
+  let total = 0, single = 0, weak = 0, urgent = 0;
+  blocks.forEach(b => {
+    const costM = b.match(/Cost:\s*₹\s*([\d,]+)/);
+    if (costM) total += parseInt(costM[1].replace(/,/g, ''), 10);
+    if (/Single quote/i.test(b)) single++;
+    const justM = b.match(/Justification:\s*"([^"]*)"/);
+    if (justM && justM[1].split(/\s+/).length <= 8) weak++;
+    if (/urgent|NABH|fire NOC|regulatory/i.test(b)) urgent++;
+  });
+  return { total, single, weak, urgent, n: blocks.length };
+}
+function renderKPIs(text) {
+  const k = computeKPIs(text);
+  const box = document.getElementById('kpis');
+  const vals = [Hub.inr(k.total), `${k.single}/${k.n}`, `${k.weak}/${k.n}`, `${k.urgent}/${k.n}`];
+  box.innerHTML = KPI_LABELS.map((l, i) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${vals[i]}</div></div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('lines').value = s.lines;
+  renderKPIs(s.lines);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('lines').addEventListener('input', e => renderKPIs(e.target.value));
+loadScenario('q1');
+
+const DEMO = {
+q1: `## Line-by-line completeness & quality score
+
+| # | Item | Score /10 | Key gap |
+|---|---|---|---|
+| 1 | ICU complex renovation | 4 | Single quote only; justification and impact both vague, no bed-occupancy or NABH-linked rationale |
+| 2 | Cath Lab detector upgrade | 9 | Well documented — 3 quotes, AMC/parts-scarcity evidence, revenue linkage |
+| 3 | MRI coil | 3 | Justification ("need better coil") gives no clinical or utilisation basis; OEM-only pricing needs a documented sole-source waiver |
+| 4 | HIS servers | 8 | Good quantified justification (40% response-time degradation, DR gap); only 2 quotes, acceptable for IT infra |
+| 5 | Dialysis machines | 3 | Verbal-only pricing, no written comparison; justification doesn't state incremental patient volume or current utilisation % |
+
+## Weak justifications flagged
+- **Line 1 (ICU renovation)** — "existing ICU is old" is not a business case for ₹2.25 cr. Needs: current bed utilisation/turnaway data, NABH space-norm gap, infection-control rationale.
+- **Line 3 (MRI coil)** — "need better coil" has no scan-volume or diagnostic-yield data attached.
+- **Line 5 (Dialysis machines)** — "unit is expanding" needs current vs projected session volume, waitlist data, and current machine utilisation %.
+
+## Missing quotes / pricing evidence
+- Line 1: only one contractor quote for a ₹2.25 cr civil package — Capex Committee will likely ask for 2 more comparable quotes or a documented reason for single-sourcing.
+- Line 3: OEM-only pricing is acceptable **only** with a signed sole-source justification (proprietary coil compatibility) — not currently attached.
+- Line 5: negotiation was verbal; a written comparative quote (even from 1 alternate vendor) should be obtained before committee submission.
+
+## ROI / payback questions to raise
+1. **Cath Lab (Line 2):** What incremental PTCA/structural-heart case volume is assumed, and over what payback period does the ₹1.85 cr investment recover through case-volume growth vs AMC/downtime cost avoidance?
+2. **HIS servers (Line 4):** Quantify cost of one HIS downtime hour (billing/pharmacy/lab blocked) to justify urgency vs a lower-cost interim fix.
+3. **Dialysis (Line 5):** What is current machine utilisation (sessions/machine/day) — does adding 6 machines match realistic demand growth, or would 3-4 suffice initially?
+
+## Suggested prioritisation
+1. **HIS servers** — urgent, out-of-warranty + no DR, well justified (approve).
+2. **Cath Lab detector** — strong ROI case, approve subject to final quote negotiation.
+3. **Fire/safety-linked or regulatory items** — none in this batch, but ICU renovation should be re-justified with NABH space-norm/infection-control data before resubmission.
+4. **MRI coil, Dialysis machines, ICU renovation** — return to originating departments for stronger justification and additional quotes before committee places these on the agenda.`,
+
+q2: `## Line-by-line completeness & quality score
+
+| # | Item | Score /10 | Key gap |
+|---|---|---|---|
+| 1 | ALS ambulance | 8 | Good data (breakdown log, MoHFW norm reference); 2 quotes but body-builder cost not itemised separately |
+| 2 | Cafeteria renovation | 2 | Single quote, no comparison; justification purely subjective, no staff-satisfaction data or safety/hygiene driver |
+| 3 | Fire safety upgrade | 9 | Strong — audit report, 3 quotes, explicit regulatory deadline (fire NOC) |
+| 4 | OT LED lights | 8 | Good — incident log evidence, parts-discontinuation confirmed by OEM, only 2 quotes |
+
+## Weak justifications flagged
+- **Line 2 (Cafeteria)** — "looks outdated" and "staff will be unhappy" are not capex-committee-grade justifications for ₹55 lakh. No hygiene/safety driver, no comparison against a phased/lower-cost refresh.
+
+## Missing quotes / pricing evidence
+- Line 2: only one local-contractor quote for a ₹55 lakh civil + equipment package — needs at least 2 more comparative quotes before submission.
+- Line 1: ambulance chassis and body-fabrication costs should be itemised separately in the quote comparison, not bundled.
+- Line 4: 2 quotes is workable but a 3rd (e.g. Stryker or Trumpf) would strengthen the file given OT-safety criticality.
+
+## ROI / payback questions to raise
+1. **Fire safety (Line 3):** What is the cost of NOC non-renewal / potential regulatory closure of West block versus the ₹1.10 cr spend — frame as risk-avoidance, not discretionary ROI.
+2. **Ambulance (Line 1):** What is annual repair/downtime cost of the two 11-year-old units, and how many patient-transfer delays occurred in the last year attributable to breakdowns?
+3. **Cafeteria (Line 2):** Is a phased refresh (kitchen equipment first, civil work later) possible to reduce FY26-27 outlay, and is there any linkage to a hygiene/food-safety audit finding?
+
+## Suggested prioritisation
+1. **Fire safety upgrade** — regulatory deadline, safety-critical, fully documented — approve on priority.
+2. **OT LED lights** — patient-safety risk, well documented — approve.
+3. **ALS ambulance** — approve, request itemised chassis/body cost split before final sign-off.
+4. **Cafeteria renovation** — defer; return to Facilities for comparative quotes and a stronger, ideally phased, justification.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const lines = document.getElementById('lines').value;
+  renderKPIs(lines);
+  const prompt = `You are reviewing a batch of FY26-27 capital expenditure (capex) requests for VPS Lakeshore Hospital, Kochi before Capex Committee submission.
+
+Capex request lines:
+${lines}
+
+For each line provide: a completeness/quality score out of 10, flag weak or vague justifications, flag missing quotes/pricing evidence, raise ROI/payback questions where relevant, and end with a suggested prioritisation order for the committee. Use ₹ lakh/crore formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital finance controller at a 350-bed Kerala hospital, expert in capex governance and committee reviews.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

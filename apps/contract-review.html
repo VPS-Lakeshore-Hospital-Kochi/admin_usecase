@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contract risk review</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Contract risk review</h1>
+    <p>Paste contract clauses against the hospital's standard positions and get a clause-by-clause risk table before it goes for signature.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample contract</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="consultant">Visiting consultant agreement — Dr. R. Balasubramanian, Robotic Surgery</option>
+          <option value="lease">Equipment lease / reagent rental — Coral Diagnostics (analyser)</option>
+        </select>
+      </div>
+      <label>Contract clauses (editable, pasted extract)</label>
+      <textarea id="clauses" rows="12"></textarea>
+      <label>Hospital standard positions (editable)</label>
+      <textarea id="standard" rows="6"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Have Legal review before execution. Synthetic contract text for demonstration only — no real counterparties.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Legal & Secretarial', title: 'Contract risk review' });
+
+const SCENARIOS = {
+  consultant: {
+    clauses: `1. TERM: This agreement is for a period of 3 years from date of signing, renewable by mutual consent.
+2. REVENUE SHARE: Hospital shall pay the Consultant 65% of net collections from robotic surgery procedures performed by the Consultant, payable within 60 days of collection.
+3. INDEMNITY: The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.
+4. NON-COMPETE: The Consultant shall not practice robotic or minimally invasive surgery at any other hospital within Ernakulam district for a period of 2 years after termination of this agreement.
+5. EQUIPMENT: The Consultant shall have exclusive use of the da Vinci robotic surgical system during scheduled OT slots.
+6. TERMINATION: Either party may terminate this agreement with 90 days' written notice.`,
+    standard: `- Revenue share for visiting consultants (robotics/cardiology): standard band 40-55% of net collections.
+- Payment terms: within 30 days of collection.
+- Indemnity must be mutual, capped, and carved out for hospital-caused negligence (equipment failure, staff error).
+- Non-compete: max 1 year, restricted to directly competing NABH-accredited facility, not a blanket district-wide bar (restraint-of-trade risk under Indian Contract Act s.27).
+- Must include DPDP Act 2023 data protection clause for patient data access.
+- Jurisdiction: courts at Ernakulam, Kerala.
+- Termination for cause (misconduct, licence suspension) must be available with immediate effect, separate from the 90-day no-cause clause.`,
+  },
+  lease: {
+    clauses: `1. TERM: Lease of one (1) fully-automated biochemistry analyser for 5 years, with reagent rental (cost-per-test) model.
+2. MINIMUM COMMITMENT: Hospital commits to a minimum of 45,000 tests per year; shortfall billed at full reagent rate regardless of actual utilisation.
+3. MAINTENANCE: Vendor shall provide preventive maintenance quarterly. Breakdown response time: best-effort, no SLA specified.
+4. PRICE ESCALATION: Reagent pricing may be revised annually by the Vendor at its sole discretion.
+5. LIABILITY: Vendor's total liability under this agreement shall not exceed ₹1,00,000 in aggregate, irrespective of the cause of loss.
+6. EXIT: Hospital may not terminate before completion of 5 years except for Vendor's uncured material breach, with 6 months' cure period.
+7. GOVERNING LAW: This agreement shall be governed by the laws of Maharashtra, with courts at Mumbai having exclusive jurisdiction.`,
+    standard: `- Minimum test commitment should have a reasonableness cap and a volume-shortfall grace band (e.g. 15% tolerance) before penal billing.
+- Maintenance SLA required: response within 4 hours (critical equipment), resolution within 24-48 hours, with uptime guarantee (>=95%) and penalty credits below that.
+- Price escalation must be capped (e.g. max 5% p.a.) or linked to WPI, not vendor's sole discretion.
+- Liability cap must be proportionate to annual contract value (typically 1x-2x annual spend), not a flat token amount.
+- Exit clause must allow termination for hospital's convenience with reasonable notice (e.g. 6 months) subject to pro-rata settlement.
+- Jurisdiction must be Ernakulam, Kerala — not the vendor's home state.
+- Must include DPDP-compliant data handling clause if analyser integrates with LIS/patient data.`,
+  },
+};
+
+const KPI_DATA = {
+  consultant: [
+    { label: 'Clauses reviewed', value: '6' },
+    { label: 'High-severity flags', value: '3', delta: 'revenue share, indemnity, non-compete', cls: 'down' },
+    { label: 'Missing clauses', value: '2', delta: 'DPDP, jurisdiction', cls: 'down' },
+  ],
+  lease: [
+    { label: 'Clauses reviewed', value: '7' },
+    { label: 'High-severity flags', value: '4', delta: 'min. commitment, SLA, liability, jurisdiction', cls: 'down' },
+    { label: 'Missing clauses', value: '1', delta: 'DPDP', cls: 'down' },
+  ],
+};
+
+function renderKpis(key) {
+  const box = document.getElementById('kpis');
+  box.innerHTML = KPI_DATA[key].map(k => `
+    <div class="kpi"><div class="label">${Hub.esc(k.label)}</div><div class="value">${Hub.esc(k.value)}</div>
+    ${k.delta ? `<div class="delta ${k.cls || ''}">${Hub.esc(k.delta)}</div>` : ''}</div>`).join('');
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('clauses').value = s.clauses;
+  document.getElementById('standard').value = s.standard;
+  renderKpis(key);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('consultant');
+
+const DEMO = {
+consultant: `## Clause-by-clause risk table
+
+| Clause | Risk | Severity | Suggested redline |
+|---|---|---|---|
+| 2. Revenue share (65%) | Above standard band (40-55%); erodes hospital margin on high-cost robotic consumables | High | Revise to 50% of net collections, or tiered (55% below volume threshold, 45% above, reflecting fixed-cost recovery) |
+| 2. Payment within 60 days | Slower than standard 30-day cycle; cash flow drag | Medium | Amend to "within 30 days of collection" |
+| 3. Indemnity (one-sided) | Consultant bears all risk, Hospital has zero indemnity obligation even for equipment failure or staff negligence | High | Make mutual: Hospital indemnifies Consultant for Hospital-caused equipment/staff negligence; cap each party's liability at contract value |
+| 4. Non-compete (district-wide, 2 yrs) | Blanket district bar likely unenforceable as unreasonable restraint of trade (Contract Act s.27); litigation risk if challenged | High | Narrow to 1 year, limited to NABH-accredited hospitals directly competing in robotic surgery within a 5 km radius, not entire Ernakulam district |
+| 5. Exclusive OT slot use | Operationally fine but should reference the OT scheduling policy to avoid disputes with other surgeons | Low | Add cross-reference to Hospital's OT allocation SOP |
+| 6. Termination (90 days, no cause) | No separate for-cause termination (misconduct, licence issues) | Medium | Add immediate-termination clause for licence suspension, criminal conviction, or NABH-flagged misconduct |
+
+## Missing clauses
+
+- **DPDP Act 2023 data protection clause** — Consultant will access patient EHR/imaging data; agreement is silent on data handling, breach notification, and post-termination data return/deletion obligations.
+- **Termination for cause** — only no-cause (90-day) termination exists; no immediate-effect clause for misconduct.
+- **Jurisdiction** — agreement does not specify governing law or courts; should explicitly state Ernakulam, Kerala to avoid forum disputes.
+
+## Summary for approver
+
+This visiting consultant agreement carries **three high-severity commercial/legal risks**: an above-market 65% revenue share, a one-sided indemnity clause exposing the hospital to zero recourse, and a district-wide non-compete that is likely unenforceable and could expose the hospital to a wasted negotiating position if later challenged. Recommend returning to the Consultant's side with the redlines above before signature — none of these are deal-breakers but all materially favour the Consultant over the Hospital's standard template. DPDP and jurisdiction clauses must be added regardless of the outcome on commercial terms.`,
+
+lease: `## Clause-by-clause risk table
+
+| Clause | Risk | Severity | Suggested redline |
+|---|---|---|---|
+| 2. Minimum 45,000 tests/yr, full penal billing on shortfall | No tolerance band; a slow quarter (e.g. due to a competing lab tie-up) results in full-rate billing on unused tests | High | Add 15% shortfall tolerance before penal billing; true up annually not per-quarter |
+| 3. Maintenance — best-effort, no SLA | Biochemistry analyser is critical-path for OPD/IPD reporting; undefined response time risks reporting delays | High | Add SLA: 4-hour response, 24-hour resolution, >=95% uptime guarantee with service credits below threshold |
+| 4. Annual price escalation at Vendor's sole discretion | Open-ended cost exposure over 5-year term | High | Cap escalation at 5% p.a. or CPI/WPI-linked, whichever is lower |
+| 5. Liability capped at ₹1,00,000 flat | Grossly disproportionate to likely annual spend (reagent rental typically ₹40-60 lakh/yr at this volume); inadequate cover for a reporting-error or equipment-damage event | High | Raise cap to 1x-2x annual contract value |
+| 6. No convenience exit; only for uncured breach with 6-month cure | Hospital locked in for 5 years even if a better-value vendor emerges | Medium | Add convenience termination after year 2, with 6 months' notice and pro-rata equipment buy-back/settlement |
+| 7. Governing law — Maharashtra, courts at Mumbai | Forces hospital to litigate outside Kerala; high cost and inconvenience for a Kochi-based dispute | High | Amend to Kerala law, courts at Ernakulam |
+
+## Missing clauses
+
+- **DPDP Act 2023 clause** — analyser likely interfaces with the LIS and patient records; no data-handling, access-control, or breach-notification terms present.
+- (Termination-for-cause and non-compete are not applicable to this equipment lease.)
+
+## Summary for approver
+
+This reagent rental agreement has **four high-severity terms** working against the hospital: an uncapped minimum-commitment penalty, no maintenance SLA on a critical analyser, unilateral price escalation, and a token liability cap. The Maharashtra jurisdiction clause should also be corrected as a matter of course. Recommend holding execution and sending the above redlines to Coral Diagnostics — these are standard asks for a 5-year reagent rental and should not require material commercial re-negotiation, but each materially shifts risk onto the hospital if left as-is.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const clauses = document.getElementById('clauses').value;
+  const standard = document.getElementById('standard').value;
+  const prompt = `You are assisting the Legal & Secretarial team at VPS Lakeshore Hospital, Kochi (LHRC) with a contract risk review before execution.
+
+Contract clauses (extract):
+${clauses}
+
+Hospital's standard positions:
+${standard}
+
+Provide: (1) a clause-by-clause risk table (clause, risk, severity tag High/Medium/Low, suggested redline), (2) missing clauses the agreement should have (DPDP Act 2023 data protection, termination for cause, jurisdiction — Ernakulam, Kerala — as relevant), (3) a short summary for the approving executive. Use ₹ formatting where relevant.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced in-house counsel at a 350-bed NABH-accredited Kerala hospital, reviewing vendor and consultant contracts for risk before signature.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approval turnaround tracker</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Approval turnaround tracker</h1>
+    <p>Track pending and completed e-signature envelopes, spot bottlenecks by signer, and get escalation drafts — computed live from the table below.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Envelope log (editable)</h2>
+      <label>One envelope per line: Document | Sender | Current signer | Sent date (YYYY-MM-DD) | Completed date (or blank) | Status</label>
+      <textarea id="envelopes" rows="18" style="font-family:ui-monospace,monospace;font-size:12.5px"></textarea>
+      <div class="table-wrap" id="liveTable" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic envelope data for demonstration only. Names, dates and documents are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Legal & Secretarial', title: 'Approval turnaround tracker' });
+
+const TODAY = new Date('2026-09-27');
+
+const SAMPLE = `Vendor agreement — Coral Diagnostics reagent rental | Legal desk | CFO (Anitha George) | 2026-09-02 | | Pending signer
+Visiting consultant agreement — Dr. R. Balasubramanian | HR desk | MD (Thomas Varghese) | 2026-09-05 | | Pending signer
+NDA — cloud EHR vendor evaluation | IT desk | CIO (Sunil Nair) | 2026-09-18 | 2026-09-20 | Completed
+Biomedical waste contract renewal | Legal desk | COO (Rekha Pillai) | 2026-09-10 | | Pending signer
+MoU — medical college clinical training | Legal desk | Medical Director (Dr. Priya Varghese) | 2026-08-28 | | Pending signer
+Locum consultant agreement — Dr. Ashiq Rahman | HR desk | CFO (Anitha George) | 2026-09-15 | | Pending signer
+Equipment AMC — GE Cath Lab system | Biomedical desk | COO (Rekha Pillai) | 2026-09-01 | | Pending signer
+Corporate tie-up agreement — Maldives referral partner | Business dev. | MD (Thomas Varghese) | 2026-08-25 | | Pending signer
+Data processing agreement — lab reference partner | IT desk | CIO (Sunil Nair) | 2026-09-12 | 2026-09-16 | Completed
+Insurance TPA network agreement renewal | Legal desk | CFO (Anitha George) | 2026-09-08 | | Pending signer
+Security services contract renewal | Admin desk | COO (Rekha Pillai) | 2026-08-30 | 2026-09-08 | Completed
+Consultant agreement — Dr. Meera Krishnan (Nephrology) | HR desk | MD (Thomas Varghese) | 2026-09-20 | | Pending signer
+Facility management contract — housekeeping | Admin desk | COO (Rekha Pillai) | 2026-09-14 | | Pending signer
+Software licence renewal — imaging PACS | IT desk | CIO (Sunil Nair) | 2026-09-22 | | Pending signer
+Panel hospital agreement — Star Health | Legal desk | CFO (Anitha George) | 2026-08-20 | | Pending signer`;
+
+function parseRows() {
+  return document.getElementById('envelopes').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [doc, sender, signer, sent, completed, status] = l.split('|').map(s => (s || '').trim());
+    return { doc, sender, signer, sent, completed: completed || null, status };
+  });
+}
+
+function ageDays(sent, completed) {
+  const end = completed ? new Date(completed) : TODAY;
+  return Math.round((end - new Date(sent)) / 86400000);
+}
+
+function median(nums) {
+  const s = [...nums].sort((a, b) => a - b);
+  const n = s.length;
+  if (!n) return 0;
+  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+}
+
+function render() {
+  const rows = parseRows();
+  const ages = rows.map(r => ({ ...r, age: ageDays(r.sent, r.completed) }));
+  const pending = ages.filter(r => r.status.toLowerCase().includes('pending'));
+  const completed = ages.filter(r => r.status.toLowerCase().includes('completed'));
+  const medTurnaround = median(completed.map(r => r.age));
+  const medPendingAge = median(pending.map(r => r.age));
+  const bySigner = {};
+  pending.forEach(r => { bySigner[r.signer] = (bySigner[r.signer] || 0) + 1; });
+  const bottleneck = Object.entries(bySigner).sort((a, b) => b[1] - a[1])[0];
+  const overdue = pending.filter(r => r.age > 10).length;
+
+  document.getElementById('kpis').innerHTML = [
+    { label: 'Pending envelopes', value: String(pending.length) },
+    { label: 'Median pending age', value: `${medPendingAge}d`, delta: overdue ? `${overdue} over 10 days` : 'all within SLA', cls: overdue ? 'down' : 'up' },
+    { label: 'Median completed turnaround', value: `${medTurnaround}d` },
+    { label: 'Biggest bottleneck', value: bottleneck ? bottleneck[0].split('(')[0].trim() : '—', delta: bottleneck ? `${bottleneck[1]} envelopes waiting` : '', cls: 'down' },
+  ].map(k => `<div class="kpi"><div class="label">${Hub.esc(k.label)}</div><div class="value">${Hub.esc(k.value)}</div>${k.delta ? `<div class="delta ${k.cls || ''}">${Hub.esc(k.delta)}</div>` : ''}</div>`).join('');
+
+  document.getElementById('liveTable').innerHTML = `<table><thead><tr>
+    <th>Document</th><th>Signer</th><th class="num">Age (d)</th><th>Status</th></tr></thead><tbody>
+    ${ages.sort((a, b) => b.age - a.age).map(r => `<tr><td>${Hub.esc(r.doc)}</td><td>${Hub.esc(r.signer)}</td>
+      <td class="num">${r.age}</td><td>${r.status.toLowerCase().includes('completed')
+        ? '<span class="tag ok">Completed</span>'
+        : r.age > 10 ? '<span class="tag bad">Overdue</span>' : '<span class="tag warn">Pending</span>'}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+document.getElementById('envelopes').value = SAMPLE;
+document.getElementById('envelopes').addEventListener('input', render);
+render();
+
+const DEMO = `## Who is holding what
+
+| Signer | Pending envelopes | Oldest pending (days) |
+|---|---|---|
+| CFO (Anitha George) | 4 | 38 (Panel hospital agreement — Star Health) |
+| MD (Thomas Varghese) | 3 | 33 (Corporate tie-up — Maldives referral partner) |
+| COO (Rekha Pillai) | 3 | 28 (Equipment AMC — GE Cath Lab system) |
+| CIO (Sunil Nair) | 1 | 5 (Software licence renewal — imaging PACS) |
+| Medical Director (Dr. Priya Varghese) | 1 | 30 (MoU — medical college clinical training) |
+
+**CFO is the clear bottleneck** — holding 4 of 12 pending envelopes, including the two oldest-adjacent items (Panel hospital agreement at 38 days, Insurance TPA network agreement renewal at 19 days). The MD's queue includes the highest-value strategic item (Maldives referral tie-up) sitting unsigned for over a month.
+
+## Escalation list (immediate)
+
+1. **Panel hospital agreement — Star Health** (38 days, CFO) — a lapsed panel agreement risks claim-processing disruption for a high-volume TPA; escalate to CFO's EA for same-day signature or delegate.
+2. **Corporate tie-up — Maldives referral partner** (33 days, MD) — international referral revenue is being delayed; flag to MD directly, this is a revenue-impacting item, not routine paperwork.
+3. **MoU — medical college clinical training** (30 days, Medical Director) — approaching the start of the academic term; risk of missing the intake window.
+4. **Equipment AMC — GE Cath Lab system** (28 days, COO) — Cath Lab is a critical-uptime asset; an unsigned AMC risks a maintenance-coverage gap.
+
+## Draft reminder (polite, ready to send)
+
+*"Dear [Signer], this is a gentle follow-up on the pending e-signature envelope '[Document]', sent on [date] and currently awaiting your signature ([X] days). Given [reason — panel continuity / revenue impact / academic term / uptime coverage], could we request signature by [date + 2 working days]? Happy to walk through any open points on a quick call. Thank you."*
+
+## Process fixes to reduce future turnaround
+
+- **Parallel signing** for items that don't have a genuine sequential dependency (e.g. AMC and facility contracts currently routed CFO→COO in series could go out simultaneously with a joint completion deadline).
+- **Delegation of powers (DoP) for routine renewals** — biomedical/AMC/security-service renewals under a defined value threshold should be pre-authorised for COO-level sign-off without requiring MD/CFO queue time.
+- **SLA-based auto-escalation** — envelopes pending beyond 10 working days should auto-notify the signer's EA and the Legal desk, rather than relying on manual chasing.
+- **Weekly digest to each signer** — a single consolidated list of their pending envelopes (rather than individual reminders) tends to clear faster than one-off nudges.`;
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const raw = document.getElementById('envelopes').value;
+  const prompt = `You are assisting the Legal & Secretarial team at VPS Lakeshore Hospital, Kochi (LHRC) in reviewing the e-signature approval log below (pipe-separated: document | sender | current signer | sent date | completed date | status). Today's date is 2026-09-27.
+
+${raw}
+
+Provide: (1) who is holding what — a table of signers with pending count and oldest pending item, naming the bottleneck signer, (2) an escalation list of the most urgent pending items with reasons, (3) a polite, ready-to-send reminder draft template, (4) process fixes (e.g. parallel signing, delegation of powers for routine renewals, SLA-based escalation).`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced Legal & Secretarial operations lead at a Kerala hospital, responsible for contract approval turnaround via e-signature workflows.',
+    prompt, demo: DEMO, manualMinutes: 45,
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incident trend report</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Incident trend report</h1>
+    <p>Turn the month's non-clinical incident reports into a quality committee-ready trend summary with CAPA recommendations.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Incident log</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="aug">August 2026 — incident log</option>
+          <option value="sep">September 2026 — incident log</option>
+        </select>
+      </div>
+      <label>Reports (editable, one per line: Date | Category | Location | Severity)</label>
+      <textarea id="log" rows="18"></textarea>
+      <label>Category × severity breakdown</label>
+      <div id="catTable"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic data for demonstration only. Locations, dates and staff are illustrative, not actual incident records.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Quality & Accreditation', title: 'Incident trend report' });
+
+const SCENARIOS = {
+  aug: {
+    label: 'August 2026 — incident log',
+    log: `2026-08-02 | Fall | Lift lobby, 2nd floor | Minor
+2026-08-03 | Needle-stick injury | Ward B nursing station | Moderate
+2026-08-04 | Fire alarm false trigger | Kitchen, ground floor | Minor
+2026-08-06 | IT downtime | HIS server, billing counter | Moderate
+2026-08-07 | Fall | Lift lobby, 3rd floor | Minor
+2026-08-09 | Medication store temperature excursion | Pharmacy cold storage | Moderate
+2026-08-10 | Security incident | ER waiting area | Moderate
+2026-08-12 | Fire alarm false trigger | Basement, laundry | Minor
+2026-08-13 | Needle-stick injury | OT sharps disposal | Moderate
+2026-08-15 | Lift entrapment | Service lift, block B | Major
+2026-08-17 | Fall | Lift lobby, ground floor | Minor
+2026-08-19 | IT downtime | Radiology PACS | Moderate
+2026-08-21 | Security incident | ER, night shift | Major
+2026-08-24 | Fall | Lift lobby, 2nd floor | Minor
+2026-08-27 | Medication store temperature excursion | Ward C medication room | Minor`,
+  },
+  sep: {
+    label: 'September 2026 — incident log',
+    log: `2026-09-01 | Needle-stick injury | Ward A nursing station | Moderate
+2026-09-02 | Fall | Lift lobby, 2nd floor | Minor
+2026-09-03 | Security incident | ER waiting area | Major
+2026-09-05 | Fire alarm false trigger | Kitchen, ground floor | Minor
+2026-09-06 | Lift entrapment | Visitor lift, main block | Major
+2026-09-08 | Fall | Lift lobby, 3rd floor | Minor
+2026-09-09 | IT downtime | HIS server, OPD billing | Major
+2026-09-11 | Medication store temperature excursion | Pharmacy cold storage | Major
+2026-09-13 | Needle-stick injury | OT sharps disposal | Moderate
+2026-09-14 | Fall | Lift lobby, ground floor | Minor
+2026-09-16 | Security incident | ER, night shift | Moderate
+2026-09-18 | Fire alarm false trigger | Basement, laundry | Minor
+2026-09-20 | Fall | Lift lobby, 2nd floor | Moderate
+2026-09-23 | IT downtime | Radiology PACS | Minor
+2026-09-25 | Needle-stick injury | Ward B nursing station | Moderate`,
+  },
+};
+
+function parseLog(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [date, category, location, severity] = l.split('|').map(s => s.trim());
+    return { date, category, location, severity };
+  });
+}
+
+function renderKPIs(rows) {
+  const bySeverity = {};
+  const byCategory = {};
+  rows.forEach(r => {
+    bySeverity[r.severity] = (bySeverity[r.severity] || 0) + 1;
+    byCategory[r.category] = (byCategory[r.category] || 0) + 1;
+  });
+  const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+  const el = document.getElementById('kpis');
+  el.innerHTML = `
+    <div class="kpi"><div class="label">Total incidents</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Major severity</div><div class="value">${bySeverity['Major'] || 0}</div><div class="delta down">Priority for RCA</div></div>
+    <div class="kpi"><div class="label">Moderate severity</div><div class="value">${bySeverity['Moderate'] || 0}</div></div>
+    <div class="kpi"><div class="label">Top category</div><div class="value" style="font-size:1.05rem">${Hub.esc(topCategory ? topCategory[0] : '—')}</div><div class="delta">${topCategory ? topCategory[1] : 0} occurrences</div></div>`;
+}
+
+function renderTable(rows) {
+  const byCategory = {};
+  rows.forEach(r => {
+    byCategory[r.category] = byCategory[r.category] || { Minor: 0, Moderate: 0, Major: 0 };
+    byCategory[r.category][r.severity] = (byCategory[r.category][r.severity] || 0) + 1;
+  });
+  const box = document.getElementById('catTable');
+  let html = '<div class="table-wrap"><table><thead><tr><th>Category</th><th class="num">Minor</th><th class="num">Moderate</th><th class="num">Major</th><th class="num">Total</th></tr></thead><tbody>';
+  Object.entries(byCategory).forEach(([cat, s]) => {
+    const total = s.Minor + s.Moderate + s.Major;
+    html += `<tr><td>${Hub.esc(cat)}</td><td class="num">${s.Minor}</td><td class="num">${s.Moderate}</td><td class="num">${s.Major}</td><td class="num"><b>${total}</b></td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  box.innerHTML = html;
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('log').value = s.log;
+  const rows = parseLog(s.log);
+  renderKPIs(rows);
+  renderTable(rows);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('aug');
+document.getElementById('log').addEventListener('input', () => {
+  const rows = parseLog(document.getElementById('log').value);
+  renderKPIs(rows);
+  renderTable(rows);
+});
+
+const DEMO = {
+aug: `## Monthly quality committee summary — August 2026
+
+15 non-clinical incidents were logged in August, spanning 7 categories across the facility. Severity mix: 9 Minor, 5 Moderate, 1 Major. The single Major incident (lift entrapment, service lift Block B, 15 Aug) triggered an immediate engineering inspection and no patient/staff injury was recorded.
+
+## Trends vs last month (July 2026, reference baseline)
+
+| Category | Aug 2026 | Jul 2026 (baseline) | Trend |
+|---|---|---|---|
+| Falls (lift lobby) | 4 | 2 | **Up** — recurring location pattern |
+| Needle-stick injury | 2 | 3 | Down |
+| Fire alarm false trigger | 2 | 1 | Up (minor) |
+| IT downtime | 2 | 2 | Flat |
+| Security incident (ER) | 2 | 1 | Up |
+| Lift entrapment | 1 | 0 | **New — flag** |
+| Medication store temperature excursion | 2 | 1 | Up |
+
+**Key trend:** Falls near lift lobbies (4 of 15 incidents, 27%) are the single largest cluster and are geographically concentrated — all four occurred within lift lobby zones across 3 floors, suggesting a common environmental factor (flooring, lighting, or signage) rather than isolated patient factors.
+
+## RCA candidates
+
+1. **Lift lobby falls (recurring, 4 events)** — warrants a full RCA: check flooring material/wet-floor protocol, lighting levels, and whether incidents cluster around specific shift timings.
+2. **Lift entrapment (Major, single event)** — RCA mandatory for any Major-severity incident per NABH protocol; review maintenance schedule and emergency release procedure adequacy.
+3. **ER security incident (21 Aug, Major)** — RCA to assess night-shift security staffing and de-escalation training gaps.
+
+## CAPA table
+
+| Finding | Corrective action | Preventive action | Owner | Target date |
+|---|---|---|---|---|
+| Lift lobby falls clustering | Immediate: anti-skid mats + wet-floor signage at all lift lobbies | Quarterly lighting/flooring audit; add to housekeeping SOP | Facilities Head | 15 Sep 2026 |
+| Lift entrapment (Block B) | Immediate: service lift taken offline for inspection | AMC vendor to run monthly preventive maintenance with signed checklist | Facilities Head | 30 Sep 2026 |
+| ER security incidents (night shift) | Immediate: additional security guard for night shift, ER | De-escalation training for ER front-desk & security staff | Security In-charge | 20 Sep 2026 |
+| Medication store temp excursions | Immediate: calibrate cold-storage thermostat | Install continuous temperature logger with SMS alert | Pharmacy In-charge | 10 Sep 2026 |
+| Needle-stick injuries | Immediate: reinforce safe-disposal briefing at OT & wards | Audit sharps-disposal bin placement and PPE compliance | Infection Control Officer | 25 Sep 2026 |
+
+**Recommendation to committee:** Prioritise the lift-lobby fall cluster and the lift entrapment for root-cause review at the next Quality Committee meeting; both point to a facilities/engineering root cause rather than staff behaviour.`,
+
+sep: `## Monthly quality committee summary — September 2026
+
+15 non-clinical incidents were logged in September. Severity mix has worsened compared to August: 6 Minor, 5 Moderate, **4 Major** (up from 1 Major in August) — a notable increase in high-severity events despite a similar total incident count.
+
+## Trends vs last month (August 2026)
+
+| Category | Sep 2026 | Aug 2026 | Trend |
+|---|---|---|---|
+| Falls (lift lobby) | 4 | 4 | Flat, but 1 now Moderate (worsening) |
+| Needle-stick injury | 3 | 2 | Up |
+| Fire alarm false trigger | 2 | 2 | Flat |
+| IT downtime | 2 | 2 | Flat, but 1 now Major |
+| Security incident (ER) | 2 | 2 | Flat, but 1 now Major |
+| Lift entrapment | 1 | 1 | Flat — **repeat category, 2nd month running** |
+| Medication store temperature excursion | 1 | 2 | Down in count, but now Major severity |
+
+**Key trend:** Severity is escalating even where incident counts are flat — IT downtime (HIS billing, 9 Sep) and the medication cold-storage excursion (11 Sep) both crossed into Major territory this month, and lift entrapment has now recurred for a second consecutive month, indicating the August CAPA on lift maintenance was not fully effective.
+
+## RCA candidates
+
+1. **Recurring lift entrapment (2nd consecutive month)** — highest priority: prior CAPA (AMC preventive maintenance) appears not to have closed the gap; needs an independent RCA, not a repeat of last month's action.
+2. **HIS server downtime escalating to Major (9 Sep)** — billing outage duration and patient impact need root-cause review with IT vendor.
+3. **Medication cold-storage excursion reaching Major severity** — investigate whether the temperature logger recommended last month was installed; if not, this is a CAPA-closure failure, not a new problem.
+
+## CAPA table
+
+| Finding | Corrective action | Preventive action | Owner | Target date |
+|---|---|---|---|---|
+| Repeat lift entrapment | Independent third-party lift inspection (beyond AMC vendor) | Escalate to biomedical/facilities committee; consider lift replacement if defect is structural | Facilities Head | 10 Oct 2026 |
+| HIS downtime (Major) | Immediate: manual billing fallback SOP activated during outage | IT to conduct server capacity review and enable failover server | IT Head | 15 Oct 2026 |
+| Medication cold-storage (Major) | Immediate: verify logger installation from August CAPA; escalate if not done | Weekly compliance check of temperature logs by QA | Pharmacy In-charge & QA | 5 Oct 2026 |
+| Lift lobby falls (persistent) | Re-audit anti-skid mat condition (installed last month) | Add lift lobby falls to monthly facilities walk-round checklist | Facilities Head | 10 Oct 2026 |
+| ER security (1 Major) | Review night-shift security staffing ratio | Fast-track de-escalation training completion (from Aug CAPA) | Security In-charge | 10 Oct 2026 |
+
+**Recommendation to committee:** Two CAPAs from August (lift maintenance, cold-storage logger) appear to have failed to prevent recurrence — request a CAPA-effectiveness review as a standing agenda item, not just new corrective actions.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const logText = document.getElementById('log').value;
+  const rows = parseLog(logText);
+  renderKPIs(rows);
+  renderTable(rows);
+  const summary = rows.map(r => `${r.date} | ${r.category} | ${r.location} | ${r.severity}`).join('\n');
+  const prompt = `You are assisting Quality & Accreditation at VPS Lakeshore Hospital (LHRC), Kochi with the monthly non-clinical incident trend report for the Quality Committee.
+
+Incident log (date | category | location | severity):
+${summary}
+
+Provide: (1) a monthly quality committee summary, (2) trends vs last month with a comparison table (invent a plausible prior-month baseline if needed and say so), (3) RCA candidates (which incidents warrant a full root-cause analysis and why), (4) a CAPA table with finding, corrective action, preventive action, owner and target date. Keep it NABH-appropriate and concise.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced Quality & Accreditation manager at a 350-bed NABH-accredited Kerala hospital, expert in incident reporting, RCA methodology and CAPA tracking.',
+    prompt, demo: DEMO[key], manualMinutes: 150,
+  });
+});
+</script>
+</body>
+</html>
