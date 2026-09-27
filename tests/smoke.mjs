@@ -43,6 +43,9 @@ for (const [path, width] of [['index.html', 1280], ['governance.html', 1280], ['
       await btn.click();
       await page.waitForFunction(() => [...document.querySelectorAll('.claude-out')].some(e => e.textContent.length > 200 && !e.querySelector('.thinking')), null, { timeout: 8000 })
         .then(() => note = 'output ok').catch(() => { note = 'NO OUTPUT'; errors.push('no output'); });
+      if (!(await page.locator('.hub-docx').count())) errors.push('no Word download button');
+      const tas = await page.locator('.card textarea').count(), ups = await page.locator('.hub-upload').count();
+      if (ups < tas) errors.push(`upload controls ${ups} of ${tas} textareas`);
     } else { errors.push('no primary button'); }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     if (overflow) errors.push(`horizontal overflow at ${width}px`);
