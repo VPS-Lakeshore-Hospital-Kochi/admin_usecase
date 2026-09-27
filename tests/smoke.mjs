@@ -10,8 +10,9 @@ const TYPES = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascrip
 const server = createServer(async (req, res) => {
   try {
     const p = join(ROOT, decodeURIComponent(req.url.split('?')[0]).replace(/\/$/, '/index.html'));
+    const body = await readFile(p);
     res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream' });
-    res.end(await readFile(p));
+    res.end(body);
   } catch { res.writeHead(404); res.end(); }
 }).listen(8765);
 
@@ -24,7 +25,7 @@ for (const [path, width] of [['index.html', 1280], ...APPS.flatMap(a => [[`apps/
   const page = await browser.newPage({ viewport: { width, height: 900 } });
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  page.on('console', m => { if (m.type() === 'error' && !/fonts\.g/.test(m.text())) errors.push(m.text()); });
+  page.on('response', r => { if (r.status() >= 400 && r.url().startsWith('http://localhost') && !r.url().endsWith('favicon.ico')) errors.push(`${r.status()} ${r.url()}`); });
   await page.goto(`http://localhost:8765/${path}`);
   let note = '';
   if (path !== 'index.html') {
