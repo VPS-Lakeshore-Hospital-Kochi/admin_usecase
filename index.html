@@ -15,6 +15,7 @@
   </section>
 
   <div class="kpis" id="summary"></div>
+  <div class="card" style="margin-bottom:16px;border-left:4px solid #9F003A"><b>Before rolling out:</b> read <a href="governance.html">Governance &amp; rollout</a> — principles, data rules, approval tiers, phased plan and an hours-saved estimator.</div>
   <div class="row" style="margin-bottom:16px"><input id="q" type="search" placeholder="Search prototypes — e.g. TPA, NABH, contract, nurse" aria-label="Search prototypes" style="max-width:480px"></div>
   <div id="tiles"></div>
 
@@ -22,44 +23,11 @@
 </main>
 
 <script src="shared/claude.js"></script>
+<script src="shared/apps.js"></script>
 <script>
   Hub.mountHeader();
 
-  // [slug, dept, title, what, manualMinutes, users, flagship]
-  const APPS = [
-    ['finance-mis', 'Finance & Accounts', 'MIS commentary & variance memo', 'Reads the monthly MIS and writes the "what moved and why" commentary by department, with a budget-vs-actual variance memo.', 180, 'CFO, Finance controllers', 1],
-    ['capex-review', 'Finance & Accounts', 'Capex request reviewer', 'Scores each capex line for justification, pricing evidence and payback, and flags weak or incomplete requests.', 120, 'CFO, Capex committee'],
-    ['audit-responder', 'Finance & Accounts', 'Audit query responder', 'Drafts responses to statutory and internal audit queries with the documents to attach and owners.', 90, 'Finance, Internal audit'],
-    ['tpa-preauth', 'Revenue Cycle · TPA', 'Cashless pre-auth file builder', 'Checks a case against the TPA checklist, flags missing documents and drafts the pre-auth request inside the IRDAI 1-hour window.', 45, 'Insurance desk, Billing', 1],
-    ['denial-analyser', 'Revenue Cycle · TPA', 'Denial & short-payment analyser', 'Clusters TPA deductions by reason, sizes the preventable amount and drafts the appeal letter.', 150, 'Insurance desk, RCM head'],
-    ['discharge-billing', 'Revenue Cycle · TPA', 'Discharge bill checker', 'Finds unbilled services, duplicates and non-payables before the final bill goes to the TPA.', 40, 'IP billing'],
-    ['estimate-generator', 'Revenue Cycle · TPA', 'Patient cost estimate', 'Builds a cost range from similar past cases and explains it to the patient in English and Malayalam.', 30, 'Front office, Billing'],
-    ['purchase-quotes', 'Purchase & Stores', 'Quote comparison & PC note', 'Normalises vendor quotations into a comparative statement, finds L1 on total cost of ownership and drafts the Purchase Committee note.', 120, 'Purchase manager, Purchase Committee', 1],
-    ['three-way-match', 'Purchase & Stores', 'PO–GRN–invoice matcher', 'Matches purchase orders, goods receipts and invoices; explains price drift and short supply, and drafts the debit note.', 60, 'Stores, Accounts payable'],
-    ['vendor-contracts', 'Purchase & Stores', 'Vendor contract summariser', 'Pulls renewal dates, escalations, uptime guarantees and penalties out of AMC/CMC and service contracts.', 60, 'Purchase, Biomedical'],
-    ['stock-watch', 'Purchase & Stores', 'Reorder & expiry watch', 'Computes days of cover, proposes reorders and handles near-expiry stock across pharmacy and consumables.', 90, 'Stores, Pharmacy'],
-    ['hr-screener', 'Human Resources', 'Resume screener & interview kit', 'Ranks applicants against the job description with evidence, red flags and a tailored interview question pack.', 90, 'HR, Hiring managers', 1],
-    ['hr-letters', 'Human Resources', 'HR letter generator', 'Drafts offer, appointment, increment, relieving and experience letters and checks the details for inconsistencies.', 25, 'HR operations'],
-    ['hr-policy-bot', 'Human Resources', 'Staff policy Q&A', 'Answers staff questions on leave, allowances, POSH and grievances, citing the policy clause.', 15, 'All staff, HR'],
-    ['credential-tracker', 'Human Resources', 'Licence & credential tracker', 'Tracks KMC/KNMC registrations and BLS/ACLS expiry, with renewal reminders and NABH HRM risk.', 120, 'HR, Medical admin, Nursing'],
-    ['exit-analysis', 'Human Resources', 'Exit interview analysis', 'Finds attrition themes and departmental hotspots in exit interviews and proposes retention actions.', 180, 'HR head, CEO'],
-    ['marketing-studio', 'Marketing & Comms', 'Content studio', 'Turns a brief into social posts, a press note and a doctor profile in the "In good hands" voice — English and Malayalam.', 150, 'Marketing, Corporate comms', 1],
-    ['reputation-monitor', 'Marketing & Comms', 'Online reputation monitor', 'Compares ratings and themes across review sites against peers and drafts replies.', 120, 'Marketing'],
-    ['referral-tracker', 'Marketing & Comms', 'Referral & camp tracker', 'Shows which referrers and health camps convert to admissions and plans outreach by district.', 90, 'Marketing, Business development'],
-    ['patient-feedback', 'Patient Experience', 'Feedback intelligence', 'Tags every complaint and review by theme, department and urgency, and routes service-recovery actions to owners.', 240, 'Patient relations, Quality, Unit heads', 1],
-    ['contact-centre', 'Patient Experience', 'Call centre & WhatsApp agent', 'Answers routine enquiries from the FAQ, suggests booking slots and escalates anything clinical or urgent.', 10, 'Contact centre'],
-    ['intl-desk', 'International Patients', 'International patient desk assistant', 'Replies to overseas enquiries in the enquirer\'s language with an estimate, visa checklist and next steps.', 45, 'International patient desk'],
-    ['nabh-readiness', 'Quality & Accreditation', 'NABH readiness & policy Q&A', 'Maps the P&P library to NABH chapters, flags gaps and overdue revisions, and answers "what does our policy say" questions.', 300, 'Quality manager, Department heads', 1],
-    ['incident-trends', 'Quality & Accreditation', 'Incident trend report', 'Turns the month\'s non-clinical incident reports into a quality committee summary with CAPA owners.', 150, 'Quality, Safety committee'],
-    ['contract-review', 'Legal & Secretarial', 'Contract risk review', 'Reviews consultant, lease and vendor agreements clause by clause, with severity and suggested redlines.', 120, 'Legal, Company secretary'],
-    ['board-papers', 'Legal & Secretarial', 'Board paper & minutes drafter', 'Drafts agenda notes and resolutions from bullet points, and formal minutes from rough notes.', 180, 'Company secretary, CEO office'],
-    ['docusign-tracker', 'Legal & Secretarial', 'Approval turnaround tracker', 'Shows who is sitting on which approval, with escalations and reminder drafts.', 45, 'CEO office, Legal'],
-    ['compliance-calendar', 'Legal & Secretarial', 'Statutory compliance calendar', 'Tracks licences and filings (fire NOC, PCB, AERB, drug licence, MCA) with renewal plans.', 90, 'Legal, Facilities, Finance'],
-    ['equipment-utilisation', 'Facilities & Biomedical', 'Equipment utilisation & AMC analyser', 'Finds underused high-value equipment such as the robot and cath labs and proposes ways to lift utilisation.', 120, 'COO, Biomedical'],
-    ['maintenance-tickets', 'Facilities & Biomedical', 'Maintenance ticket analyser', 'Spots repeat failures and repair-vs-replace calls in the maintenance log.', 90, 'Engineering, Biomedical'],
-    ['ceo-copilot', 'Management Office', 'CEO / Chairman copilot', 'Morning brief across departments, meeting notes to tracked actions, and plain-English questions on hospital KPIs.', 60, 'CEO, Chairman, COO', 1],
-    ['market-scan', 'Management Office', 'Competitor & market scan', 'Compares public financials and news for peers and drafts a board-ready positioning one-pager.', 240, 'CEO, Strategy'],
-  ].map(([slug, dept, title, what, manual, users, flagship]) => ({ href: `apps/${slug}.html`, dept, title, what, manual, users, flagship: !!flagship }));
+  const APPS = window.HUB_APPS;
 
   const tile = a => `
     <a class="card tile" href="${a.href}" data-q="${Hub.esc((a.dept + ' ' + a.title + ' ' + a.what + ' ' + a.users).toLowerCase())}">
