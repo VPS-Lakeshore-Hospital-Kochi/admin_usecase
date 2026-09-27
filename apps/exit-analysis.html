@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exit interview analysis</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Exit interview analysis</h1>
+    <p>Turn a batch of exit interview free-text responses into attrition themes, department hotspots and retention actions.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Exit interview responses (editable)</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q3">Q3 2026 exits (12 responses)</option>
+          <option value="nursing">Nursing-heavy Gulf outflow batch</option>
+        </select>
+      </div>
+      <textarea id="responses" rows="18"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic exit interview data for demonstration only. No real employee identities.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Human Resources', title: 'Exit interview analysis' });
+
+const SCENARIOS = {
+q3: `1. Nurse, CICU, 2.5 yrs — "Got an offer from a Riyadh hospital, almost double my take-home. Also night shifts here are back-to-back, no rotation fairness."
+2. Nurse, General Ward, 1.2 yrs — "Manager plays favourites with leave approvals. Otherwise I like the work."
+3. Technician, Radiology, 4 yrs — "Pay hasn't kept pace — juniors joining now get almost the same as me after increments."
+4. Nurse, Emergency, 3 yrs — "Moving to UK on a Health and Care Worker visa. Been planning this for a year, nothing hospital could've done."
+5. Billing Executive, Patient Billing, 1.8 yrs — "No growth path visible, same role for 2 years, asked twice about promotion cycle, no answer."
+6. Nurse, OT Complex, 2 yrs — "Shift roster published only 3 days in advance, hard to plan childcare. Pay is fine."
+7. Nurse, CICU, 1.5 yrs — "Gulf offer, better accommodation allowance too. Also my manager is very rigid about swaps."
+8. Housekeeping Supervisor, Facilities, 6 yrs — "Retiring early, no complaints, was a good run."
+9. Nurse, Paediatrics, 2.2 yrs — "UK recruitment agency approached me, couldn't say no to the salary difference."
+10. Pharmacist, Pharmacy, 3.5 yrs — "Workload doubled after two colleagues left and weren't replaced for 4 months."
+11. Nurse, General Ward, 0.8 yrs — "Just didn't feel supported during induction, felt thrown into the deep end."
+12. Front Office Executive, Patient Billing, 2.5 yrs — "Spouse relocated to Bangalore for work, otherwise happy here."`,
+
+nursing: `1. Nurse, CICU, 2 yrs — "Riyadh offer, 2.2x current salary plus family visa sponsorship."
+2. Nurse, CICU, 3 yrs — "Same story as most of my batch — Gulf agencies are actively recruiting from our unit specifically."
+3. Nurse, Emergency, 1.5 yrs — "UK NHS Trust sponsorship, been applying for a year."
+4. Nurse, CICU, 4 yrs — "Night-shift load has gone up since two vacancies weren't filled — burnout is real."
+5. Nurse, OT Complex, 2.8 yrs — "Qatar offer, plus my cousin already there says the lifestyle is easier."
+6. Nurse, Paediatrics, 1 yr — "Manager micromanages every swap request, feels punitive."
+7. Nurse, General Ward, 3.5 yrs — "Gulf salary aside, promotion to Senior Staff Nurse has been 'under review' for 8 months."
+8. Nurse, CICU, 2.5 yrs — "Dubai hospital offer, sponsors accommodation, was the deciding factor over pay alone."
+9. Nurse, Emergency, 5 yrs — "Long-serving but the roster unpredictability finally wore me down, moving to a Gulf agency posting."
+10. Nurse, OT Complex, 1.8 yrs — "UK visa route via a recruitment agency, salary nearly 3x."
+11. Nurse, CICU, 0.9 yrs — "Left within a year — induction felt rushed given how short-staffed CICU already was."
+12. Nurse, General Ward, 4.2 yrs — "No Gulf plans, just switching to a hospital closer to home after marriage."`,
+};
+
+function parseTenure(line) {
+  const m = line.match(/,\s*([\d.]+)\s*yrs?/i);
+  return m ? parseFloat(m[1]) : null;
+}
+function parseDept(line) {
+  const m = line.match(/^\d+\.\s*[^,]+,\s*([^,]+),/);
+  return m ? m[1].trim() : 'Other';
+}
+function renderKpis(text) {
+  const lines = text.trim().split('\n').filter(l => /^\d+\./.test(l));
+  const byDept = {};
+  let tenureSum = 0, tenureN = 0, underTwo = 0;
+  lines.forEach(l => {
+    const dept = parseDept(l);
+    byDept[dept] = (byDept[dept] || 0) + 1;
+    const t = parseTenure(l);
+    if (t !== null) { tenureSum += t; tenureN++; if (t < 2) underTwo++; }
+  });
+  const topDept = Object.entries(byDept).sort((a, b) => b[1] - a[1])[0];
+  const box = document.getElementById('kpis');
+  box.innerHTML = `
+    <div class="kpi"><div class="label">Exits in batch</div><div class="value">${lines.length}</div></div>
+    <div class="kpi"><div class="label">Top exit dept</div><div class="value" style="font-size:1.15rem">${topDept ? Hub.esc(topDept[0]) : '—'}</div><div class="delta">${topDept ? topDept[1] + ' exits' : ''}</div></div>
+    <div class="kpi"><div class="label">Avg tenure</div><div class="value">${tenureN ? (tenureSum / tenureN).toFixed(1) : '—'} yrs</div></div>
+    <div class="kpi"><div class="label">Exits &lt; 2 yrs tenure</div><div class="value">${underTwo}</div></div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('responses').value = SCENARIOS[key];
+  renderKpis(SCENARIOS[key]);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('responses').addEventListener('input', e => renderKpis(e.target.value));
+loadScenario('q3');
+
+const DEMO = {
+q3: `## Attrition themes
+
+| Theme | Mentions | Depts affected |
+|---|---|---|
+| Gulf/UK salary & sponsorship pull | 4 | CICU, Emergency, Paediatrics |
+| Roster unpredictability / shift fairness | 4 | CICU, OT Complex, General Ward |
+| Manager rigidity / favouritism | 3 | General Ward, CICU, OT Complex |
+| Stagnant growth / promotion delay | 2 | Patient Billing |
+| Understaffing → workload spike | 1 | Pharmacy |
+| Personal/relocation (not retention-actionable) | 3 | Emergency, Paediatrics, Patient Billing, Facilities |
+
+## Department hotspots
+
+- **CICU (3 of 12 exits):** overlapping international-offer and roster-fairness complaints — highest-risk cluster; nurses here are also the most portable internationally (ICU skills transfer directly to Gulf hospitals).
+- **Patient Billing (2 exits):** growth-stagnation pattern distinct from clinical departments — a non-clinical retention gap, easy to miss if analysis focuses only on nursing.
+- **General Ward:** management-style complaints recur across two separate exits — worth a 360° review of the ward manager.
+
+## Retention actions (cost vs impact)
+
+| Action | Est. cost | Expected impact |
+|---|---|---|
+| Publish shift roster 2 weeks ahead (vs 3 days) in CICU/OT | Near-zero (process change) | High — addresses 4 of 12 exit reasons directly |
+| Gulf-parity retention allowance for CICU/Emergency critical-care nurses (~₹3,000–5,000/month) | ~₹8–12 lakh/year for ~25 nurses | Medium-high — won't match 2x salary but improves stay-decision at the margin |
+| Formalise promotion review cadence (quarterly, published dates) for non-clinical roles | Near-zero | Medium — targets Patient Billing stagnation theme |
+| Backfill SLA: replace exits within 6 weeks, not 4+ months | Recruitment cost, ~₹1.5 lakh/hire (agency fee) | High — prevents Pharmacy-style workload cascades that trigger further exits |
+| 360° review + coaching for General Ward manager | Low (internal L&D time) | Medium — targeted fix for a recurring named-pattern complaint |
+
+## Note for the CEO
+
+Of 12 Q3 exits, only 4 are genuinely "unavoidable" (relocation, retirement, spouse transfer). The other 8 cluster around three fixable levers: **roster predictability, manager consistency, and visible career progression** — none of which require matching Gulf salaries directly. CICU is the single highest-risk unit and merits an immediate roster and pay-band review before Q4, given its nurses are the most internationally mobile in the hospital.`,
+
+nursing: `## Attrition themes
+
+| Theme | Mentions | Depts affected |
+|---|---|---|
+| Gulf agency recruitment (Riyadh/Qatar/Dubai) | 5 | CICU, OT Complex |
+| UK NHS/agency sponsorship route | 3 | Emergency, OT Complex |
+| Understaffing → burnout (vacancies unfilled) | 2 | CICU, Emergency |
+| Manager micromanagement of swaps | 2 | Paediatrics, CICU (cross-referenced) |
+| Promotion delay ("under review" 8 months) | 1 | General Ward |
+| Personal (marriage relocation) | 1 | General Ward |
+
+## Department hotspots
+
+- **CICU (5 of 12 exits) — critical hotspot.** Every CICU exit cites a Gulf offer, and two explicitly link it to unfilled vacancies raising night-shift load — a **self-reinforcing cycle**: each unreplaced exit increases burnout risk for those remaining, accelerating further attrition.
+- **OT Complex (2 exits):** both cite international offers as primary driver but with lifestyle/family framing rather than pure pay — suggests a softer counter (flexibility, family support) may retain some of this segment even without full pay-matching.
+- **Emergency:** long-tenure exit (5 yrs) explicitly citing roster unpredictability as the "final straw" after years of stability — a signal that even loyal staff have a breaking point.
+
+## Retention actions (cost vs impact)
+
+| Action | Est. cost | Expected impact |
+|---|---|---|
+| Emergency CICU vacancy backfill (currently 2 unfilled) | Recruitment/agency cost ~₹3 lakh total | High — directly breaks the burnout→exit cycle cited by 3 respondents |
+| International-parity retention bonus for CICU critical care staff (~₹4,000/month + fixed-tenure bond) | ~₹10–15 lakh/year for CICU cohort (~30 staff) | Medium — won't close the 2–3x salary gap but may defer some exits by 12–18 months |
+| Family-support package (spouse job referrals, accommodation assistance) for OT Complex/family-driven exits | Low-moderate, mostly coordination cost | Medium — targets the "lifestyle/family" segment specifically, cheaper than pure pay-matching |
+| Formal swap-request SLA (manager must respond within 48 hrs, documented) | Near-zero | Medium — addresses micromanagement complaints in Paediatrics/CICU |
+| Publish Senior Staff Nurse promotion decisions on a fixed quarterly cycle | Near-zero | Low-medium — small but visible fix for the 8-month "under review" complaint |
+
+## Note for the CEO
+
+This batch is dominated by a single, structural driver: **Gulf/UK nursing outmigration**, cited in 8 of 12 exits, concentrated almost entirely in CICU. Pay-matching alone is not financially viable against a 2–3x salary differential — the higher-leverage levers are backfilling CICU vacancies to break the burnout cycle, and a modest retention bonus plus family-support package to shift the marginal stay/go decision for staff who are not purely pay-driven. Recommend treating CICU nursing attrition as a standing agenda item, not a per-quarter review.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const responses = document.getElementById('responses').value;
+  const prompt = `You are analysing exit interview responses for VPS Lakeshore Hospital, Kochi. Each line is one exit: role, department, tenure, and free-text reason.
+
+Responses:
+${responses}
+
+Produce: (1) an attrition themes table (theme, mentions, depts affected), (2) department hotspots analysis, (3) a retention actions table with estimated cost and expected impact (₹ lakh/crore where relevant), (4) a short note for the CEO summarising the single biggest lever.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an HR analytics lead at a 350-bed Kerala hospital analysing exit interview data, with awareness of Gulf/UK international nurse recruitment pressure.',
+    prompt, demo: DEMO[key], manualMinutes: 180,
+  });
+});
+</script>
+</body>
+</html>

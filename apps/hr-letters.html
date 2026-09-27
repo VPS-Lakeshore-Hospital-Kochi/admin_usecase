@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HR letter generator</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>HR letter generator</h1>
+    <p>Draft offer, appointment, confirmation, increment, relieving and experience letters in the VPS Lakeshore format, with a built-in field/consistency check.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample employee</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="offer">Offer letter — Staff Nurse</option>
+          <option value="increment">Increment letter — Senior Radiographer</option>
+          <option value="relieving">Relieving letter — Billing Executive</option>
+        </select>
+      </div>
+      <label>Letter type</label>
+      <select id="letterType">
+        <option value="offer">Offer letter</option>
+        <option value="appointment">Appointment letter</option>
+        <option value="confirmation">Confirmation letter</option>
+        <option value="increment">Increment letter</option>
+        <option value="relieving">Relieving letter</option>
+        <option value="experience">Experience certificate</option>
+      </select>
+      <label>Employee details (editable)</label>
+      <textarea id="fields" rows="12"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic employee data for demonstration only. No real staff records.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Human Resources', title: 'HR letter generator' });
+
+const SCENARIOS = {
+  offer: {
+    type: 'offer',
+    fields: `Name: Anjali Raveendran
+Designation: Staff Nurse
+Department: Cardiac ICU
+Grade band: Nursing Grade II (₹22,000–₹30,000 basic band)
+CTC offered: ₹4,20,000 per annum
+Date of joining: 13-Oct-2026
+Probation period: 6 months
+Notice period (post-confirmation): 60 days
+Reporting to: Nursing Superintendent, CICU`,
+  },
+  increment: {
+    type: 'increment',
+    fields: `Name: Basil Thomas
+Designation: Senior Radiographer
+Department: Radiology & Imaging
+Grade band: Technical Grade III (₹38,000–₹52,000 basic band)
+Current CTC: ₹6,60,000 per annum
+Revised CTC: ₹7,45,000 per annum (12.9% increment)
+Effective date: 01-Oct-2026
+Notice period: 30 days
+Reporting to: Head of Radiology`,
+  },
+  relieving: {
+    type: 'relieving',
+    fields: `Name: Divya Suresh
+Designation: Billing Executive
+Department: Patient Billing
+Date of joining: 04-Jan-2022
+Last working day: 30-Sep-2026
+Notice period served: 30 days (full notice served)
+CTC at exit: ₹3,90,000 per annum
+Reason for exit: Relocation to Dubai
+Reporting to: Manager — Revenue Cycle`,
+  },
+};
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('letterType').value = s.type;
+  document.getElementById('fields').value = s.fields;
+  renderKpis(s.fields);
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+
+function renderKpis(text) {
+  const has = re => re.test(text);
+  const filled = ['Name', 'Designation', 'Department', 'CTC', 'joining|Effective', 'Notice period']
+    .filter(k => has(new RegExp(k, 'i'))).length;
+  const total = 6;
+  const box = document.getElementById('kpis');
+  box.innerHTML = `
+    <div class="kpi"><div class="label">Fields captured</div><div class="value">${filled}/${total}</div></div>
+    <div class="kpi"><div class="label">Letter type</div><div class="value" style="font-size:1.1rem">${Hub.esc(document.getElementById('letterType').selectedOptions[0].textContent)}</div></div>
+    <div class="kpi"><div class="label">Draft status</div><div class="value"><span class="tag ${filled===total?'ok':'warn'}">${filled===total?'Ready':'Check gaps'}</span></div></div>`;
+}
+document.getElementById('fields').addEventListener('input', () => renderKpis(document.getElementById('fields').value));
+document.getElementById('letterType').addEventListener('change', () => renderKpis(document.getElementById('fields').value));
+loadScenario('offer');
+
+const DEMO = {
+offer: `## Offer Letter — VPS Lakeshore Hospital, Kochi
+
+Dear Ms. Anjali Raveendran,
+
+We are pleased to offer you the position of **Staff Nurse** in the **Cardiac ICU** department at VPS Lakeshore Hospital, Kochi. Your appointment is subject to satisfactory verification of documents, medical fitness and background checks.
+
+| Term | Detail |
+|---|---|
+| Designation | Staff Nurse |
+| Department | Cardiac ICU |
+| Grade band | Nursing Grade II (₹22,000–₹30,000 basic) |
+| CTC offered | ₹4,20,000 per annum |
+| Date of joining | 13-Oct-2026 |
+| Probation period | 6 months from date of joining |
+| Notice period (post-confirmation) | 60 days |
+| Reporting to | Nursing Superintendent, CICU |
+
+This offer is valid for 7 days from the date of issue. Kindly confirm acceptance by signing and returning a copy of this letter.
+
+Yours sincerely,
+**Human Resources Department**
+VPS Lakeshore Hospital, Kochi
+
+## Field / consistency check
+
+- **CTC vs grade band:** ₹4,20,000/yr ≈ ₹35,000/month CTC, but the basic band quoted (₹22,000–₹30,000) is the **basic pay component**, not full CTC — confirm the letter clearly separates basic from CTC so the candidate isn't misled on take-home.
+- **Notice period during probation** is not stated (only post-confirmation notice given) — standard VPS format requires a separate probation notice clause (typically 15–30 days); add before issuing.
+- All other mandatory fields (name, designation, department, joining date) are present and consistent.`,
+
+increment: `## Increment Letter — VPS Lakeshore Hospital, Kochi
+
+Dear Mr. Basil Thomas,
+
+We are pleased to inform you of a revision in your compensation in recognition of your performance and contribution to the Radiology & Imaging department.
+
+| Term | Detail |
+|---|---|
+| Designation | Senior Radiographer |
+| Department | Radiology & Imaging |
+| Grade band | Technical Grade III (₹38,000–₹52,000 basic) |
+| Current CTC | ₹6,60,000 per annum |
+| Revised CTC | ₹7,45,000 per annum |
+| Increment | 12.9% |
+| Effective date | 01-Oct-2026 |
+| Notice period | 30 days |
+
+All other terms of your appointment remain unchanged. We look forward to your continued contribution.
+
+Yours sincerely,
+**Human Resources Department**
+VPS Lakeshore Hospital, Kochi
+
+## Field / consistency check
+
+- **CTC vs grade band:** revised CTC (₹7,45,000/yr ≈ ₹62,000/month) sits **above** the quoted Technical Grade III basic band ceiling (₹52,000) — this is expected since CTC includes allowances, but flag to Compensation desk to confirm the grade band itself doesn't also need revision (risk of grade-CTC mismatch on audit).
+- Increment % (12.9%) is on the higher side of the typical 6–10% annual band at VPS Lakeshore — confirm this is a promotion-linked increment, not a routine annual one, and note the reason in the letter if so.
+- Notice period (30 days) is consistent with confirmed-staff norms for this grade.`,
+
+relieving: `## Relieving Letter — VPS Lakeshore Hospital, Kochi
+
+Dear Ms. Divya Suresh,
+
+This is to certify that you were employed with VPS Lakeshore Hospital, Kochi as **Billing Executive** in the Patient Billing department from **04-Jan-2022** to **30-Sep-2026**.
+
+| Term | Detail |
+|---|---|
+| Designation | Billing Executive |
+| Department | Patient Billing |
+| Date of joining | 04-Jan-2022 |
+| Last working day | 30-Sep-2026 |
+| Tenure | 4 years 9 months |
+| Notice period served | 30 days (full notice) |
+| Reason for exit | Relocation to Dubai |
+
+You have been relieved of your duties as requested, and all dues/full & final settlement will be processed as per policy. We wish you the very best in your future endeavours.
+
+Yours sincerely,
+**Human Resources Department**
+VPS Lakeshore Hospital, Kochi
+
+## Field / consistency check
+
+- **CTC at exit (₹3,90,000/yr)** is provided but not required on a standard relieving letter (only on the experience certificate/F&F statement) — recommend removing it here to avoid disclosing compensation on a document employers commonly forward externally.
+- Notice period served (30 days) matches standard policy for this grade — no gap.
+- No missing mandatory fields for this letter type.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const type = document.getElementById('letterType').value;
+  const fields = document.getElementById('fields').value;
+  const scenarioKey = document.getElementById('scenario').value;
+  const prompt = `You are drafting a ${type} letter for an employee at VPS Lakeshore Hospital, Kochi.
+
+Employee details:
+${fields}
+
+Produce: (1) the full letter in VPS Lakeshore's formal HR tone, (2) a key-terms table, (3) a "Field / consistency check" section flagging any missing fields or inconsistencies (e.g. CTC vs grade band, missing notice period clauses). Use ₹ Indian formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an HR executive at a 350-bed Kerala hospital, expert in drafting employment letters and checking them for compliance and internal consistency.',
+    prompt, demo: DEMO[scenarioKey], manualMinutes: 25,
+  });
+});
+</script>
+</body>
+</html>
