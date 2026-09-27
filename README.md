@@ -62,6 +62,12 @@ Or publish the folder to GitHub Pages.
 - **Demo mode** (default): each prototype returns a pre-written sample output, so the hub can be shown with no API key and no network.
 - **Live mode**: click **Settings**, paste an Anthropic API key. Prototypes then call the Claude Messages API directly from the browser with the on-screen input. The key is stored only in that browser's `localStorage`. This is fine for internal demos; a production rollout should route calls through a hospital-controlled backend (key custody, audit logging, PHI/DPDP controls).
 
+## Files in and out
+
+- **Upload file** — every input box on a prototype accepts `.txt`, `.csv`, `.xlsx`, `.docx` or text-based `.pdf`. Files are read entirely in the browser; nothing is uploaded. In live mode the extracted text is what gets sent to Claude. Scanned PDFs have no text layer and are rejected.
+- **Download Word (.docx)** — every Claude output can be saved as a VPS Lakeshore-branded Word draft (DM Sans, navy headings, navy-header tables, magenta rule, "Review before use" panel, page-numbered footer).
+- Libraries for both live in `shared/vendor/` and load only when first used — see `shared/vendor/README.md` for versions and licences.
+
 ## Structure
 
 - `shared/hub.css` — design system (VPS Lakeshore "In good hands" palette, light/dark)
