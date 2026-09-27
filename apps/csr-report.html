@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSR project reporter</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>CSR project reporter</h1>
+    <p>Turn the FY CSR project list into a board/CSR-committee ready report with spend tracking and impact narrative.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample CSR project list</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="fy25">FY 2025-26 — Q2 review</option>
+          <option value="fy24">FY 2024-25 — year-end</option>
+        </select>
+      </div>
+      <label>Project list (editable, one row per line)</label>
+      <textarea id="log" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: reviewed by the CSR Committee Chair / Company Secretary before the report goes to the Board. All project names, NGOs and beneficiary stories are fictional/composite.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'CSR', title: 'CSR project reporter' });
+
+const SCENARIOS = {
+fy25: `Project | Category | Location | Budget | Spent | Beneficiaries | Partner NGO | Notes
+Free cardiac screening camps | Health care | Ernakulam district (rural) | 1800000 | 1240000 | 2100 | Aswas Health Foundation | Three camps held; one deferred to Q3 due to monsoon
+School sanitation blocks | Sanitation | Govt LP School, Tripunithura | 900000 | 900000 | 650 | CleanWell Trust | Fully completed; handover done, students now have separate girls' toilets
+Nursing scholarship program | Education | Ernakulam & Kottayam | 1200000 | 540000 | 40 | Deepika Foundation for Girls | 40 of planned 60 scholarships disbursed; remaining pending verification
+Mobile diagnostic van | Health care | Rural Ernakulam belt | 2500000 | 2500000 | 3400 | Aswas Health Foundation | Van fully operational since June, covering 12 villages fortnightly
+Elderly day-care support | Health care (elder care) | Kochi urban | 700000 | 210000 | 85 | Sahayam Senior Care | Slow start; MoU signed late, ramping up in Q3
+Skill training for tribal youth | Education/livelihood | Idukki district | 1000000 | 260000 | 30 | Vanamitra Trust | Batch 1 (30 trainees) started August; batch 2 planned Q3`,
+fy24: `Project | Category | Location | Budget | Spent | Beneficiaries | Partner NGO | Notes
+Free cardiac screening camps | Health care | Ernakulam district (rural) | 1600000 | 1590000 | 3800 | Aswas Health Foundation | All planned camps completed; strong turnout
+School sanitation blocks | Sanitation | 3 Govt schools, Ernakulam | 1100000 | 1080000 | 1200 | CleanWell Trust | All blocks completed and handed over before year-end
+Nursing scholarship program | Education | Ernakulam & Kottayam | 1200000 | 1150000 | 58 | Deepika Foundation for Girls | 58 of 60 scholarships disbursed; 2 candidates withdrew
+Mobile diagnostic van | Health care | Rural Ernakulam belt | 2200000 | 2200000 | 5600 | Aswas Health Foundation | Full year of operation, expanded to 15 villages
+Elderly day-care support | Health care (elder care) | Kochi urban | 650000 | 610000 | 140 | Sahayam Senior Care | Ramped up well after slow Q1 start
+Skill training for tribal youth | Education/livelihood | Idukki district | 900000 | 540000 | 55 | Vanamitra Trust | Two batches completed; placement tie-ups pending for Q1 next FY`,
+};
+
+function parseLog(text) {
+  const lines = text.trim().split('\n').filter(l => l.includes('|'));
+  lines.shift();
+  return lines.map(l => {
+    const c = l.split('|').map(s => s.trim());
+    return { project: c[0], category: c[1], location: c[2], budget: Number(c[3]), spent: Number(c[4]), beneficiaries: Number(c[5]), ngo: c[6], notes: c[7] };
+  });
+}
+
+function inrLakh(n) { return '₹' + (n / 100000).toFixed(2) + 'L'; }
+
+function renderKPIs() {
+  const rows = parseLog(document.getElementById('log').value);
+  const budget = rows.reduce((s, r) => s + r.budget, 0);
+  const spent = rows.reduce((s, r) => s + r.spent, 0);
+  const unspent = budget - spent;
+  const pct = budget ? ((spent / budget) * 100).toFixed(1) : '0.0';
+  const beneficiaries = rows.reduce((s, r) => s + r.beneficiaries, 0);
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total budget</div><div class="value">${inrLakh(budget)}</div></div>
+    <div class="kpi"><div class="label">Total spent</div><div class="value">${inrLakh(spent)}</div></div>
+    <div class="kpi"><div class="label">% utilised</div><div class="value">${pct}%</div></div>
+    <div class="kpi"><div class="label">Unspent</div><div class="value">${inrLakh(unspent)}</div></div>
+    <div class="kpi"><div class="label">Beneficiaries reached</div><div class="value">${beneficiaries.toLocaleString('en-IN')}</div></div>
+  `;
+}
+
+function loadScenario(key) {
+  document.getElementById('log').value = SCENARIOS[key];
+  renderKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('log').addEventListener('input', renderKPIs);
+loadScenario('fy25');
+
+const DEMO = {
+fy25: `## CSR Committee report — FY 2025-26, Q2 review
+
+### Spend summary
+
+| Project | Category | Budget | Spent | Utilisation | Status |
+|---|---|---|---|---|---|
+| Free cardiac screening camps | Health care | ₹18.00L | ₹12.40L | 69% | On track, one camp deferred to Q3 |
+| School sanitation blocks | Sanitation | ₹9.00L | ₹9.00L | 100% | Completed and handed over |
+| Nursing scholarship program | Education | ₹12.00L | ₹5.40L | 45% | Behind — verification pending |
+| Mobile diagnostic van | Health care | ₹25.00L | ₹25.00L | 100% | Fully operational |
+| Elderly day-care support | Health care (elder) | ₹7.00L | ₹2.10L | 30% | Slow start, MoU delay |
+| Skill training for tribal youth | Education/livelihood | ₹10.00L | ₹2.60L | 26% | Batch 1 underway |
+| **Total** | | **₹81.00L** | **₹56.50L** | **69.8%** | |
+
+### Impact summary
+
+2,100+ villagers screened for cardiac risk across three rural camps; 3,400 patients served through the mobile diagnostic van covering 12 villages fortnightly; 650 school students in Tripunithura now have functioning, gender-separate sanitation facilities; 40 nursing scholarships disbursed to date against a target of 60.
+
+### Beneficiary stories (anonymised)
+
+1. *A 58-year-old daily-wage worker from a village near Angamaly attended the cardiac screening camp after years without a check-up; an irregular ECG finding led to early referral and treatment before any acute event.*
+2. *A Class 8 student at the Tripunithura government school said the new sanitation block meant girls no longer had to skip school during their periods — attendance for girls in that grade has visibly improved this term.*
+
+### Unspent amount — Companies Act, 2013 compliance note
+
+Overall utilisation stands at 69.8%, leaving ₹24.50L unspent at the half-year mark. Under Section 135 of the Companies Act 2013, any amount pertaining to an *ongoing project* must be transferred to a designated Unspent CSR Account within 30 days of the financial year-end and utilised within three years; amounts not linked to an ongoing project must go to a Schedule VII fund within six months of year-end. Given four of six projects here are ongoing (scholarship, elderly care, skill training, and one deferred camp), **the unspent amount likely qualifies for the ongoing-project route** — this classification should be confirmed with the Company Secretary before the year-end filing.
+
+### Press-friendly paragraph
+
+*Lakeshore Hospital & Research Centre Ltd continued its community health and education outreach this quarter, screening over 2,100 residents for cardiac risk through free rural camps and serving 3,400 patients via its mobile diagnostic van across 12 villages around Kochi. A newly completed sanitation block at a government school in Tripunithura now serves 650 students, while the hospital's nursing scholarship programme has supported 40 young women from the region this year, with further skill-development and elder-care initiatives ramping up through the remainder of the financial year.*`,
+fy24: `## CSR Committee report — FY 2024-25, year-end
+
+### Spend summary
+
+| Project | Category | Budget | Spent | Utilisation | Status |
+|---|---|---|---|---|---|
+| Free cardiac screening camps | Health care | ₹16.00L | ₹15.90L | 99% | Completed, strong turnout |
+| School sanitation blocks | Sanitation | ₹11.00L | ₹10.80L | 98% | Completed and handed over |
+| Nursing scholarship program | Education | ₹12.00L | ₹11.50L | 96% | 58 of 60 disbursed |
+| Mobile diagnostic van | Health care | ₹22.00L | ₹22.00L | 100% | Full year of operation |
+| Elderly day-care support | Health care (elder) | ₹6.50L | ₹6.10L | 94% | Ramped up after slow start |
+| Skill training for tribal youth | Education/livelihood | ₹9.00L | ₹5.40L | 60% | Placement tie-ups pending |
+| **Total** | | **₹76.50L** | **₹71.70L** | **93.7%** | |
+
+### Impact summary
+
+3,800 villagers screened at cardiac camps; 5,600 patients served by the mobile diagnostic van across 15 villages; 1,200 students benefited from newly completed sanitation blocks at three government schools; 58 nursing scholarships fully disbursed; 140 elderly residents supported through day-care services; 55 tribal youth completed skill-training batches.
+
+### Beneficiary stories (anonymised)
+
+1. *A retired autorickshaw driver from rural Ernakulam credited the cardiac screening camp with catching a blockage early enough for a planned, low-risk procedure rather than an emergency one.*
+2. *One of the 58 scholarship recipients, a first-generation nursing student from Kottayam district, completed her diploma this year and has since been placed at a regional hospital.*
+
+### Unspent amount — Companies Act, 2013 compliance note
+
+Year-end utilisation stands at 93.7%, leaving ₹4.80L unspent, concentrated in the skill-training project where placement tie-ups are still pending. As this is an ongoing, multi-year project, the unspent amount should be transferred to the Unspent CSR Account within 30 days of year-end for continued use within the permitted three-year window — **please confirm this classification and the transfer mechanics with the Company Secretary** ahead of the AOC-4 filing.
+
+### Press-friendly paragraph
+
+*Lakeshore Hospital & Research Centre Ltd closed FY 2024-25 having utilised over 93% of its CSR budget across health, education and sanitation initiatives in and around Kochi, reaching nearly 11,000 beneficiaries in total — from 3,800 rural residents screened for cardiac risk to 58 young women supported through nursing scholarships and 1,200 schoolchildren benefiting from new sanitation facilities.*`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const log = document.getElementById('log').value;
+  const prompt = `You are assisting the CSR team at Lakeshore Hospital & Research Centre Ltd (VPS Lakeshore, Kochi) in preparing a report for the CSR Committee/Board.
+
+FY CSR project list:
+${log}
+
+Provide: (1) a board/CSR-committee report section with a spend table (budget, spent, % utilisation, status), (2) an impact summary, (3) two short anonymised beneficiary stories, (4) a note on how the unspent amount should be handled under Companies Act 2013 Section 135 (keep it generic and explicitly say "confirm with the Company Secretary"), and (5) a press-friendly paragraph. Use ₹ lakh formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced CSR manager at a large Kerala hospital group, familiar with Companies Act 2013 Section 135 reporting norms.',
+    prompt, demo: DEMO[key], manualMinutes: 240,
+  });
+});
+</script>
+</body>
+</html>
