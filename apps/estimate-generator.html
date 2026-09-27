@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patient cost estimate</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Patient cost estimate</h1>
+    <p>Generate a defensible cost range for a planned procedure from past similar cases, with a patient-friendly explanation in English and Malayalam.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample case</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="tkr">Total Knee Replacement — Maldivian patient, self-pay</option>
+          <option value="ptca">PTCA + stent — GCC corporate insured patient</option>
+        </select>
+      </div>
+      <label>Case details (editable)</label>
+      <textarea id="caseDetails" rows="6"></textarea>
+      <label>Past similar cases — final bill amounts, ₹ (editable, comma-separated)</label>
+      <textarea id="pastBills" rows="3"></textarea>
+      <div class="table-wrap"><table id="billsTable"><thead><tr><th>Case #</th><th class="num">Final bill (₹)</th></tr></thead><tbody></tbody></table></div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic case and billing data for demonstration only. Patient names and figures are illustrative.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Patient cost estimate' });
+
+const SCENARIOS = {
+  tkr: {
+    caseDetails: `Procedure: Unilateral Total Knee Replacement (TKR)
+Room category: Private AC (international patient preference)
+Payer type: Self-pay (international patient, Maldives)
+Comorbidities: Type 2 diabetes (controlled), mild hypertension
+Surgeon: Dr. Anil Menon, Orthopaedics
+Expected stay: 5 days`,
+    pastBills: `3,65,000, 3,80,000, 4,10,000, 3,95,000, 4,35,000, 3,72,000, 4,05,000, 3,88,000, 4,50,000, 3,60,000`,
+  },
+  ptca: {
+    caseDetails: `Procedure: PTCA with 1 drug-eluting stent
+Room category: Twin sharing (policy entitlement)
+Payer type: Corporate GHI insured (GCC-based employer group policy)
+Comorbidities: Hypertension, prior mild dyslipidaemia
+Cardiologist: Dr. Priya Varghese, Interventional Cardiology
+Expected stay: 3 days (2 CCU + 1 step-down)`,
+    pastBills: `2,45,000, 2,80,000, 2,60,000, 3,10,000, 2,70,000, 2,95,000, 2,55,000, 3,25,000, 2,65,000, 2,88,000`,
+  },
+};
+
+function percentile(sorted, p) {
+  const idx = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+function computeStats() {
+  const raw = document.getElementById('pastBills').value;
+  const nums = raw.split(',').map(s => parseInt(s.replace(/[^\d]/g, ''), 10)).filter(n => !isNaN(n));
+  const sorted = [...nums].sort((a, b) => a - b);
+  const tbody = document.querySelector('#billsTable tbody');
+  tbody.innerHTML = sorted.map((n, i) => `<tr><td>Case ${i + 1}</td><td class="num">${Hub.inr(n)}</td></tr>`).join('');
+  if (!sorted.length) return { median: 0, p25: 0, p75: 0, n: 0 };
+  const median = percentile(sorted, 50), p25 = percentile(sorted, 25), p75 = percentile(sorted, 75);
+  const box = document.getElementById('kpis');
+  box.innerHTML = [
+    ['Median (P50)', Hub.inr(median)],
+    ['P25', Hub.inr(p25)],
+    ['P75', Hub.inr(p75)],
+    ['Cases in sample', sorted.length],
+  ].map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+  return { median, p25, p75, n: sorted.length };
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('caseDetails').value = s.caseDetails;
+  document.getElementById('pastBills').value = s.pastBills;
+  computeStats();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('pastBills').addEventListener('input', computeStats);
+loadScenario('tkr');
+
+const DEMO = {
+tkr: `## Estimate range with breakup
+
+Based on 10 similar recent TKR cases (private AC room, self-pay), the estimated range is **₹3,72,000 (P25) to ₹4,05,000 (P75)**, median **₹3,91,500**.
+
+| Component | Estimated ₹ | Notes |
+|---|---|---|
+| Implant (cemented, standard) | 1,40,000–1,55,000 | Premium/uncemented implants would push this higher |
+| OT & anaesthesia | 55,000–62,000 | |
+| Room rent (5 days, private AC) | 30,000–35,000 | Assumes no extension of stay |
+| Surgeon & anaesthetist fee | 90,000–1,00,000 | |
+| Physiotherapy, pharmacy, investigations | 55,000–65,000 | Diabetes control may add monitoring cost |
+| **Estimated total** | **3,72,000–4,05,000** | Median case: ₹3,91,500 |
+
+## Assumptions
+- Standard cemented titanium implant (not a premium/robotic-assisted implant, which would add ₹40,000–80,000).
+- No major intra-operative complications; 5-day stay as planned.
+- Diabetes is controlled (per case notes) — no additional ICU/endocrinology consult assumed.
+
+## What can raise the cost
+1. Extended stay beyond 5 days (e.g. wound healing delay, glycaemic instability) — each extra day adds ~₹6,000–8,000 (room + monitoring).
+2. Choice of a premium/robotic-assisted implant instead of standard cemented implant.
+3. Post-operative complications requiring additional imaging, blood transfusion, or ICU observation.
+4. Currency/remittance charges for international self-pay settlement (bank/forex charges, typically 1–2% of billed amount) — advise the patient's family to check with their bank.
+
+## Patient-friendly explanation
+
+**English:** "Based on similar recent knee replacement surgeries at our hospital, your estimated total cost is between ₹3,72,000 and ₹4,05,000, including the implant, surgery, a 5-day stay in a private room, and post-surgery physiotherapy. Since you have diabetes, we will monitor your sugar levels closely, which is already included in this estimate. If your recovery needs a longer stay, the cost may increase slightly — we will keep you informed at every step."
+
+**Malayalam (short):** "സമാനമായ മുട്ട് മാറ്റിവയ്ക്കൽ ശസ്ത്രക്രിയകളുടെ അടിസ്ഥാനത്തിൽ, നിങ്ങളുടെ ചെലവ് ഏകദേശം ₹3,72,000 മുതൽ ₹4,05,000 വരെ ആകാം. ഇതിൽ ഇംപ്ലാന്റ്, ശസ്ത്രക്രിയ, 5 ദിവസത്തെ സ്വകാര്യ മുറി, ഫിസിയോതെറാപ്പി എന്നിവ ഉൾപ്പെടുന്നു. ഷുഗർ നിരീക്ഷണം ഇതിനകം ഉൾപ്പെടുത്തിയിട്ടുണ്ട്."`,
+
+ptca: `## Estimate range with breakup
+
+Based on 10 similar recent PTCA + single DES stent cases (twin sharing, corporate GHI), the estimated range is **₹2,60,000 (P25) to ₹2,95,000 (P75)**, median **₹2,75,000**.
+
+| Component | Estimated ₹ | Notes |
+|---|---|---|
+| DES stent (1x) | 55,000–65,000 | Check policy stent sub-limit separately — this is billed cost, not necessarily payer-approved amount |
+| Cath lab / procedure charges | 95,000–1,10,000 | |
+| CCU + step-down (3 days) | 22,000–28,000 | |
+| Cardiologist & anaesthetist fee | 40,000–48,000 | |
+| Medicines & investigations | 25,000–32,000 | |
+| **Estimated total** | **2,60,000–2,95,000** | Median case: ₹2,75,000 |
+
+## Assumptions
+- Single-vessel PTCA with 1 DES stent; no multi-vessel intervention assumed.
+- 3-day stay (2 CCU + 1 step-down) as planned, no complications.
+- Corporate GHI stent sub-limit not yet confirmed — patient may have out-of-pocket exposure if actual stent cost exceeds the policy's per-stent cap.
+
+## What can raise the cost
+1. A second stent or multi-vessel intervention discovered during the procedure.
+2. Extended CCU stay if post-procedure monitoring shows any rhythm or perfusion concern.
+3. If the employer group policy's DES stent sub-limit (commonly ₹40,000–50,000) is below actual stent cost, the shortfall becomes a direct patient/family payment — this should be confirmed with the TPA desk before the procedure, not after.
+4. Any additional imaging (repeat angiogram) if initial results are inconclusive.
+
+## Patient-friendly explanation
+
+**English:** "Based on similar recent angioplasty procedures at our hospital, your estimated total cost is between ₹2,60,000 and ₹2,95,000, covering the stent, procedure, a 3-day hospital stay, and doctor's fees. Your insurance may have a separate limit on the stent cost — our insurance desk will confirm this with your policy before the procedure so there are no surprises at billing."
+
+**Malayalam (short):** "സമാനമായ ആൻജിയോപ്ലാസ്റ്റി ചികിത്സകളുടെ അടിസ്ഥാനത്തിൽ, നിങ്ങളുടെ ചെലവ് ഏകദേശം ₹2,60,000 മുതൽ ₹2,95,000 വരെ ആകാം. സ്റ്റെന്റ്, ചികിത്സ, 3 ദിവസത്തെ താമസം, ഡോക്ടർ ഫീസ് എന്നിവ ഇതിൽ ഉൾപ്പെടുന്നു. ഇൻഷുറൻസ് പരിധി ഞങ്ങൾ മുൻകൂട്ടി പരിശോധിക്കും."`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const caseDetails = document.getElementById('caseDetails').value;
+  const stats = computeStats();
+  const prompt = `You are preparing a patient-facing cost estimate for a planned procedure at VPS Lakeshore Hospital, Kochi, a hospital that treats many international patients.
+
+Case details:
+${caseDetails}
+
+Past similar cases' final bills — median ₹${Math.round(stats.median).toLocaleString('en-IN')}, P25 ₹${Math.round(stats.p25).toLocaleString('en-IN')}, P75 ₹${Math.round(stats.p75).toLocaleString('en-IN')}, based on ${stats.n} cases.
+
+Provide: (1) an estimate range with a cost breakup table, (2) key assumptions behind the estimate, (3) factors that could raise the cost, (4) a short patient-friendly explanation in plain English AND a short version in Malayalam. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a patient relations / billing counsellor at a 350-bed Kerala hospital serving many international patients from the Maldives, GCC and Africa, skilled at explaining cost estimates clearly and sensitively.',
+    prompt, demo: DEMO[key], manualMinutes: 30,
+  });
+});
+</script>
+</body>
+</html>
