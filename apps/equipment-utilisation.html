@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Equipment utilisation & AMC analyser</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Equipment utilisation & AMC analyser</h1>
+    <p>Check high-value equipment usage, revenue and downtime against AMC spend to find underused assets and new ideas.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample equipment table</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q2">This quarter — Jul-Sep 2026</option>
+          <option value="prior">Prior quarter — Apr-Jun 2026</option>
+        </select>
+      </div>
+      <label>Asset | Available hrs/mo | Used hrs/mo | Cases/mo | Revenue/mo (₹) | AMC ₹/yr | Downtime hrs/mo — editable</label>
+      <textarea id="eq" rows="12"></textarea>
+      <div id="eqTable"></div>
+      <div class="row" style="margin-top:12px"><button class="primary" id="runBtn">Run with Claude</button></div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+  <p class="footer-note">Synthetic equipment and revenue figures for demonstration only.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Facilities & Biomedical', title: 'Equipment utilisation & AMC analyser' });
+
+const SCENARIOS = {
+  q2: {
+    text: `Asset | Available hrs | Used hrs | Cases | Revenue/mo | AMC/yr | Downtime hrs
+Surgical robot (da Vinci) | 260 | 78 | 22 | 4200000 | 9500000 | 14
+Cath lab 1 | 300 | 195 | 145 | 6800000 | 3200000 | 8
+Cath lab 2 | 300 | 140 | 98 | 4100000 | 3200000 | 22
+MRI 3T | 300 | 240 | 310 | 5600000 | 3850000 | 6
+CT scanner | 300 | 255 | 480 | 4200000 | 2100000 | 4
+Lithotripter | 260 | 32 | 18 | 780000 | 1450000 | 2
+Dialysis unit (12 stations) | 2880 | 2350 | 620 | 3900000 | 1650000 | 18`,
+  },
+  prior: {
+    text: `Asset | Available hrs | Used hrs | Cases | Revenue/mo | AMC/yr | Downtime hrs
+Surgical robot (da Vinci) | 260 | 62 | 17 | 3300000 | 9500000 | 26
+Cath lab 1 | 300 | 210 | 160 | 7200000 | 3200000 | 5
+Cath lab 2 | 300 | 118 | 82 | 3500000 | 3200000 | 12
+MRI 3T | 300 | 232 | 298 | 5400000 | 3850000 | 10
+CT scanner | 300 | 248 | 462 | 4050000 | 2100000 | 3
+Lithotripter | 260 | 28 | 15 | 650000 | 1450000 | 4
+Dialysis unit (12 stations) | 2880 | 2280 | 598 | 3780000 | 1650000 | 9`,
+  },
+};
+
+function parseEq(text) {
+  return text.trim().split('\n').slice(1).filter(Boolean).map(r => {
+    const c = r.split('|').map(x => x.trim());
+    return { asset: c[0], avail: +c[1], used: +c[2], cases: +c[3], rev: +c[4], amc: +c[5], downtime: +c[6] };
+  });
+}
+
+function renderTable(rows) {
+  const trs = rows.map(r => {
+    const util = Math.round((r.used / r.avail) * 100);
+    const revPerAmc = (r.rev * 12 / r.amc).toFixed(1);
+    const tag = util < 40 ? ['bad', 'Underused'] : util < 65 ? ['warn', 'Moderate'] : ['ok', 'Well utilised'];
+    return `<tr><td>${Hub.esc(r.asset)}</td><td class="num">${util}%</td><td class="num">${r.cases}</td><td class="num">${Hub.inr(r.rev)}</td><td class="num">${revPerAmc}x</td><td><span class="tag ${tag[0]}">${tag[1]}</span></td></tr>`;
+  }).join('');
+  document.getElementById('eqTable').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Asset</th><th class="num">Util%</th><th class="num">Cases</th><th class="num">Revenue/mo</th><th class="num">Rev/AMC₹</th><th>Flag</th></tr></thead><tbody>${trs}</tbody></table></div>`;
+
+  const avgUtil = Math.round(rows.reduce((s, r) => s + r.used / r.avail, 0) / rows.length * 100);
+  const totalRev = rows.reduce((s, r) => s + r.rev, 0);
+  const totalDowntime = rows.reduce((s, r) => s + r.downtime, 0);
+  const underused = rows.filter(r => (r.used / r.avail) < 0.4).length;
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Avg utilisation</div><div class="value">${avgUtil}%</div></div>
+    <div class="kpi"><div class="label">Total revenue/mo</div><div class="value">${Hub.inr(totalRev)}</div></div>
+    <div class="kpi"><div class="label">Underused assets</div><div class="value">${underused}</div></div>
+    <div class="kpi"><div class="label">Total downtime hrs/mo</div><div class="value">${totalDowntime}</div></div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('eq').value = SCENARIOS[key].text;
+  renderTable(parseEq(SCENARIOS[key].text));
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('eq').addEventListener('change', e => { try { renderTable(parseEq(e.target.value)); } catch (err) {} });
+loadScenario('q2');
+
+const DEMO = {
+q2: `## Underused assets
+
+| Asset | Utilisation | Concern |
+|---|---|---|
+| Surgical robot (da Vinci) | 30% | Highest AMC (₹95L/yr) of any asset but lowest utilisation — revenue/AMC-rupee ratio of just 5.3x, weakest return on maintenance spend in the fleet |
+| Lithotripter | 12% | Very low case volume (18/mo); AMC of ₹14.5L/yr against ₹7.8L monthly revenue is a thin margin once running costs are counted |
+| Cath lab 2 | 47% | Moderate, running at roughly half the volume of Cath lab 1 despite identical AMC cost |
+
+## Ideas to lift utilisation
+1. **Robot: out-of-Kochi patient discount package.** With Maldives/GCC/Africa referral volume already strong for cardiology and transplant, bundle a discounted robotic-surgery package (e.g., 8-10% off) for international/out-of-state patients booked in low-demand weekday slots — fills capacity that would otherwise sit idle.
+2. **Revenue-share slots for visiting clinicians.** Offer visiting surgeons (urology, gynae-onc) block time on the robot under a revenue-share model instead of a flat facility fee, lowering the barrier for occasional users and raising case count.
+3. **Cath lab 2 — shift emergency PTCA load evenly.** Cath lab 1 is running near-saturated (65%) while Cath lab 2 sits at 47%; a scheduling rule to route elective diagnostic angiograms to Lab 2 would balance load and reduce Lab 1 turnaround delays.
+4. **Lithotripter — evaluate consolidation.** At 12% utilisation and thin per-case economics, consider a shared-service or visiting-specialist-day model rather than year-round AMC coverage, or renegotiate the AMC to a pay-per-use structure.
+
+## Downtime concerns
+- **Cath lab 2's 22 hours/month downtime** is the highest in the fleet and coincides with its lower utilisation — worth checking whether downtime is a *cause* (patients diverted to Lab 1) rather than a symptom of low demand. Recommend a root-cause review with the AMC vendor on recurring fault codes.
+- **Dialysis unit downtime (18 hrs/mo across 12 stations)** is low per-station but affects a high-volume, safety-critical service — track by individual station rather than as a fleet average.`,
+
+prior: `## Underused assets
+
+| Asset | Utilisation | Concern |
+|---|---|---|
+| Surgical robot (da Vinci) | 24% | Utilisation and revenue both lower than the current quarter, with downtime (26 hrs/mo) nearly double the latest period — investigate whether early-period reliability issues suppressed bookings |
+| Lithotripter | 11% | Consistently the lowest utilised asset across both quarters — this is a structural pattern, not a one-off dip |
+| Cath lab 2 | 39% | Below the 40% threshold this quarter; downtime of 12 hrs/mo is roughly half the latest quarter's 22 hrs, suggesting downtime is worsening even as utilisation improves — worth flagging as an emerging maintenance trend |
+
+## Ideas to lift utilisation
+1. **Robot downtime root cause first.** Before marketing discounts, resolve the 26 hrs/mo downtime — no discount campaign will fill slots that are cancelled for equipment unavailability.
+2. **Revenue-share for visiting clinicians**, as in the current quarter, remains the fastest lever to add case volume without new capex.
+3. **Extended operating hours for MRI/CT** — both are already near-saturated (77-83%); consider add-on evening slots for elective outpatient scans (e.g., 6-9pm) to capture demand without new equipment.
+4. **Track Cath lab 2 downtime trend quarter-on-quarter** — it nearly doubled into the current period; if this continues, an AMC vendor escalation is warranted before it becomes a revenue-impacting pattern.
+
+## Downtime concerns
+- **Rising Cath lab 2 downtime (12 → 22 hrs/mo)** across the two quarters is the single most concerning trend in the dataset and should be raised with Biomedical/AMC vendor proactively rather than waiting for a case-cancelling failure.
+- **Robot downtime fell (26 → 14 hrs/mo)** quarter-on-quarter alongside rising utilisation and revenue — worth confirming if a specific fix (part replacement, software update) explains the improvement, so it can be documented for future AMC negotiations.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const text = document.getElementById('eq').value;
+  const prompt = `You are assisting Facilities & Biomedical at VPS Lakeshore Hospital, Kochi with equipment utilisation and AMC value analysis.
+
+Equipment table (Asset | Available hrs/mo | Used hrs/mo | Cases/mo | Revenue/mo ₹ | AMC ₹/yr | Downtime hrs/mo):
+${text}
+
+Provide: (1) underused assets with utilisation % and why it matters given AMC cost, (2) concrete ideas to lift utilisation (e.g. discounted packages for out-of-Kochi/international patients on the robot, revenue-share slots for visiting clinicians, extended operating hours, load-balancing between similar assets), (3) downtime concerns worth escalating. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital biomedical engineering/facilities manager at a 350-bed Kerala hospital with cardiology, robotics and transplant programs.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PO-GRN-invoice matcher</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>PO–GRN–invoice matcher</h1>
+    <p>Line-level three-way match of purchase order, goods-receipt and vendor invoice before payment release.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample match set</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="ortho">Ortho implants — Meditrust Surgicals</option>
+          <option value="pharma">Pharmacy bulk order — Keralon Pharma Distributors</option>
+        </select>
+      </div>
+      <label>PO / GRN / Invoice lines (editable — one per row: item | PO qty | PO rate | GRN qty | Inv qty | Inv rate | GST% | Rate-contract rate)</label>
+      <textarea id="lines" rows="10"></textarea>
+      <label>Notes (freight, PO terms, etc.)</label>
+      <textarea id="notes" rows="3"></textarea>
+      <div id="matchTable"></div>
+      <div class="row" style="margin-top:12px"><button class="primary" id="runBtn">Run with Claude</button></div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+  <p class="footer-note">Synthetic vendor and PO data for demonstration only.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Purchase & Stores', title: 'PO–GRN–invoice matcher' });
+
+const SCENARIOS = {
+  ortho: {
+    lines: `Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | RC Rate
+Titanium hip stem, size 12 | 10 | 42000 | 10 | 10 | 44500 | 12 | 42000
+Bone cement (40g pack) | 40 | 3200 | 36 | 40 | 3200 | 18 | 3200
+Surgical gloves size 7.5 (box) | 100 | 450 | 100 | 100 | 450 | 5 | 450
+Orthopaedic drill bits (set) | 6 | 8800 | 6 | 6 | 8800 | 18 | 8800
+Freight & handling | 1 | 0 | 1 | 1 | 2400 | 18 | 0`,
+    notes: `PO number: PO/LKS/2026/1187. Vendor: Meditrust Surgicals. Rate contract valid till Mar-2027. PO silent on freight — vendor to bear as per standard clause 4.2. GST on implants should be 12% (medical device), vendor billed several lines at 18% by system default.`,
+  },
+  pharma: {
+    lines: `Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | RC Rate
+Paracetamol 500mg (strip of 15) | 2000 | 8.5 | 1850 | 2000 | 8.5 | 12 | 8.5
+Amoxicillin 500mg (strip of 10) | 1200 | 22 | 1200 | 1200 | 24.5 | 12 | 22
+IV fluid NS 500ml (bottle) | 800 | 38 | 800 | 800 | 38 | 12 | 38
+Insulin glargine (vial) | 150 | 620 | 150 | 150 | 620 | 5 | 620
+Surgical spirit (5L can) | 30 | 410 | 28 | 30 | 410 | 18 | 410`,
+    notes: `PO number: PO/LKS/2026/1203. Vendor: Keralon Pharma Distributors, quarterly rate contract. Two batches of Amoxicillin flagged near-expiry at receiving dock; GRN short by 150 strips citing transit damage.`,
+  },
+};
+
+function parseLines(text) {
+  return text.trim().split('\n').slice(1).filter(Boolean).map(r => {
+    const c = r.split('|').map(x => x.trim());
+    return { item: c[0], poQty: +c[1], poRate: +c[2], grnQty: +c[3], invQty: +c[4], invRate: +c[5], gst: +c[6], rcRate: +c[7] };
+  });
+}
+
+function statusFor(l) {
+  const tags = [];
+  if (l.grnQty < l.poQty) tags.push(['warn', 'Short supply']);
+  if (l.invQty > l.grnQty) tags.push(['bad', 'Over-billed qty']);
+  if (l.rcRate && l.invRate > l.rcRate) tags.push(['bad', 'Price > rate contract']);
+  if (l.poRate === 0 && l.invRate > 0) tags.push(['warn', 'Not on PO']);
+  if (!tags.length) tags.push(['ok', 'Matched']);
+  return tags;
+}
+
+function renderTable(lines) {
+  const box = document.getElementById('matchTable');
+  let rows = lines.map(l => {
+    const payable = l.invQty <= l.grnQty ? l.invQty * l.invRate : l.grnQty * (l.rcRate || l.invRate);
+    const tags = statusFor(l).map(([c, t]) => `<span class="tag ${c}">${Hub.esc(t)}</span>`).join(' ');
+    return `<tr><td>${Hub.esc(l.item)}</td><td class="num">${l.poQty}</td><td class="num">${l.grnQty}</td><td class="num">${l.invQty}</td><td class="num">${Hub.inr(l.invRate)}</td><td class="num">${Hub.inr(Math.round(payable))}</td><td>${tags}</td></tr>`;
+  }).join('');
+  box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">PO</th><th class="num">GRN</th><th class="num">Inv</th><th class="num">Rate</th><th class="num">Payable</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+  const total = lines.reduce((s, l) => s + Math.min(l.invQty, l.grnQty) * (l.rcRate || l.invRate), 0);
+  const mismatches = lines.filter(l => statusFor(l)[0][0] !== 'ok').length;
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="label">Lines checked</div><div class="value">${lines.length}</div></div>
+    <div class="kpi"><div class="label">Mismatched lines</div><div class="value">${mismatches}</div></div>
+    <div class="kpi"><div class="label">Net payable (recommended)</div><div class="value">${Hub.inr(Math.round(total))}</div></div>`;
+}
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('lines').value = s.lines;
+  document.getElementById('notes').value = s.notes;
+  renderTable(parseLines(s.lines));
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('lines').addEventListener('change', e => { try { renderTable(parseLines(e.target.value)); } catch (err) {} });
+loadScenario('ortho');
+
+const DEMO = {
+ortho: `## Line-level mismatch analysis
+
+| Item | Issue | Detail |
+|---|---|---|
+| Titanium hip stem | Price drift | Invoiced at ₹44,500 vs rate-contract ₹42,000 — ₹2,500/unit above contract, ₹25,000 excess across 10 units |
+| Titanium hip stem | GST rate error | Billed at 12% — correct per rate contract, no issue |
+| Bone cement | Short supply | GRN received 36 of 40 ordered, but invoice bills for 40 — 4 units over-billed against receipt |
+| Surgical drill bits, gloves | Matched | Qty, rate and GST all tie out cleanly |
+| Freight & handling | Not on PO | ₹2,400 freight billed but PO clause 4.2 makes vendor bear freight — this line is not payable |
+
+## Payable amount
+Recommended payable: **₹4,86,300** (implants at contract rate ₹42,000 × 10, cement capped at received 36 units, gloves and drill bits as billed, freight excluded).
+Invoice claims ₹5,15,700 — a variance of **₹29,400** to hold back.
+
+## Draft debit note
+**Debit Note — Meditrust Surgicals | Ref PO/LKS/2026/1187**
+1. Price drift on titanium hip stem (10 units × ₹2,500 over rate contract): **₹25,000**
+2. Bone cement billed for 4 units not received (short supply per GRN): **₹12,800**
+3. Freight & handling not payable under PO clause 4.2: **₹2,400**
+**Total debit note value: ₹40,200** (net of GST adjustment, to be confirmed with accounts).
+
+**Recommendation:** Hold payment at ₹4,86,300, issue debit note for ₹40,200, and flag the rate-contract deviation to the vendor relationship owner before the next PO cycle.`,
+
+pharma: `## Line-level mismatch analysis
+
+| Item | Issue | Detail |
+|---|---|---|
+| Paracetamol 500mg | Short supply | GRN 1,850 vs invoiced 2,000 — 150 strips billed but not received |
+| Amoxicillin 500mg | Price drift | Invoiced at ₹24.5 vs rate contract ₹22 — ₹2.5/strip above contract, ₹3,000 excess on 1,200 strips |
+| IV fluid, Insulin | Matched | Qty and rate tie out to rate contract |
+| Surgical spirit | Short supply (minor) | GRN 28 of 30 cans, invoice bills for 30 |
+
+## Payable amount
+Recommended payable: **₹67,220** — paracetamol capped at received 1,850 strips, amoxicillin capped at contract rate ₹22, spirit capped at received 28 cans, other lines as billed.
+Invoice claims ₹73,510 — variance of **₹6,290** to hold back.
+
+## Draft debit note
+**Debit Note — Keralon Pharma Distributors | Ref PO/LKS/2026/1203**
+1. Paracetamol short-received (150 strips × ₹8.5): **₹1,275**
+2. Amoxicillin price above rate contract (1,200 × ₹2.5): **₹3,000**
+3. Surgical spirit short-received (2 cans × ₹410): **₹820**
+**Total debit note value: ₹5,095**
+
+**Recommendation:** Also flag the near-expiry Amoxicillin batches noted at receiving for return-to-vendor rather than acceptance, separate from this billing dispute.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const lines = document.getElementById('lines').value;
+  const notes = document.getElementById('notes').value;
+  const prompt = `You are assisting Purchase & Stores at VPS Lakeshore Hospital, Kochi with a three-way match of PO, GRN and vendor invoice lines before payment release.
+
+Lines (Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | Rate-contract Rate):
+${lines}
+
+Notes: ${notes}
+
+For each mismatched line explain the issue (short supply, price drift vs rate contract, GST rate error, freight not on PO). State the recommended payable amount vs invoiced amount. Draft a debit note with line items and a total value. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital purchase/accounts-payable officer at a 350-bed Kerala hospital, expert in three-way matching and vendor billing disputes.',
+    prompt, demo: DEMO[key], manualMinutes: 60,
+  });
+});
+</script>
+</body>
+</html>
