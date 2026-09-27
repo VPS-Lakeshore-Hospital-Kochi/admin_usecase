@@ -6,307 +6,470 @@
 <title>CEO / Chairman copilot</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
-  .tabs button { border-radius:999px; }
-  .tabs button.active { background:var(--navy); border-color:var(--navy); color:#fff; }
-  .mode { display:none; }
-  .mode.active { display:block; }
-  .bundle-list { font-size:13px; }
-  .bundle-list div { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--border); }
+  /* local additions: kit.js has no date picker or chat components — built here, brand tokens only */
+  .datebar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .datebar select { width:auto; min-width:170px; }
+  .chat-log { display:flex; flex-direction:column; gap:10px; max-height:460px; overflow-y:auto; padding-right:2px; }
+  .chat-msg.user { align-self:flex-end; background:var(--navy); color:#fff; border-radius:16px 16px 4px 16px; padding:8px 14px; max-width:80%; }
+  .chat-msg.assistant { max-width:92%; }
+  .chat-quick { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  .chat-quick button { font-size:12px; padding:5px 12px; }
+  .overdue-flag { color:var(--magenta); font-weight:500; }
+  .preview-note { font-size:12px; color:var(--muted); margin:6px 0; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>CEO / Chairman copilot</h1>
-    <p>Morning brief across departments, meeting notes turned into a tracked action list, and plain-English questions answered over the same KPI bundle.</p>
+    <p>The Management Office's daily cockpit: a morning brief, meeting notes turned into a tracked action list, and plain questions answered over the same KPI bundle.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="tabs">
-    <button type="button" class="active" data-mode="brief">A · Morning brief</button>
-    <button type="button" data-mode="actions">B · Meeting notes → actions</button>
-    <button type="button" data-mode="ask">C · Ask a question</button>
-  </div>
-
-  <!-- MODE A: MORNING BRIEF -->
-  <div class="mode active" id="mode-brief">
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>Yesterday's data bundle — 26 Sep 2026</h2>
-        <div class="bundle-list" id="bundleList"></div>
-        <div class="row" style="margin-top:14px">
-          <button class="primary" id="runBrief">Run with Claude — write the morning brief</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Claude output</h2>
-        <div class="claude-out" id="outBrief"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODE B: MEETING NOTES -->
-  <div class="mode" id="mode-actions">
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>Chairman's meeting notes (sample, 25 Sep 2026)</h2>
-        <textarea id="notesText" style="min-height:320px"></textarea>
-        <div class="row" style="margin-top:10px">
-          <button class="primary" id="runActions">Run with Claude — action tracker + follow-up email</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Claude output</h2>
-        <div class="claude-out" id="outActions"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODE C: ASK A QUESTION -->
-  <div class="mode" id="mode-ask">
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>Ask about the KPI bundle</h2>
-        <p class="small" style="color:var(--muted);margin-top:-6px">Uses the same data bundle shown in tab A.</p>
-        <label for="scenarioAsk">Sample question</label>
-        <select id="scenarioAsk">
-          <option value="ortho">Why is ortho revenue down this month?</option>
-          <option value="intl">How are we tracking on the 20% international revenue goal?</option>
-          <option value="custom">Custom question (type below)</option>
-        </select>
-        <label for="askQ">Question</label>
-        <textarea id="askQ" style="min-height:80px"></textarea>
-        <div class="row" style="margin-top:10px">
-          <button class="primary" id="runAsk">Run with Claude — answer</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Claude output</h2>
-        <div class="claude-out" id="outAsk"></div>
-      </div>
-    </div>
-  </div>
-
-  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
 </main>
-
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'ceo-copilot';
 Hub.mountHeader({ dept: 'Management Office', title: 'CEO / Chairman copilot' });
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const parseDMY = s => { const [d, mon, y] = s.split('-'); return new Date(Number(y), MONTHS.indexOf(mon), Number(d)); };
+const st = Hub.kit.state(SLUG, { tab: 'brief', selectedDate: null, actionStatus: {}, addedActions: [], reviews: {}, chat: [] });
+let DATA, TODAY_STR, TODAY;
 
-// ---------- DATA BUNDLE ----------
-const BUNDLE = {
-  census: { occupied: 289, capacity: 350, occPct: 82.6, admissions: 41, discharges: 33 },
-  revenue: { flashCr: 1.62, aopCr: 1.75, mtdCr: 24.3, mtdAopCr: 26.0 },
-  er: { footfall: 118, admits: 22 },
-  dischargesPending: 9,
-  tpaPending: { count: 27, valueCr: 0.84, oldestDays: 4 },
-  equipmentDown: [
-    { name: 'da Vinci Robotic System (OT-4)', since: '24-Sep-2026', reason: 'Arm calibration fault, vendor ETA 29-Sep' },
-    { name: 'Cath Lab 2', since: '26-Sep-2026', reason: 'X-ray tube overheating, vendor engineer on site' },
-  ],
-  complaints: [
-    { theme: 'Billing delay at discharge', count: 6 },
-    { theme: 'Long wait — radiology (MRI)', count: 5 },
-    { theme: 'Food quality — international patients', count: 3 },
-  ],
-  cash: { balanceCr: 6.4, daysPayableOutstanding: 38 },
-  docusignPending: [
-    { name: 'Dr. Anand Menon (Consultant, Cardiology renewal)', days: 6 },
-    { name: 'M/s KeralaMed Supplies (rate contract)', days: 11 },
-    { name: 'Fatima Al Busaidi visa-support MoU (Maldives referral partner)', days: 3 },
-  ],
-};
-
-document.getElementById('kpis').innerHTML = `
-  <div class="kpi"><div class="label">Occupancy</div><div class="value">${BUNDLE.census.occPct}%</div><div class="delta">${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds</div></div>
-  <div class="kpi"><div class="label">Revenue flash (yday)</div><div class="value">${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr</div><div class="delta down">vs AOP ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr</div></div>
-  <div class="kpi"><div class="label">ER footfall</div><div class="value">${BUNDLE.er.footfall}</div><div class="delta">${BUNDLE.er.admits} admitted</div></div>
-  <div class="kpi"><div class="label">Discharges pending &gt;2pm</div><div class="value">${BUNDLE.dischargesPending}</div></div>
-  <div class="kpi"><div class="label">TPA approvals pending</div><div class="value">${BUNDLE.tpaPending.count}</div><div class="delta">${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr blocked</div></div>
-  <div class="kpi"><div class="label">Cash balance</div><div class="value">${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr</div></div>`;
-
-document.getElementById('bundleList').innerHTML = `
-  <div><span>Census</span><span>${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds (${BUNDLE.census.occPct}%) · ${BUNDLE.census.admissions} adm / ${BUNDLE.census.discharges} disch</span></div>
-  <div><span>Revenue flash vs AOP</span><span>${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr vs ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr</span></div>
-  <div><span>MTD revenue vs AOP</span><span>${Hub.inr(BUNDLE.revenue.mtdCr,1)} Cr vs ${Hub.inr(BUNDLE.revenue.mtdAopCr,1)} Cr</span></div>
-  <div><span>ER footfall / admits</span><span>${BUNDLE.er.footfall} / ${BUNDLE.er.admits}</span></div>
-  <div><span>Discharges pending past 2pm</span><span>${BUNDLE.dischargesPending}</span></div>
-  <div><span>TPA approvals pending</span><span>${BUNDLE.tpaPending.count} cases, ${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr, oldest ${BUNDLE.tpaPending.oldestDays}d</span></div>
-  <div><span>Critical equipment down</span><span>${BUNDLE.equipmentDown.map(e=>e.name).join('; ')}</span></div>
-  <div><span>Top complaints (24h)</span><span>${BUNDLE.complaints.map(c=>c.theme+' ('+c.count+')').join('; ')}</span></div>
-  <div><span>Cash balance / DPO</span><span>${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr / ${BUNDLE.cash.daysPayableOutstanding}d</span></div>
-  <div><span>DocuSign approvals pending</span><span>${BUNDLE.docusignPending.map(d=>d.name+' ('+d.days+'d)').join('; ')}</span></div>`;
-
-function bundleAsText() {
-  return `CENSUS: ${BUNDLE.census.occupied}/${BUNDLE.census.capacity} beds occupied (${BUNDLE.census.occPct}%), ${BUNDLE.census.admissions} admissions, ${BUNDLE.census.discharges} discharges yesterday.
-REVENUE FLASH (yesterday): ${Hub.inr(BUNDLE.revenue.flashCr,2)} Cr actual vs ${Hub.inr(BUNDLE.revenue.aopCr,2)} Cr AOP target (${(((BUNDLE.revenue.flashCr-BUNDLE.revenue.aopCr)/BUNDLE.revenue.aopCr)*100).toFixed(1)}%).
-MTD REVENUE: ${Hub.inr(BUNDLE.revenue.mtdCr,1)} Cr vs ${Hub.inr(BUNDLE.revenue.mtdAopCr,1)} Cr AOP MTD.
-ER: ${BUNDLE.er.footfall} footfall, ${BUNDLE.er.admits} admitted.
-DISCHARGES PENDING PAST 2PM: ${BUNDLE.dischargesPending}.
-TPA/INSURANCE APPROVALS PENDING: ${BUNDLE.tpaPending.count} cases worth ${Hub.inr(BUNDLE.tpaPending.valueCr,2)} Cr, oldest pending ${BUNDLE.tpaPending.oldestDays} days.
-CRITICAL EQUIPMENT DOWNTIME: ${BUNDLE.equipmentDown.map(e=>`${e.name} — down since ${e.since}, reason: ${e.reason}`).join(' | ')}.
-TOP COMPLAINTS (last 24h): ${BUNDLE.complaints.map(c=>`${c.theme} (${c.count})`).join(', ')}.
-CASH POSITION: balance ${Hub.inr(BUNDLE.cash.balanceCr,1)} Cr, days payable outstanding ${BUNDLE.cash.daysPayableOutstanding}.
-DOCUSIGN APPROVALS PENDING WITH CHAIRMAN/CEO: ${BUNDLE.docusignPending.map(d=>`${d.name} — pending ${d.days} days`).join(', ')}.
-Context: VPS Lakeshore Hospital, Kochi, 350 beds, NABH-accredited multi-specialty hospital with robotic surgery, cardiology and transplant programmes, strong international patient inflow from Maldives/GCC/Africa.`;
+/* ================= TAB A: MORNING BRIEF ================= */
+function dayByDate(dt) { return DATA.days.find(d => d.date === dt); }
+function avg7(dt) {
+  const idx = DATA.days.findIndex(d => d.date === dt);
+  const from = Math.max(0, idx - 6);
+  const window = DATA.days.slice(from, idx + 1);
+  const s = k => window.reduce((a, d) => a + (k === 'downtime' ? 0 : d[k]), 0) / window.length;
+  return {
+    occupancyPct: s('occupancyPct'), revenueLakh: s('revenueLakh'), aopLakh: s('aopLakh'),
+    erFootfall: s('erFootfall'), dischargeNoonPct: s('dischargeNoonPct'), tpaPending: s('tpaPending'),
+    complaints: s('complaints'), cashCr: s('cashCr'), intlPatients: s('intlPatients'),
+    downtimeTotal: window.reduce((a, d) => a + d.downtime.robot + d.downtime.cathLab + d.downtime.mri + d.downtime.ct, 0) / window.length,
+  };
 }
+function delta(cur, avg, higherBetter, digits = 1) {
+  const diff = cur - avg;
+  if (Math.abs(diff) < 0.05) return '<span class="small">≈ 7-day avg</span>';
+  const good = higherBetter ? diff > 0 : diff < 0;
+  return `<span class="${good ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'} ${Math.abs(diff).toFixed(digits)} vs 7-day avg</span>`;
+}
+function briefBundleText(day, a7) {
+  const eDown = [];
+  if (day.downtime.robot) eDown.push(`da Vinci robot down ${day.downtime.robot}h`);
+  if (day.downtime.cathLab) eDown.push(`Cath Lab down ${day.downtime.cathLab}h`);
+  if (day.downtime.mri) eDown.push(`MRI down ${day.downtime.mri}h`);
+  if (day.downtime.ct) eDown.push(`CT down ${day.downtime.ct}h`);
+  const top3 = DATA.esign.slice(0, 3).map(e => `${e.doc} — pending ${e.days}d with ${e.pendingWith}`).join(' | ');
+  const overdue = combinedActions().filter(isOverdue).slice(0, 4).map(a => `${a.action} (${a.owner}, due ${a.due})`).join(' | ');
+  return `DATE: ${day.date} (VPS Lakeshore Hospital, Kochi, 350-bed NABH-accredited multi-specialty hospital).
+IP CENSUS: ${day.ipCensus}/${DATA.capacity} beds, occupancy ${day.occupancyPct}% (7-day avg ${a7.occupancyPct.toFixed(1)}%).
+REVENUE: ₹${day.revenueLakh} lakh vs AOP ₹${day.aopLakh} lakh (${(((day.revenueLakh - day.aopLakh) / day.aopLakh) * 100).toFixed(1)}%); 7-day avg revenue ₹${a7.revenueLakh.toFixed(1)} lakh vs AOP ₹${a7.aopLakh.toFixed(1)} lakh.
+ER FOOTFALL: ${day.erFootfall} (7-day avg ${a7.erFootfall.toFixed(0)}).
+DISCHARGES BEFORE NOON: ${day.dischargeNoonPct}% (7-day avg ${a7.dischargeNoonPct.toFixed(0)}%).
+TPA APPROVALS PENDING: ${day.tpaPending} cases (7-day avg ${a7.tpaPending.toFixed(0)}).
+CRITICAL EQUIPMENT DOWNTIME TODAY: ${eDown.length ? eDown.join(', ') : 'none reported'}.
+COMPLAINTS LOGGED: ${day.complaints} (7-day avg ${a7.complaints.toFixed(0)}).
+CASH POSITION: ₹${day.cashCr} Cr.
+INTERNATIONAL PATIENTS: ${day.intlPatients}.
+E-SIGNATURE APPROVALS PENDING (top 3 by age): ${top3}.
+OVERDUE ACTION ITEMS (from past management meetings): ${overdue || 'none'}.`;
+}
+function briefDemo(day, a7) {
+  const missPct = (((day.revenueLakh - day.aopLakh) / day.aopLakh) * 100).toFixed(1);
+  const eqLines = [];
+  if (day.downtime.robot) eqLines.push(`- **da Vinci robot down ${day.downtime.robot}h today** — check with Surgery whether non-urgent robotic cases can shift to a conventional approach while it is out.`);
+  if (day.downtime.cathLab) eqLines.push(`- **Cath Lab down ${day.downtime.cathLab}h today** — confirm no elective cath cases are being deferred beyond 48 hours.`);
+  if (day.downtime.mri) eqLines.push(`- **MRI down ${day.downtime.mri}h today** — likely feeding the radiology wait-time complaints; watch the complaints count.`);
+  if (day.downtime.ct) eqLines.push(`- **CT down ${day.downtime.ct}h today** — same radiology bottleneck risk as MRI.`);
+  const overdue = combinedActions().filter(isOverdue).slice(0, 3);
+  const topEsign = DATA.esign.slice(0, 3);
+  return `## Morning brief — VPS Lakeshore, ${day.date}
 
-const DEMO_BRIEF = `## Morning Brief — VPS Lakeshore, 27 Sep 2026 (data as of 26 Sep close)
+**Headline:** Occupancy at ${day.occupancyPct}% (${day.ipCensus}/${DATA.capacity} beds); revenue ${day.revenueLakh >= day.aopLakh ? 'ahead of' : 'behind'} AOP by ${Math.abs(missPct)}%${eqLines.length ? ', and equipment downtime needs attention before today’s OT/radiology lists are finalised' : ''}.
 
-**Headline:** Occupancy steady at 82.6%, but revenue flash missed AOP by ~7.4% on a slow ER day; two pieces of critical equipment are down simultaneously (robot + Cath Lab 2), which needs your attention before today's OT list is finalised.
-
-| Metric | Yesterday | Target/Note |
+| Metric | Today | 7-day avg |
 |---|---|---|
-| Occupancy | 289/350 (82.6%) | Healthy; 41 admissions vs 33 discharges |
-| Revenue flash | ₹1.62 Cr | vs AOP ₹1.75 Cr (**−7.4%**) |
-| MTD revenue | ₹24.3 Cr | vs AOP ₹26.0 Cr (**−6.5%** MTD — watch closely, 3 days left in month) |
-| ER footfall | 118 | 22 admitted (18.6% conversion — normal range) |
-| Cash balance | ₹6.4 Cr | DPO 38 days — within comfort band |
+| Occupancy | ${day.occupancyPct}% | ${a7.occupancyPct.toFixed(1)}% |
+| Revenue vs AOP | ₹${day.revenueLakh}L / ₹${day.aopLakh}L (**${missPct}%**) | ₹${a7.revenueLakh.toFixed(1)}L / ₹${a7.aopLakh.toFixed(1)}L |
+| ER footfall | ${day.erFootfall} | ${a7.erFootfall.toFixed(0)} |
+| Discharges before noon | ${day.dischargeNoonPct}% | ${a7.dischargeNoonPct.toFixed(0)}% |
+| TPA approvals pending | ${day.tpaPending} | ${a7.tpaPending.toFixed(0)} |
+| Cash position | ₹${day.cashCr} Cr | — |
 
 **Needs your eyes today**
-- **da Vinci robot (OT-4) down since 24-Sep** — vendor ETA 29-Sep. That's 5 days of lost robotic-surgery slots; ask Surgery to check if any non-urgent robotic cases can shift to conventional laparoscopic approach in the interim rather than pushing patients out.
-- **Cath Lab 2 X-ray tube overheating** — engineer on site today. Cath Lab 1 is absorbing the load; confirm no elective cath procedures are being deferred beyond 48 hours.
-- **9 discharges still pending past 2pm** yesterday — this is a recurring theme in complaints ("billing delay at discharge," 6 mentions in 24h). Recommend Finance + Nursing review the 2pm discharge SOP this week.
-- **27 TPA approvals pending, ₹84 lakh blocked, oldest 4 days** — within the 4-hour to same-day norm for most insurers but the ₹84 lakh blocked is worth a nudge to the insurance desk lead if it recurs tomorrow.
+${eqLines.length ? eqLines.join('\n') : '- No critical equipment down today — a clean day on that front.'}
+- **${day.complaints} complaints logged** (7-day avg ${a7.complaints.toFixed(0)})${day.complaints > a7.complaints ? ' — above the recent run rate; worth a quick theme check.' : '.'}
+- **${day.dischargeNoonPct}% discharges before noon** ${day.dischargeNoonPct < a7.dischargeNoonPct ? 'is below the 7-day average — a recurring driver of billing-delay complaints; ask Finance + Nursing to re-check the 2pm SOP.' : 'is holding steady.'}
 
-**Approvals waiting on you (DocuSign)**
-| Document | Pending | Recommendation |
+**Who to call**
+${overdue.length ? overdue.map(a => `- **${a.owner}** — "${a.action}" was due ${a.due} and is still ${a.status.toLowerCase()}.`).join('\n') : '- No overdue action items right now.'}
+
+**Approvals waiting on you (e-signature)**
+| Document | Pending with | Days |
 |---|---|---|
-| M/s KeralaMed Supplies rate contract | 11 days | Longest-pending — sign or send back today |
-| Dr. Anand Menon consultant renewal | 6 days | Sign before month-end to avoid a privileging gap |
-| Fatima Al Busaidi (Maldives referral MoU) | 3 days | Low urgency but ties to international-revenue push — sign this week |
+${topEsign.map(e => `| ${e.doc} | ${e.pendingWith} | ${e.days} |`).join('\n')}
 
-**Watch list:** Radiology MRI wait times (5 complaints in 24h) — consider fast-tracking the token-prioritisation fix already discussed for full-bladder abdominal cases.`;
+**Watch list:** ${day.intlPatients} international patients today — keep an eye on the trend against the 20% international-revenue goal from the last Chairman review.`;
+}
+function isOverdue(a) { return a.status !== 'Done' && parseDMY(a.due) < TODAY; }
+function combinedActions() {
+  const overrides = st.get().actionStatus || {};
+  return DATA.actions.concat(st.get().addedActions || []).map(a => ({ ...a, status: overrides[a.id] || a.status }));
+}
 
-document.getElementById('runBrief').addEventListener('click', () => {
-  const prompt = `Here is yesterday's hospital operations data bundle for VPS Lakeshore Hospital, Kochi:\n\n${bundleAsText()}\n\nWrite a concise morning brief for the CEO/Chairman: a one-line headline, a KPI snapshot table, a short "needs your eyes today" section prioritising the most urgent operational issues, a table of pending DocuSign approvals with a recommendation for each, and a one-line watch list item. Be direct and specific, use ₹ crore/lakh formatting, and call out root causes where the data suggests one.`;
-  Hub.run({
-    out: '#outBrief', button: '#runBrief',
-    system: 'You are the Chief of Staff / Management Office assistant to the CEO and Chairman of a 350-bed NABH-accredited multi-specialty hospital in Kochi, Kerala. You write tight, actionable morning briefs.',
-    prompt, demo: DEMO_BRIEF, manualMinutes: 60,
+function brief(el) {
+  const dt = st.get().selectedDate || TODAY_STR;
+  const day = dayByDate(dt), a7 = avg7(dt);
+  el.innerHTML = `
+    <div class="datebar"><label for="briefDate" style="margin:0">Day</label>
+      <select id="briefDate">${DATA.days.map(d => `<option value="${d.date}" ${d.date === dt ? 'selected' : ''}>${d.date}</option>`).join('')}</select>
+      <span class="small">Defaults to the latest day. KPI tiles compare today against the trailing 7-day average.</span></div>
+    <div class="kpis" id="briefKpis"></div>
+    <div class="grid cols-2">
+      <div class="card"><h2>Data bundle Claude sees</h2>
+        <p class="small">Census, revenue vs AOP, ER, discharges, TPA, equipment downtime, complaints, cash, international patients, top e-signature approvals and overdue actions — for ${dt}.</p>
+        <button class="primary" id="runBrief">Run with Claude — write the morning brief</button>
+        <p class="small" style="margin-top:8px">For the CEO's own use — no approval step needed before reading or downloading this brief.</p>
+      </div>
+      <div class="card"><h2>Morning brief</h2><div class="claude-out" id="outBrief"></div></div>
+    </div>`;
+  const tiles = el.querySelector('#briefKpis');
+  tiles.innerHTML = `
+    <div class="kpi"><div class="label">Occupancy</div><div class="value">${day.occupancyPct}%</div><div class="delta">${delta(day.occupancyPct, a7.occupancyPct, true)}</div></div>
+    <div class="kpi"><div class="label">Revenue vs AOP</div><div class="value">₹${day.revenueLakh}L</div><div class="delta ${day.revenueLakh >= day.aopLakh ? 'up' : 'down'}">${day.revenueLakh >= day.aopLakh ? '▲' : '▼'} vs AOP ₹${day.aopLakh}L</div></div>
+    <div class="kpi"><div class="label">ER footfall</div><div class="value">${day.erFootfall}</div><div class="delta">${delta(day.erFootfall, a7.erFootfall, true, 0)}</div></div>
+    <div class="kpi"><div class="label">Discharges before noon</div><div class="value">${day.dischargeNoonPct}%</div><div class="delta">${delta(day.dischargeNoonPct, a7.dischargeNoonPct, true, 0)}</div></div>
+    <div class="kpi"><div class="label">TPA pending</div><div class="value">${day.tpaPending}</div><div class="delta">${delta(day.tpaPending, a7.tpaPending, false, 0)}</div></div>
+    <div class="kpi"><div class="label">Cash position</div><div class="value">₹${day.cashCr} Cr</div></div>`;
+  el.querySelector('#briefDate').onchange = e => { st.set({ selectedDate: e.target.value }); brief(el); };
+  el.querySelector('#runBrief').onclick = () => Hub.run({
+    out: '#outBrief', button: '#runBrief', manualMinutes: 45,
+    system: 'You are the Chief of Staff / Management Office assistant to the CEO and Chairman of VPS Lakeshore, a 350-bed NABH-accredited hospital in Kochi. You write tight, specific morning briefs.',
+    prompt: `Here is today's hospital operations data bundle:\n\n${briefBundleText(day, a7)}\n\nWrite a concise morning brief: a one-line headline, a KPI-vs-7-day-average table, a "needs your eyes today" section, a "who to call" section naming owners of overdue actions, a table of the top e-signature approvals pending, and a one-line watch list item. Use ₹ lakh/crore formatting and be specific about root causes where the data suggests one.`,
+    demo: briefDemo(day, a7),
   });
-});
+}
 
-// ---------- MODE B: MEETING NOTES ----------
-const NOTES = `Chairman's review meeting — 25 Sep 2026, attendees: Chairman, CEO, COO, CFO, Medical Superintendent, Sameeraj Rao (Management Office), SK (Strategy)
+/* ================= TAB B: ACTION TRACKER ================= */
+function actionsTab(el) {
+  el.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Action tracker</h2>
+        <button type="button" id="expTracker">Export tracker to Excel</button></div>
+      <div id="tblActions"></div>
+    </div>
+    <div id="actionDetail" style="margin-top:14px"></div>
+    <div class="card" style="margin-top:14px">
+      <h2>Turn meeting notes into actions</h2>
+      <label for="notesPick">Sample meeting notes</label>
+      <select id="notesPick">${DATA.meetingNotes.map((n, i) => `<option value="${i}">${n.title} — ${n.date}</option>`).join('')}</select>
+      <label for="notesText">Notes</label>
+      <textarea id="notesText" style="min-height:260px"></textarea>
+      <div class="row" style="margin-top:10px"><button class="primary" id="runExtract">Extract actions with Claude</button></div>
+      <div class="claude-out" id="outExtract" style="margin-top:10px"></div>
+      <div id="extractPreview" style="margin-top:10px"></div>
+      <div id="extractReview" style="margin-top:10px"></div>
+    </div>`;
+  const setNotes = i => { el.querySelector('#notesText').value = DATA.meetingNotes[i].text; };
+  setNotes(0);
+  el.querySelector('#notesPick').onchange = e => setNotes(Number(e.target.value));
+  drawActionsTable(el);
+  el.querySelector('#expTracker').onclick = () => {
+    Hub.kit.exportXlsx(combinedActions().map(a => ({ ID: a.id, Action: a.action, Owner: a.owner, Due: a.due, Status: isOverdue(a) ? 'Overdue' : a.status, Source: a.source })), 'ceo-copilot-action-tracker.xlsx', 'Actions');
+    Hub.kit.log(SLUG, 'Exported action tracker to Excel');
+  };
+  el.querySelector('#runExtract').onclick = () => runExtract(el, Number(el.querySelector('#notesPick').value));
+}
+function drawActionsTable(el) {
+  Hub.kit.table(el.querySelector('#tblActions'), {
+    rows: combinedActions(), search: true, selectedKey: st.get().selectedAction,
+    columns: [
+      { key: 'id', label: 'ID' }, { key: 'action', label: 'Action' }, { key: 'owner', label: 'Owner' },
+      { key: 'due', label: 'Due' },
+      { key: 'status', label: 'Status', render: r => isOverdue(r) ? '<span class="tag bad">Overdue</span>' : `<span class="tag ${r.status === 'Done' ? 'ok' : 'warn'}">${Hub.esc(r.status)}</span>` },
+      { key: 'source', label: 'Source meeting' },
+    ],
+    onRowClick: r => { st.set({ selectedAction: r.id }); actionDetail(el, r); },
+  });
+  const selId = st.get().selectedAction;
+  if (selId) { const r = combinedActions().find(a => a.id === selId); if (r) actionDetail(el, r); }
+}
+function actionDetail(el, r) {
+  const box = el.querySelector('#actionDetail');
+  box.innerHTML = `<div class="card"><h2 style="margin-top:0">${Hub.esc(r.id)} — ${Hub.esc(r.action)}</h2>
+    <p class="small">Owner: <b>${Hub.esc(r.owner)}</b> · Due ${Hub.esc(r.due)} · From ${Hub.esc(r.source)} ${isOverdue(r) ? '· <span class="overdue-flag">overdue</span>' : ''}</p>
+    ${r.status === 'Done' ? '<span class="tag ok">Done</span>' : '<button type="button" id="markDone">Mark done</button>'}</div>`;
+  const btn = box.querySelector('#markDone');
+  if (btn) btn.onclick = () => {
+    st.set(s => ({ actionStatus: { ...(s.actionStatus || {}), [r.id]: 'Done' } }));
+    Hub.kit.log(SLUG, 'Marked action done', `${r.id} — ${r.action}`);
+    actionsTab(document.getElementById('view'));
+  };
+}
+const KPI_HINTS = ['CMI, ARPOB, ALOS', 'Revenue index vs Peer A', 'International revenue %', 'Robot utilisation %', 'Equipment utilisation %', 'MRI/CT wait time', 'Discharge-before-noon %'];
+function extractRowsFor(idx) {
+  // deterministic per-sample extraction so the preview table and the approved tracker rows always match
+  return idx === 0 ? [
+    { action: 'Set up recurring monthly CMI / ARPOB / ALOS dashboard', owner: 'Sameeraj Rao (Management Office)', due: '10-Oct-2026', kpi: 'CMI, ARPOB, ALOS' },
+    { action: 'Start quarterly competitor benchmarking vs Peer A Kerala cluster', owner: 'SK (Strategy)', due: '31-Oct-2026', kpi: 'Revenue index vs Peer A' },
+    { action: 'Build plan to grow international revenue from ~14% to 20%', owner: 'Marketing + International Desk', due: '15-Nov-2026', kpi: 'International revenue %' },
+    { action: 'Design off-peak discount package for out-of-Kochi robotic surgery patients', owner: 'COO Sandeep Nair', due: '20-Oct-2026', kpi: 'Robot utilisation %' },
+    { action: 'Explore revenue-share model for underused Cath Lab 2 / 2nd LINAC slot', owner: 'CFO Thomas Alex', due: '15-Nov-2026', kpi: 'Equipment utilisation %' },
+    { action: 'Implement radiology token/priority system for full-bladder-prep cases', owner: 'Radiology HOD Dr. Vinod Pillai', due: '10-Oct-2026', kpi: 'MRI/CT wait time' },
+    { action: 'Design and roll out patient-flow training module', owner: 'HR + Quality', due: '30-Nov-2026', kpi: 'Discharge-before-noon %' },
+  ] : [
+    { action: 'Open conversation with top 3 insurers on faster TPA turnaround', owner: 'CFO Thomas Alex', due: '15-Oct-2026', kpi: 'TPA approvals pending' },
+    { action: 'Design documentation-completeness training for TPA desk staff', owner: 'HR + Quality', due: '20-Oct-2026', kpi: 'TPA approvals pending' },
+    { action: 'Review 2pm discharge SOP with Finance and Nursing', owner: 'Finance + Nursing', due: '12-Oct-2026', kpi: 'Discharge-before-noon %' },
+    { action: 'Prepare vendor AMC renewal calendar for critical equipment', owner: 'COO Sandeep Nair', due: '25-Oct-2026', kpi: 'Equipment downtime hours' },
+    { action: 'Set up weekly complaints-theme review with department heads', owner: 'Medical Superintendent Dr. Leela Menon', due: '05-Oct-2026', kpi: 'Complaints logged' },
+  ];
+}
+function extractDemo(idx, rows) {
+  const notes = DATA.meetingNotes[idx];
+  return `## Extracted actions — ${notes.title}, ${notes.date}
 
-1. CMI (Case Mix Index), ARPOB (Average Revenue Per Occupied Bed) and ALOS (Average Length of Stay) to be tracked and reviewed every month at the management meeting — Sameeraj to set up the recurring dashboard.
-2. Need visibility on competitor revenue trends, specifically Peer A Kerala cluster — quarterly benchmarking exercise to be started.
-3. International revenue currently ~14% of total; Chairman wants this to reach 20% over the next 2-3 quarters. Marketing + international desk to build a plan (GCC, Maldives, Africa corridors).
-4. Robot (da Vinci) utilisation is below plan. Proposal: offer a discount/package pricing for patients travelling from outside Kochi (Kottayam, Thrissur, Alappuzha corridors) to drive volume during off-peak OT slots.
-5. Explore revenue-share arrangements with other VPS units or external partners for underused equipment (Cath Lab 2, second Linear Accelerator slot) instead of it sitting idle.
-6. Radiology to implement a token/priority system so that full-bladder-prep patients (CT/MRI abdomen-pelvis) are not stuck behind routine cases — reduces both wait time complaints and re-prep costs.
-7. Staff training needed on patient flow management (admission to discharge) — HR/Quality to design a module, roll out to nursing and front-office staff.
-8. A monthly management dashboard (single page, CEO + Chairman view) to be maintained going forward — owners: Sameeraj Rao and SK.
-
-Chairman asked for a follow-up email summarising actions and owners to go out by end of week.`;
-
-document.getElementById('notesText').value = NOTES;
-
-const DEMO_ACTIONS = `## Action tracker — Chairman's review, 25 Sep 2026
-
-| # | Action | Owner | Due | Linked KPI | Status |
-|---|---|---|---|---|---|
-| 1 | Set up recurring monthly CMI / ARPOB / ALOS dashboard | Sameeraj Rao | 10-Oct-2026 | CMI, ARPOB, ALOS | Not started |
-| 2 | Start quarterly competitor benchmarking (Peer A Kerala cluster) | SK (Strategy) | 31-Oct-2026 | Market-share proxy (revenue index) | Not started |
-| 3 | Build plan to grow international revenue from ~14% to 20% (GCC/Maldives/Africa) | Marketing + International Desk | 15-Nov-2026 (plan); ongoing to Q2 2027 | International revenue % of total | Not started |
-| 4 | Design off-peak discount/package for out-of-Kochi robotic surgery patients | COO + Surgery Dept | 20-Oct-2026 | Robot utilisation % | Not started |
-| 5 | Explore revenue-share model for underused Cath Lab 2 / 2nd LINAC slot | CFO | 15-Nov-2026 | Equipment utilisation %, other income | Not started |
-| 6 | Implement radiology token/priority system for full-bladder-prep cases | Radiology HOD | 10-Oct-2026 | MRI/CT wait time, re-prep rate | Not started |
-| 7 | Design & roll out patient-flow training module (nursing + front office) | HR + Quality | 30-Nov-2026 | Discharge-before-2pm %, patient complaints | Not started |
-| 8 | Maintain single-page monthly management dashboard | Sameeraj Rao, SK | Ongoing, monthly from 05-Oct-2026 | All of the above, rolled up | Recurring |
-
-**Notes for the tracker**
-- Items 1 and 8 are closely linked — recommend building the CMI/ARPOB/ALOS view as one panel of the same monthly dashboard rather than two separate deliverables.
-- Item 4 (robot discount) and Item 5 (revenue-share on idle equipment) both hit the same underlying issue — asset utilisation — and could share one review forum.
-- No numeric target was set for Item 2 or Item 5 in the notes; suggest owners propose a measurable target (e.g., "close competitor revenue gap by X%", "generate ₹Y lakh from revenue-share") before the next review.
+| Action | Owner | Due | Linked KPI |
+|---|---|---|---|
+${rows.map(r => `| ${r.action} | ${r.owner} | ${r.due} | ${r.kpi} |`).join('\n')}
 
 ---
 
 ### Follow-up email draft
 
-**To:** Chairman, CEO, COO, CFO, Medical Superintendent, SK
+**To:** meeting attendees
 **From:** Sameeraj Rao, Management Office
-**Subject:** Action tracker — Chairman's review, 25 Sep 2026
+**Subject:** Action tracker — ${notes.title}, ${notes.date}
 
 Dear all,
 
-Thank you for the review on 25 Sep. Summarising the agreed actions and owners below; I will circulate progress against these at our next monthly management meeting.
+Summarising the actions and owners agreed at our ${notes.date} meeting; I will track progress against these at the next monthly review.
 
-1. Monthly CMI/ARPOB/ALOS dashboard — Sameeraj, live by 10 Oct.
-2. Quarterly Peer A Kerala competitor benchmarking — SK, first cut by 31 Oct.
-3. International revenue plan (target 20% of total) — Marketing/International Desk, plan by 15 Nov.
-4. Off-peak discount package for out-of-Kochi robotic surgery patients — COO/Surgery, by 20 Oct.
-5. Revenue-share model for underused Cath Lab 2 / LINAC slot — CFO, by 15 Nov.
-6. Radiology token system for full-bladder-prep cases — Radiology HOD, by 10 Oct.
-7. Patient-flow training module — HR/Quality, roll-out by 30 Nov.
-8. Single-page monthly management dashboard — Sameeraj/SK, ongoing from 5 Oct.
+${rows.map((r, i) => `${i + 1}. ${r.action} — ${r.owner}, by ${r.due}.`).join('\n')}
 
-Please let me know if any due dates or owners need adjustment. Happy to walk through the tracker in our next 1:1 if useful.
+Please let me know if any due date or owner needs adjusting.
 
 Best regards,
 Sameeraj Rao`;
-
-document.getElementById('runActions').addEventListener('click', () => {
-  const notes = document.getElementById('notesText').value;
-  const prompt = `Here are the Chairman's meeting notes from VPS Lakeshore Hospital's review meeting on 25 Sep 2026:\n\n${notes}\n\nProduce: (1) an action tracker table with columns Action, Owner, Due date, Linked KPI, Status — infer reasonable due dates (today is 27 Sep 2026) and named KPIs where the notes don't state one explicitly, (2) 2-3 notes flagging where actions overlap or lack a measurable target, (3) a ready-to-send follow-up email draft from Sameeraj Rao summarising actions and owners, addressed to the meeting attendees.`;
+}
+function runExtract(el, idx) {
+  const rows = extractRowsFor(idx);
+  const notes = el.querySelector('#notesText').value;
   Hub.run({
-    out: '#outActions', button: '#runActions',
-    system: 'You are the Management Office assistant at a Kochi multi-specialty hospital, turning leadership meeting notes into a clean action tracker and follow-up communication.',
-    prompt, demo: DEMO_ACTIONS, manualMinutes: 60,
+    out: '#outExtract', button: '#runExtract', manualMinutes: 40,
+    system: 'You are the Management Office assistant at VPS Lakeshore, turning leadership meeting notes into a clean action tracker and a follow-up email. Today is ' + TODAY_STR + '.',
+    prompt: `Here are meeting notes from VPS Lakeshore Hospital:\n\n${notes}\n\nExtract an action tracker (Action, Owner, Due date, Linked KPI) and draft a follow-up email from Sameeraj Rao to the attendees.`,
+    demo: extractDemo(idx, rows),
+  }).then(text => {
+    if (!text) return;
+    const prev = el.querySelector('#extractPreview');
+    prev.innerHTML = '<p class="preview-note">Preview — rows Claude would add to the tracker once approved:</p><div id="prevTbl"></div>';
+    Hub.kit.table(prev.querySelector('#prevTbl'), { rows, columns: [{ key: 'action', label: 'Action' }, { key: 'owner', label: 'Owner' }, { key: 'due', label: 'Due' }, { key: 'kpi', label: 'Linked KPI' }] });
+    const item = { id: 'extract-' + idx, title: `Extracted actions — ${DATA.meetingNotes[idx].title}` };
+    Hub.kit.review(el.querySelector('#extractReview'), {
+      slug: SLUG, item, text, st,
+      onDecision: status => {
+        if (status !== 'approved') return;
+        const already = (st.get().addedActions || []).some(a => a.source === `${DATA.meetingNotes[idx].title} — ${DATA.meetingNotes[idx].date}` && a.fromExtract === idx);
+        if (already) return;
+        const newRows = rows.map((r, i) => ({ id: `EX-${idx}-${i + 1}`, action: r.action, owner: r.owner, due: r.due, status: 'Not started', source: `${DATA.meetingNotes[idx].title} — ${DATA.meetingNotes[idx].date}`, fromExtract: idx }));
+        st.set(s => ({ addedActions: [...(s.addedActions || []), ...newRows] }));
+        Hub.kit.log(SLUG, 'Actions added to tracker', `${newRows.length} rows from ${DATA.meetingNotes[idx].title}`);
+        drawActionsTable(document.getElementById('view'));
+      },
+    });
   });
-});
+}
 
-// ---------- MODE C: ASK ----------
-const ASK_SAMPLES = {
-  ortho: 'Why is ortho revenue down this month?',
-  intl: 'How are we tracking on the 20% international revenue goal?',
-  custom: '',
-};
-document.getElementById('scenarioAsk').addEventListener('change', e => {
-  document.getElementById('askQ').value = ASK_SAMPLES[e.target.value] || '';
-});
-document.getElementById('askQ').value = ASK_SAMPLES.ortho;
+/* ================= TAB C: ASK ================= */
+function equipmentAnswer() {
+  const totals = { robot: 0, cathLab: 0, mri: 0, ct: 0 };
+  DATA.days.forEach(d => { totals.robot += d.downtime.robot; totals.cathLab += d.downtime.cathLab; totals.mri += d.downtime.mri; totals.ct += d.downtime.ct; });
+  const ranked = Object.entries(totals).map(([k, v]) => ({ k, v })).sort((a, b) => b.v - a.v);
+  const names = { robot: 'da Vinci robot', cathLab: 'Cath Lab', mri: 'MRI', ct: 'CT' };
+  const badDays = DATA.days.filter(d => d.downtime.robot + d.downtime.cathLab + d.downtime.mri + d.downtime.ct > 3 && d.revenueLakh < d.aopLakh).length;
+  return `**Short answer:** over the last 30 days, **${names[ranked[0].k]}** logged the most downtime — **${ranked[0].v.toFixed(1)} hours** — and is the equipment hurting revenue most.
 
-const DEMO_ASK = {
-  ortho: `**Short answer:** The data bundle here doesn't carry a department-level (ortho) revenue split, but three signals point to a plausible explanation and what to check next.
+| Equipment | Downtime, last 30 days |
+|---|---|
+${ranked.map(r => `| ${names[r.k]} | ${r.v.toFixed(1)} hrs |`).join('\n')}
 
-1. **Robot (da Vinci) downtime since 24-Sep** — if ortho's joint-replacement/robotic-assisted cases share OT-4 slots with other specialties, this alone could suppress ortho's high-value case volume for the month.
-2. **MTD revenue is 6.5% below AOP hospital-wide** — so some of the ortho softness may simply be part of a broader shortfall, not ortho-specific. Worth checking whether other surgical departments show the same dip.
-3. **Discharge delays (9 pending past 2pm) and billing-delay complaints (6 in 24h)** can also depress same-month revenue recognition if high-value ortho discharges are getting billed into the next cycle.
+On ${badDays} of the last 30 days, total equipment downtime exceeded 3 hours **and** revenue missed AOP the same day — consistent with the ${names[ranked[0].k]} being a real revenue drag, not just a maintenance nuisance. Recommend prioritising its AMC/vendor response time and, per the last Chairman review, revisiting the revenue-share proposal for slots that sit idle rather than under repair.`;
+}
+function orthoAnswer() {
+  const last7 = DATA.days.slice(-7);
+  const missDays = last7.filter(d => d.revenueLakh < d.aopLakh).length;
+  const robotDown = DATA.days.slice(-4).reduce((a, d) => a + d.downtime.robot, 0);
+  return `**Short answer:** this data bundle doesn't carry a department-level (ortho) revenue split, so I can't confirm ortho specifically — but two signals in the bundle point at a plausible explanation.
 
-**Recommend:** pull the ortho-specific revenue and case-volume split from the MIS (by CMI/procedure mix) to confirm whether the gap is volume-driven (fewer cases), price-driven (payer mix shift, e.g. more TPA/scheme patients vs cash), or timing (billing/discharge lag pushing revenue into October). I can rerun this once that department-level cut is available.`,
-  intl: `**Short answer:** International revenue is currently tracking at roughly the ~14% baseline the Chairman flagged in the 25-Sep review — the data bundle here doesn't include a live updated %, so this reflects the last reported figure, not a fresh calculation.
+1. Revenue missed AOP on **${missDays} of the last 7 days** — some ortho softness may be part of a broader shortfall, not ortho-specific.
+2. The **da Vinci robot logged ${robotDown.toFixed(1)} hours of downtime in the last 4 days** — if ortho's robotic-assisted joint cases share that slot, this alone could suppress high-value ortho volume.
 
-**What's in motion:**
-- Marketing + International Desk have been asked to build a growth plan targeting GCC, Maldives and Africa corridors, due 15-Nov-2026.
-- The Fatima Al Busaidi Maldives referral-partner MoU (currently pending signature, 3 days) is a direct lever for this goal — recommend prioritising its signature this week given the stated target.
+**Recommend:** pull the ortho-specific revenue and case-mix split from the MIS to confirm whether the gap is volume-driven, payer-mix driven, or a discharge/billing timing lag. I can re-run this once that cut is available.`;
+}
+function intlAnswer() {
+  const last7 = DATA.days.slice(-7), prior7 = DATA.days.slice(-14, -7);
+  const avg = arr => arr.reduce((a, d) => a + d.intlPatients, 0) / arr.length;
+  const now7 = avg(last7), before7 = avg(prior7);
+  const pendingIntl = DATA.esign.find(e => /maldives|international|gulf/i.test(e.doc));
+  return `**Short answer:** international patient volume is trending **${now7 >= before7 ? 'up' : 'down'}** — 7-day average now ${now7.toFixed(1)} patients/day vs ${before7.toFixed(1)} the week before.
 
-**Gap to target:** Moving from ~14% to 20% of total revenue within 2-3 quarters implies either (a) international revenue growing materially faster than domestic revenue, or (b) international patient volumes/ARPOB (often higher for self-pay international cases) rising disproportionately. Suggest the monthly management dashboard (Action #8 from the 25-Sep tracker) carry a dedicated international-revenue-% trendline so this can be answered precisely each month rather than from memory.`,
-};
+Against the Chairman's 20%-of-revenue goal (from ~14% baseline), this bundle doesn't carry a live revenue-share %, only patient counts — worth adding that split to the monthly dashboard (action already tracked).
 
-document.getElementById('runAsk').addEventListener('click', () => {
-  const q = document.getElementById('askQ').value.trim();
-  const scKey = document.getElementById('scenarioAsk').value;
-  const prompt = `Here is the current hospital KPI/data bundle for VPS Lakeshore Hospital, Kochi:\n\n${bundleAsText()}\n\nContext from the last Chairman review (25 Sep 2026): CMI/ARPOB/ALOS to be tracked monthly; international revenue currently ~14% of total with a target of 20% over 2-3 quarters; robot utilisation below plan; da Vinci robot down since 24-Sep.\n\nQuestion from the CEO/Chairman: "${q}"\n\nAnswer plainly and specifically using only the data given. If the bundle doesn't contain enough detail to fully answer, say so clearly and state exactly what additional data cut would resolve it.`;
-  Hub.run({
-    out: '#outAsk', button: '#runAsk',
-    system: 'You are the Management Office analyst answering the CEO/Chairman\'s ad-hoc questions over the hospital KPI bundle. Be honest about data limitations rather than fabricating numbers.',
-    prompt, demo: DEMO_ASK[scKey] || DEMO_ASK.ortho, manualMinutes: 60,
+${pendingIntl ? `**One lever right now:** "${pendingIntl.doc}" is pending signature with ${pendingIntl.pendingWith} (${pendingIntl.days} days) — signing this keeps the GCC/Maldives corridor plan moving.` : ''}`;
+}
+function tpaAnswer() {
+  const last7 = DATA.days.slice(-7);
+  const avgPending = last7.reduce((a, d) => a + d.tpaPending, 0) / last7.length;
+  const trend = DATA.days.slice(-14, -7).reduce((a, d) => a + d.tpaPending, 0) / 7;
+  return `**Short answer:** TPA approvals pending are averaging **${avgPending.toFixed(0)} cases** over the last 7 days, ${avgPending > trend ? 'up' : 'down'} from ${trend.toFixed(0)} the week before.
+
+This matches the action already on the tracker — CFO to open a conversation with the top 3 insurers on turnaround, and a documentation-completeness module for the TPA desk. Recommend checking whether the increase concentrates in one payer before escalating hospital-wide.`;
+}
+function dischargeAnswer() {
+  const last7 = DATA.days.slice(-7);
+  const avgPct = last7.reduce((a, d) => a + d.dischargeNoonPct, 0) / last7.length;
+  const avgComplaints = last7.reduce((a, d) => a + d.complaints, 0) / last7.length;
+  return `**Short answer:** discharges before noon are averaging **${avgPct.toFixed(0)}%** over the last 7 days, alongside **${avgComplaints.toFixed(1)} complaints/day** — billing-delay-at-discharge is a recurring theme in those complaints. The 2pm discharge SOP review with Finance and Nursing (already on the tracker) is the right lever; worth checking whether housekeeping turnaround is the actual bottleneck before changing the SOP itself.`;
+}
+function cashAnswer() {
+  const last = DATA.days[DATA.days.length - 1], first = DATA.days[0];
+  return `**Short answer:** cash position is ₹${last.cashCr} Cr today, ${last.cashCr >= first.cashCr ? 'up' : 'down'} from ₹${first.cashCr} Cr 30 days ago. Comfortable for now; the CFO's flag on days-payable-outstanding against upcoming equipment AMC renewals is the thing to watch, not the balance itself.`;
+}
+function complaintAnswer() {
+  const last7 = DATA.days.slice(-7).reduce((a, d) => a + d.complaints, 0);
+  return `**Short answer:** ${last7} complaints logged in the last 7 days. The bundle doesn't carry themes day-by-day, but discharge delay and radiology wait time are the two recurring themes flagged in the last two management meetings — both already have tracked actions (2pm discharge SOP review; radiology token/priority system).`;
+}
+function genericAnswer(q) {
+  const last = DATA.days[DATA.days.length - 1];
+  return `I don't have a specific computed answer for "${q}" in this demo bundle. Here's what's live today: occupancy ${last.occupancyPct}%, revenue ₹${last.revenueLakh}L vs AOP ₹${last.aopLakh}L, ${DATA.esign.length} e-signature approvals pending, ${combinedActions().filter(isOverdue).length} overdue action items. Try asking about ortho revenue, equipment/downtime, international revenue, TPA approvals, discharges, cash, or complaints — those are wired to the data.`;
+}
+const KEYWORD_TABLE = [
+  { any: ['ortho'], fn: orthoAnswer }, { any: ['equipment', 'downtime', 'robot', 'cath', 'mri', 'ct scan', ' ct '], fn: equipmentAnswer },
+  { any: ['international', 'intl', 'gcc', 'maldives'], fn: intlAnswer }, { any: ['tpa', 'insurance', 'approval'], fn: tpaAnswer },
+  { any: ['discharge', 'noon'], fn: dischargeAnswer }, { any: ['cash', 'dpo'], fn: cashAnswer }, { any: ['complaint'], fn: complaintAnswer },
+];
+function computeAskAnswer(q) {
+  const lq = ' ' + q.toLowerCase() + ' ';
+  const hit = KEYWORD_TABLE.find(k => k.any.some(w => lq.includes(w)));
+  return hit ? hit.fn() : genericAnswer(q);
+}
+function ask(el) {
+  const chat = st.get().chat || [];
+  el.innerHTML = `<div class="card">
+      <h2>Ask about the KPI bundle</h2>
+      <p class="small" style="margin-top:-6px">Multi-turn chat over the same 30-day data bundle shown in the other tabs.</p>
+      <div class="chat-quick">
+        <button type="button" data-q="Why is ortho revenue down this month?">Why is ortho down?</button>
+        <button type="button" data-q="Which equipment is hurting revenue the most?">Which equipment is hurting revenue?</button>
+        <button type="button" data-q="How are we tracking on the 20% international revenue goal?">International revenue goal?</button>
+      </div>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="row" style="margin-top:10px">
+        <textarea id="chatInput" data-upload="off" style="min-height:60px" placeholder="Ask a question…"></textarea>
+      </div>
+      <div class="row" style="margin-top:6px"><button class="primary" id="chatSend">Send</button>
+        <button type="button" id="chatClear">Clear chat</button></div>
+    </div>`;
+  const log = el.querySelector('#chatLog');
+  function renderChat() {
+    log.innerHTML = chat.map(m => m.role === 'user'
+      ? `<div class="chat-msg user">${Hub.esc(m.content)}</div>`
+      : `<div class="chat-msg assistant claude-out">${Hub.md(m.content)}</div>`).join('') || '<p class="small">Ask a question to start.</p>';
+    log.scrollTop = log.scrollHeight;
+  }
+  renderChat();
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { el.querySelector('#chatInput').value = b.dataset.q; send(); });
+  el.querySelector('#chatSend').onclick = send;
+  el.querySelector('#chatClear').onclick = () => { st.set({ chat: [] }); ask(document.getElementById('view')); };
+  async function send() {
+    const ta = el.querySelector('#chatInput'), q = ta.value.trim();
+    if (!q) return;
+    const btn = el.querySelector('#chatSend'); btn.disabled = true;
+    chat.push({ role: 'user', content: q }); renderChat(); ta.value = '';
+    const holder = document.createElement('div'); holder.className = 'chat-msg assistant claude-out';
+    holder.innerHTML = '<p class="thinking">Claude is working</p>'; log.appendChild(holder); log.scrollTop = log.scrollHeight;
+    const text = await Hub.ask({
+      system: 'You are the Management Office analyst answering the CEO/Chairman\'s ad-hoc questions over a VPS Lakeshore KPI bundle. Be honest about data limitations rather than fabricating numbers.',
+      messages: chat.map(m => ({ role: m.role, content: m.content })),
+      demo: computeAskAnswer(q),
+      onText: partial => { holder.innerHTML = Hub.md(partial); log.scrollTop = log.scrollHeight; },
+    });
+    chat.push({ role: 'assistant', content: text }); st.set({ chat });
+    renderChat(); btn.disabled = false;
+  }
+}
+
+/* ================= TAB D: DASHBOARD ================= */
+function dashboard(el) {
+  const last = DATA.days[DATA.days.length - 1];
+  const totalDown = k => DATA.days.reduce((a, d) => a + d.downtime[k], 0);
+  const mtdRev = DATA.days.reduce((a, d) => a + d.revenueLakh, 0), mtdAop = DATA.days.reduce((a, d) => a + d.aopLakh, 0);
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="label">Occupancy (latest)</div><div class="value">${last.occupancyPct}%</div></div>
+      <div class="kpi"><div class="label">30-day revenue vs AOP</div><div class="value">₹${(mtdRev / 100).toFixed(2)} Cr</div><div class="delta ${mtdRev >= mtdAop ? 'up' : 'down'}">vs AOP ₹${(mtdAop / 100).toFixed(2)} Cr</div></div>
+      <div class="kpi"><div class="label">E-signature approvals pending</div><div class="value">${DATA.esign.length}</div></div>
+      <div class="kpi"><div class="label">Overdue action items</div><div class="value">${combinedActions().filter(isOverdue).length}</div></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card" id="cRev"></div>
+      <div class="card" id="cOcc"></div>
+      <div class="card" id="cEq"></div>
+      <div class="card" id="cIntl"></div>
+    </div>`;
+  const labels = DATA.days.map(d => d.date.slice(0, 6));
+  Hub.chart.line(el.querySelector('#cRev'), {
+    title: 'Revenue vs AOP', sub: '₹ lakh, last 30 days', labels,
+    series: [{ name: 'Revenue', values: DATA.days.map(d => d.revenueLakh * 100000) }, { name: 'AOP', values: DATA.days.map(d => d.aopLakh * 100000) }],
   });
-});
-
-// ---------- TAB SWITCHING ----------
-document.querySelectorAll('.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
-    document.getElementById('mode-' + btn.dataset.mode).classList.add('active');
+  Hub.chart.line(el.querySelector('#cOcc'), {
+    title: 'Occupancy', sub: '% of 350 beds, last 30 days', labels,
+    series: [{ name: 'Occupancy', values: DATA.days.map(d => d.occupancyPct) }], format: v => `${Math.round(v)}%`,
   });
+  Hub.chart.hbar(el.querySelector('#cEq'), {
+    title: 'Critical equipment downtime', sub: 'total hours, last 30 days',
+    data: [
+      { label: 'da Vinci robot', value: totalDown('robot') }, { label: 'Cath Lab', value: totalDown('cathLab') },
+      { label: 'MRI', value: totalDown('mri') }, { label: 'CT', value: totalDown('ct') },
+    ], format: v => `${v.toFixed(1)} hrs`,
+  });
+  Hub.chart.line(el.querySelector('#cIntl'), {
+    title: 'International patients', sub: 'per day, last 30 days', labels,
+    series: [{ name: 'International patients', values: DATA.days.map(d => d.intlPatients) }], format: v => String(Math.round(v)),
+  });
+}
+
+/* ================= BOOT ================= */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  TODAY_STR = DATA.days[DATA.days.length - 1].date;
+  TODAY = parseDMY(TODAY_STR);
+  if (!st.get().selectedDate) st.set({ selectedDate: TODAY_STR });
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '.datebar', title: 'Pick a day', text: 'Defaults to the latest day. Change it and the KPI tiles update against that day\'s 7-day average.' },
+      { sel: '#runBrief', title: 'Morning brief', text: 'Claude drafts the brief from the KPI bundle — for the CEO\'s own use, download as Word straight away.' },
+      { sel: '#tabs', title: 'Four tabs', text: 'Morning brief, Action tracker, Ask, and Dashboard all read the same 30-day data bundle.' },
+      { sel: '#tblActions', title: 'Action tracker', text: 'Roughly 25 actions from past management meetings, tagged overdue automatically.' },
+      { sel: '#notesText', title: 'Meeting notes → actions', text: 'Paste (or pick a sample) set of notes; Claude extracts an action list you can preview before it is submitted.' },
+      { sel: '#extractReview', title: 'Maker → approver', text: 'A CEO office executive submits the extracted list; the CEO approves before it lands in the tracker.' },
+      { sel: '#tabs', title: 'Ask and Dashboard', text: 'Ask plain questions over the bundle, or see the same data as trend charts.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'brief', label: 'Morning brief' }, { id: 'actions', label: 'Action tracker' },
+    { id: 'ask', label: 'Ask' }, { id: 'dash', label: 'Dashboard' },
+  ], id => {
+    st.set({ tab: id });
+    ({ brief, actions: actionsTab, ask, dash: dashboard }[id])(document.getElementById('view'));
+  }, st.get().tab);
 });
 </script>
 </body>
