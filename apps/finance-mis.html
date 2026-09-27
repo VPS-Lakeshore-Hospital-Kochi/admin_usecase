@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIS commentary & variance memo</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .scn-row { margin-bottom: 12px; }
+  select#scenario { max-width: 320px; }
+  td.dept-name { font-weight: 500; }
+  .mini { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>MIS commentary & variance memo</h1>
+    <p>Monthly MIS by department — budget vs actual revenue, volumes, and hospital KPIs. Claude drafts the CFO commentary, top risks and questions for department heads.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample input — August 2026 MIS</h2>
+      <div class="row scn-row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="A">A — Strong month, robotic surgery & transplant driving upside</option>
+          <option value="B">B — Soft month, occupancy pressure & payor mix shift</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table id="misTable">
+          <thead>
+            <tr><th>Department</th><th class="num">Budget (₹L)</th><th class="num">Actual (₹L)</th><th class="num">Var %</th><th>Flag</th><th class="num">IP vol</th><th class="num">OP vol</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <label>Hospital KPIs (editable)</label>
+      <textarea id="kpiText" rows="7"></textarea>
+
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic MIS figures for demonstration only. No real financial data.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Finance & Accounts', title: 'MIS commentary & variance memo' });
+
+const SCENARIOS = {
+  A: {
+    label: 'Strong month',
+    rows: [
+      { dept: 'Cardiology', budget: 410, actual: 452, ip: 168, op: 2140 },
+      { dept: 'Orthopaedics', budget: 260, actual: 244, ip: 96, op: 1510 },
+      { dept: 'Neurosciences', budget: 190, actual: 205, ip: 61, op: 980 },
+      { dept: 'Oncology', budget: 230, actual: 221, ip: 74, op: 1320 },
+      { dept: 'Gastro / Liver Transplant', budget: 175, actual: 233, ip: 22, op: 640 },
+      { dept: 'Nephrology / Dialysis', budget: 150, actual: 146, ip: 40, op: 1870 },
+      { dept: 'Robotic Surgery Programme', budget: 95, actual: 138, ip: 31, op: 210 },
+      { dept: 'Emergency Medicine', budget: 140, actual: 149, ip: 58, op: 2960 },
+      { dept: 'Pharmacy', budget: 310, actual: 322, ip: 0, op: 0 },
+      { dept: 'Lab & Radiology', budget: 180, actual: 191, ip: 0, op: 0 },
+    ],
+    kpis: `ARPOB: ₹52,400 (budget ₹48,900)
+ALOS: 4.1 days (budget 4.4 days)
+Bed occupancy: 79.6% (budget 74%)
+Case Mix Index (CMI): 1.42 (budget 1.31)
+Payor mix: Cash 34% · TPA/Insurance 41% · International 17% · Govt schemes (KASP/CMCHIS) 8%
+International patient revenue: ₹6.9 Cr (Maldives 46%, GCC 31%, Africa 14%, other 9%)
+Net revenue: ₹41.0 Cr vs budget ₹38.2 Cr`,
+  },
+  B: {
+    label: 'Soft month',
+    rows: [
+      { dept: 'Cardiology', budget: 410, actual: 372, ip: 141, op: 1860 },
+      { dept: 'Orthopaedics', budget: 260, actual: 198, ip: 71, op: 1190 },
+      { dept: 'Neurosciences', budget: 190, actual: 176, ip: 52, op: 860 },
+      { dept: 'Oncology', budget: 230, actual: 226, ip: 70, op: 1280 },
+      { dept: 'Gastro / Liver Transplant', budget: 175, actual: 158, ip: 15, op: 520 },
+      { dept: 'Nephrology / Dialysis', budget: 150, actual: 152, ip: 42, op: 1910 },
+      { dept: 'Robotic Surgery Programme', budget: 95, actual: 61, ip: 14, op: 130 },
+      { dept: 'Emergency Medicine', budget: 140, actual: 158, ip: 66, op: 3210 },
+      { dept: 'Pharmacy', budget: 310, actual: 289, ip: 0, op: 0 },
+      { dept: 'Lab & Radiology', budget: 180, actual: 171, ip: 0, op: 0 },
+    ],
+    kpis: `ARPOB: ₹44,100 (budget ₹48,900)
+ALOS: 4.9 days (budget 4.4 days)
+Bed occupancy: 66.2% (budget 74%)
+Case Mix Index (CMI): 1.22 (budget 1.31)
+Payor mix: Cash 29% · TPA/Insurance 46% · International 11% · Govt schemes (KASP/CMCHIS) 14%
+International patient revenue: ₹3.8 Cr (Maldives 39%, GCC 28%, Africa 21%, other 12%)
+Net revenue: ₹33.6 Cr vs budget ₹38.2 Cr`,
+  },
+};
+
+function variancePct(b, a) { return ((a - b) / b) * 100; }
+function flagFor(pct) {
+  if (pct >= -2) return '<span class="tag ok">On/above budget</span>';
+  if (pct >= -10) return '<span class="tag warn">Watch</span>';
+  return '<span class="tag bad">Shortfall</span>';
+}
+
+function renderTable(scn) {
+  const tbody = document.querySelector('#misTable tbody');
+  let totalB = 0, totalA = 0;
+  tbody.innerHTML = scn.rows.map(r => {
+    const pct = variancePct(r.budget, r.actual);
+    totalB += r.budget; totalA += r.actual;
+    return `<tr>
+      <td class="dept-name">${Hub.esc(r.dept)}</td>
+      <td class="num">${r.budget.toLocaleString('en-IN')}</td>
+      <td class="num">${r.actual.toLocaleString('en-IN')}</td>
+      <td class="num">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</td>
+      <td>${flagFor(pct)}</td>
+      <td class="num">${r.ip}</td>
+      <td class="num">${r.op.toLocaleString('en-IN')}</td>
+    </tr>`;
+  }).join('') + `<tr><td class="dept-name">Total</td><td class="num"><b>${totalB.toLocaleString('en-IN')}</b></td>
+      <td class="num"><b>${totalA.toLocaleString('en-IN')}</b></td>
+      <td class="num"><b>${variancePct(totalB, totalA) >= 0 ? '+' : ''}${variancePct(totalB, totalA).toFixed(1)}%</b></td>
+      <td></td><td></td><td></td></tr>`;
+
+  const worst = [...scn.rows].sort((x, y) => variancePct(x.budget, x.actual) - variancePct(y.budget, y.actual))[0];
+  const best = [...scn.rows].sort((x, y) => variancePct(y.budget, y.actual) - variancePct(x.budget, x.actual))[0];
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total revenue variance</div><div class="value">${variancePct(totalB, totalA) >= 0 ? '+' : ''}${variancePct(totalB, totalA).toFixed(1)}%</div></div>
+    <div class="kpi"><div class="label">Best performer</div><div class="value" style="font-size:1.05rem">${Hub.esc(best.dept)}</div><div class="delta up">+${variancePct(best.budget, best.actual).toFixed(1)}%</div></div>
+    <div class="kpi"><div class="label">Largest shortfall</div><div class="value" style="font-size:1.05rem">${Hub.esc(worst.dept)}</div><div class="delta down">${variancePct(worst.budget, worst.actual).toFixed(1)}%</div></div>
+    <div class="kpi"><div class="label">Departments in watch/shortfall</div><div class="value">${scn.rows.filter(r => variancePct(r.budget, r.actual) < -2).length} / ${scn.rows.length}</div></div>`;
+}
+
+function loadScenario(key) {
+  const scn = SCENARIOS[key];
+  renderTable(scn);
+  document.getElementById('kpiText').value = scn.kpis;
+}
+
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('A');
+
+const DEMO = {
+  A: `## Executive commentary — August 2026 MIS
+
+VPS Lakeshore closed August with **net revenue of ₹41.0 Cr against a budget of ₹38.2 Cr (+7.3%)**, the strongest beat in the last two quarters. The upside is concentrated and structural rather than one-off:
+
+- **Robotic Surgery Programme** overshot budget by **+45.3%** (₹138L vs ₹95L) — case volumes nearly doubled on the back of two new console-trained surgeons and a marketing push around minimally-invasive urology cases.
+- **Gastro / Liver Transplant** beat budget by **+33.1%**, driven by three high-value transplant cases from Maldives referrals — each carrying ARPOB well above the hospital average.
+- **Cardiology**, the largest revenue line, is **+10.2%** ahead on volume growth in OP consults (2,140 vs a typical ~1,850) rather than price, which is the healthier kind of beat.
+- Bed occupancy at **79.6%** (vs 74% budget) and CMI at **1.42** (vs 1.31) both point to a genuinely higher-acuity, better-utilised month, not just more patients.
+- **Orthopaedics is the one soft spot**, at **-6.2%**, likely elective knee/hip deferrals — worth checking against surgeon leave calendars.
+
+**International revenue of ₹6.9 Cr (17% of payor mix)** continues to be a swing factor — Maldives referrals alone are now a material line and should be tracked separately from GCC/Africa given different payment cycles (advance vs post-treatment insurance settlement).
+
+## Top 3 risks to flag to the CFO
+
+1. **Concentration risk in Robotic Surgery upside** — a large share of the beat sits with two surgeons; any leave, attrition or console downtime next month could reverse ₹40–50L of this gain quickly.
+2. **International receivables timing** — Maldives/GCC volume growth (₹6.9 Cr) needs matching against actual cash realisation; a revenue beat funded by rising international receivables is not the same as a cash beat.
+3. **Orthopaedics softness could be an early signal**, not noise — if it persists into September, it may indicate referral leakage to a competing ortho programme rather than seasonal deferral.
+
+## Draft variance memo — for CFO sign-off
+
+**To:** CFO, VPS Lakeshore | **Re:** August 2026 MIS variance | **Prepared by:** Finance Controller
+
+Net revenue for August was ₹41.0 Cr against a budgeted ₹38.2 Cr, a favourable variance of ₹2.8 Cr (+7.3%). The variance is led by Robotic Surgery (+₹43L), Gastro/Liver Transplant (+₹58L) and Cardiology (+₹42L), partially offset by a shortfall in Orthopaedics (-₹16L). ARPOB improved to ₹52,400 (budget ₹48,900) and ALOS improved to 4.1 days (budget 4.4), consistent with a higher-acuity case mix (CMI 1.42 vs 1.31 budget). Occupancy at 79.6% is comfortably above the 74% budget and should be watched for capacity constraints if the trend continues into Q3. Recommend Finance flag the Orthopaedics shortfall to the Ortho unit head for a root-cause review before the September MIS is finalised.
+
+## Questions to ask department heads
+
+- **Orthopaedics head:** Is the -6.2% shortfall due to surgeon leave, elective deferrals, or referral leakage? What is the September pipeline looking like?
+- **Robotic Surgery lead:** Is the +45% volume sustainable, or a one-month spike from a specific referral source? What is console utilisation (cases/week) trending to?
+- **Gastro/Transplant head:** Of the three transplant cases this month, what is the expected cash-collection timeline for the international patients specifically?
+- **Revenue Cycle / TPA desk:** Has the payor mix shift (International 17% vs typical ~13%) changed average days-to-collection this month?
+- **Nursing/Ops:** With occupancy at 79.6%, is there a bed-blocking risk building in any single ward (esp. Cardiology ICU/step-down)?`,
+  B: `## Executive commentary — August 2026 MIS
+
+August closed **below budget: net revenue ₹33.6 Cr vs a budget of ₹38.2 Cr, a shortfall of ₹4.6 Cr (-12.0%)** — the weakest month this quarter, and the softness is broad-based rather than isolated to one department.
+
+- **Robotic Surgery Programme** is the largest percentage miss, **-35.8%** (₹61L vs ₹95L budget) — case volumes nearly halved, consistent with a reported console downtime/servicing window this month.
+- **Orthopaedics** missed by **-23.8%**, the largest absolute rupee miss (-₹62L), tracking with the occupancy drop.
+- **Bed occupancy fell to 66.2%** (vs 74% budget) and **ALOS rose to 4.9 days** (vs 4.4 budget) — a combination that usually signals either a softer elective pipeline or discharge-process delays holding beds without adding revenue.
+- **CMI fell to 1.22** (vs 1.31 budget), so the case mix this month was also lower-acuity, compounding the ARPOB miss (₹44,100 vs ₹48,900 budget).
+- On the positive side, **Emergency Medicine (+12.9%)** and **Govt scheme revenue (14% of mix, up from a typical ~8%)** grew — the hospital is absorbing more emergency and scheme-funded load, which protects footfall but pressures margin given lower realisation per case on government schemes (KASP/CMCHIS) versus cash/international.
+- **International revenue fell to ₹3.8 Cr (11% of mix)**, down from a typical ~₹6-7 Cr — this is the single largest driver of the ARPOB miss given international cases carry the highest realisation.
+
+## Top 3 risks to flag to the CFO
+
+1. **Payor mix has shifted toward lower-margin business** — Govt schemes now 14% (from ~8%) and International down to 11% (from ~17%); if this mix persists, budgeted ARPOB assumptions for Q3 need revisiting, not just this month's variance explained away.
+2. **Robotic Surgery downtime is a recurring capacity risk** — a -35.8% miss driven by equipment/servicing suggests a single point of failure; confirm whether a backup slot or second robotic system access exists for FY27 planning.
+3. **Occupancy + rising ALOS together** point to a possible discharge-process bottleneck (pending TPA approvals, pharmacy billing delays) rather than pure demand softness — worth a same-week ops review rather than waiting for September numbers.
+
+## Draft variance memo — for CFO sign-off
+
+**To:** CFO, VPS Lakeshore | **Re:** August 2026 MIS variance | **Prepared by:** Finance Controller
+
+Net revenue for August was ₹33.6 Cr against a budgeted ₹38.2 Cr, an adverse variance of ₹4.6 Cr (-12.0%). The shortfall is led by Robotic Surgery (-₹34L), Orthopaedics (-₹62L) and Cardiology (-₹38L), with Emergency Medicine and government-scheme volumes providing partial offset. ARPOB fell to ₹44,100 (budget ₹48,900) on a lower CMI of 1.22 (budget 1.31) and a payor-mix shift away from International/Cash toward Govt schemes. Occupancy at 66.2% (budget 74%) combined with a higher ALOS of 4.9 days (budget 4.4) suggests both softer elective demand and a possible discharge-cycle delay; recommend a joint Finance-Ops review of TPA approval turnaround and bed-turnover before the September close.
+
+## Questions to ask department heads
+
+- **Robotic Surgery lead:** What caused the volume drop — equipment downtime, surgeon availability, or referral softness — and when is normal throughput expected to resume?
+- **Orthopaedics head:** Is the -23.8% miss linked to the same capacity constraint, or a separate elective-deferral pattern?
+- **Nursing/Bed management:** With ALOS up to 4.9 days against a 66.2% occupancy, is there a specific discharge bottleneck (TPA clearance, pharmacy reconciliation) adding a day or more per patient?
+- **Revenue Cycle / TPA desk:** Why did International revenue fall to 11% of mix this month — fewer referrals, or a timing/collection issue on existing cases?
+- **CFO/Finance:** Should Q3 budget assumptions be revised given the payor-mix shift toward Govt schemes, which carry lower per-case realisation?`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const scn = SCENARIOS[key];
+  const misText = document.querySelectorAll('#misTable tbody tr').length
+    ? Array.from(document.querySelectorAll('#misTable tbody tr')).map(tr => tr.innerText.replace(/\t/g, ' | ')).join('\n')
+    : '';
+  const kpiText = document.getElementById('kpiText').value;
+  const prompt = `You are the Finance Controller's assistant at VPS Lakeshore Hospital, Kochi. Here is the August 2026 MIS by department (Budget vs Actual, ₹ lakh, with IP/OP volumes):
+
+${misText}
+
+Hospital KPIs:
+${kpiText}
+
+Write: (1) executive commentary on what moved and why, (2) top 3 risks to flag to the CFO, (3) a short draft variance memo suitable for CFO sign-off, (4) a list of pointed questions to ask each relevant department head. Use Indian number formatting (₹ lakh/crore).`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a hospital finance analyst producing MIS commentary for the CFO of a 350-bed multi-specialty hospital in Kochi.',
+    prompt, demo: DEMO[key], manualMinutes: 180,
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feedback intelligence — Patient Experience</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  td.fb { max-width: 360px; }
+  .src { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Feedback intelligence</h1>
+    <p>Reads every complaint and review — Google, discharge forms, WhatsApp, international patient emails — and turns them into themed patterns, urgent service-recovery actions with an owner and SLA, and draft public replies.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Last 15 feedback items</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Source</th><th>Rating</th><th class="fb">Feedback</th></tr></thead>
+          <tbody id="fbBody"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Claude's analysis</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Patient Experience', title: 'Feedback intelligence' });
+
+const FEEDBACK = [
+  { source: 'Google review', rating: 2, text: 'My mother from Male was made to wait almost 2 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable experience, nobody updated us on delay. Doctors were fine but the wait was too much.' },
+  { source: 'IP discharge form', rating: 2, text: 'Billing team took more than 3 hours to finalise discharge summary and final bill after doctor said we can go home. TPA approval bhi late aaya. Overall stay was ok but discharge process needs improvement.' },
+  { source: 'Google review', rating: 5, text: 'Excellent care from the nursing staff in cardiology ward, especially Sister Anitha. She explained everything patiently and checked on my father every 2 hours. Doctors also very good.' },
+  { source: 'WhatsApp complaint', rating: 1, text: 'Parking issue again today. Waited 20 min to find parking, valet not available at OP block. This happens almost every time we come for follow up. Please fix.' },
+  { source: 'International patient email', rating: 3, text: 'Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for Maldivian diet were limited, mostly south indian only.' },
+  { source: 'Google review', rating: 2, text: 'Lift waiting time on 3rd floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.' },
+  { source: 'IP discharge form', rating: 4, text: 'Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.' },
+  { source: 'WhatsApp complaint', rating: 1, text: 'TPA approval for my cashless surgery got delayed by almost 6 hours, insurance desk kept saying documents pending but nobody called us to say what exactly was missing. Very stressful before surgery.' },
+  { source: 'Google review', rating: 5, text: 'Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend cardiology and surgery dept.' },
+  { source: 'International patient email', rating: 2, text: 'We travelled from Male for my husband cardiac consult, the OP appointment got pushed by 90 minutes without any message to us, we were already worried about flight timing. Doctor consult itself was good and thorough.' },
+  { source: 'IP discharge form', rating: 3, text: 'Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.' },
+  { source: 'Google review', rating: 1, text: 'Billing counter at discharge is a mess, no proper queue system, had to wait 90 min after doctor cleared discharge. Staff were polite but process is broken.' },
+  { source: 'WhatsApp complaint', rating: 2, text: 'Ultrasound department made my wife wait with full bladder for over an hour past her slot time, she was in a lot of discomfort. This is second time this happened to us here.' },
+  { source: 'Google review', rating: 5, text: 'ICU team took amazing care of my father post cardiac surgery. Constant updates given to family, doctors very approachable. Grateful to the entire team.' },
+  { source: 'International patient email', rating: 3, text: 'Overall treatment for my fertility consultation was good, doctor was patient with our questions. Front desk coordination between OP and lab could be smoother, we had to explain our case twice.' },
+];
+
+const kpisEl = document.getElementById('kpis');
+const bodyEl = document.getElementById('fbBody');
+
+function starTag(r) {
+  const cls = r <= 2 ? 'bad' : (r === 3 ? 'warn' : 'ok');
+  return `<span class="tag ${cls}">${r} ★</span>`;
+}
+
+function render() {
+  bodyEl.innerHTML = FEEDBACK.map(f => `
+    <tr><td class="src">${Hub.esc(f.source)}</td><td>${starTag(f.rating)}</td><td class="fb">${Hub.esc(f.text)}</td></tr>`).join('');
+
+  const avg = FEEDBACK.reduce((s, f) => s + f.rating, 0) / FEEDBACK.length;
+  const negative = FEEDBACK.filter(f => f.rating <= 2).length;
+  const negPct = Math.round((negative / FEEDBACK.length) * 100);
+  const waitMentions = FEEDBACK.filter(f => /wait|delay|late|lift|parking/i.test(f.text)).length;
+
+  kpisEl.innerHTML = `
+    <div class="kpi"><div class="label">Avg rating</div><div class="value">${avg.toFixed(1)} / 5</div></div>
+    <div class="kpi"><div class="label">Negative (≤ 2 ★)</div><div class="value">${negPct}%</div><div class="delta down">${negative} of ${FEEDBACK.length} items</div></div>
+    <div class="kpi"><div class="label">Mention waiting/delay</div><div class="value">${waitMentions}</div><div class="delta">of ${FEEDBACK.length} items</div></div>
+    <div class="kpi"><div class="label">International patient items</div><div class="value">${FEEDBACK.filter(f => f.source.includes('International')).length}</div></div>`;
+}
+render();
+
+const SYSTEM = `You are the Patient Experience analyst at VPS Lakeshore Hospital, Kochi, a 350-bed NABH-accredited multi-specialty hospital with a significant international patient base (Maldives, GCC, East Africa). You analyse patient feedback (Google reviews, discharge forms, WhatsApp complaints, international patient emails, mixed English/Manglish) to find themes, urgent issues needing service recovery, likely root causes, and draft calm, specific, non-defensive public replies to negative reviews. Never invent patient names or identifying details in replies; keep them generic and empathetic.`;
+
+function buildPrompt() {
+  const rows = FEEDBACK.map((f, i) => `${i + 1}. [${f.source}, ${f.rating}★] ${f.text}`).join('\n');
+  return `Here are 15 recent patient feedback items collected across channels:\n\n${rows}\n\nProduce:\n1. A themed table: Theme | Department | Count | Sentiment | Example (one short quote per theme).\n2. An urgent service-recovery list for the most serious issues, each with a named owning department and an SLA (e.g. "Insurance desk — call patient within 2 hours").\n3. Root-cause hypotheses for the top 2-3 recurring issues.\n4. Draft public reply text for the 2 most negative Google reviews (calm, specific, no medical claims, invites offline follow-up).`;
+}
+
+const DEMO = () => `## Themed feedback table
+| Theme | Department | Count | Sentiment | Example |
+|---|---|---|---|---|
+| Ultrasound wait with full bladder | Radiology | 2 | Negative | "made to wait almost 2 hours for ultrasound with full bladder" |
+| Discharge/billing delay | Billing & Discharge | 3 | Negative | "billing counter at discharge is a mess... waited 90 min" |
+| TPA/cashless approval delay | Insurance Desk (TPA) | 2 | Negative | "TPA approval delayed by almost 6 hours... nobody called to say what was missing" |
+| Parking & lift waiting | Facilities | 2 | Negative | "lift waiting time on 3rd floor OP block is too much" |
+| International patient coordination (visa, currency, appointment delay) | International Patient Desk | 3 | Mixed | "currency exchange guidance given was outdated" |
+| Food (spice level, diet options) | Dietetics / F&B | 2 | Neutral | "could be less spicy for post-surgery patients" |
+| Nursing & ICU care | Nursing / ICU | 3 | Positive | "ICU team took amazing care of my father, constant updates" |
+| Doctor communication & surgical outcomes | Cardiology / Surgery | 2 | Positive | "Dr. Menon... explained the whole procedure clearly beforehand" |
+| Housekeeping timing | Housekeeping | 1 | Neutral | "housekeeping came very early morning 5:30am" |
+
+## Urgent service-recovery actions
+| Issue | Owner | SLA |
+|---|---|---|
+| TPA cashless approval delayed 6 hrs pre-surgery with no update to patient | Insurance Desk lead | Call every affected patient within 2 hours of any delay past 90 min; escalate to Billing Head if unresolved in 3 hrs |
+| Ultrasound patients left waiting with full bladder past slot time (2 separate reports) | Radiology HOD | Fix slot-buffer scheduling this week; front desk to update waiting patients every 20 min |
+| Discharge billing taking 90+ min / 3+ hrs after clinical clearance | Billing Head + Nursing supervisor | Start bill preparation at clinical clearance, not after; target discharge-to-exit under 60 min from next week |
+| OP appointment for Maldives cardiac patient pushed 90 min with no communication, flight-timing risk | International Patient Desk + OP scheduling | Any delay >30 min for outstation/international patients to trigger an immediate call/WhatsApp update |
+| Lift out of service ~1 week on OP block 3rd floor, elderly patients affected | Facilities/Engineering | Restore or replace lift within 48 hours; post signage + wheelchair assistance until fixed |
+| Parking/valet unavailable at OP block, recurring | Facilities | Review valet staffing during peak OP hours (9-11am) this week |
+
+## Root-cause hypotheses
+1. **TPA and billing delays trace to the same handoff gap**: insurance desk and billing do not proactively communicate document status to patients or start paperwork until after clinical sign-off, turning a process delay into a patient-facing "nobody told us" experience — three separate items (TPA delay, 2x discharge billing delay) point to the same fix: parallel-process billing/TPA with clinical discharge, and mandate a status call at each delay checkpoint.
+2. **Radiology slot buffers are too tight for prep-dependent scans**: two independent ultrasound complaints (including an international patient) describe full-bladder waits past slot time, suggesting scheduling doesn't buffer for prep time or communicate delays — likely a scheduling template issue rather than one-off staffing.
+3. **International patient coordination is inconsistent on time-sensitive items**: visa/currency guidance and appointment-delay communication both failed for Maldivian patients who have flight constraints — root cause likely a lack of a standard SOP/checklist for international patient updates, rather than individual staff performance (nursing and doctor communication scored well throughout).
+
+## Draft public replies
+
+**Reply to: Ultrasound wait with full bladder (Google, 2★)**
+Thank you for telling us this, and we're sorry for the discomfort your mother went through waiting with a full bladder — that shouldn't happen, and we understand how uncomfortable it is. We're reviewing our ultrasound scheduling to build in better time buffers and to make sure patients get an update the moment there's a delay. We'd like to follow up directly — could you share your visit details with our Patient Relations desk at patientrelations@vpslakeshore.example so we can look into this specific case and make it right?
+
+**Reply to: Billing counter discharge delay (Google, 1★)**
+We're sorry the discharge process added stress at a time it shouldn't have — a 90-minute wait after clearance is not the standard we hold ourselves to, and your feedback on the lack of a proper queue is fair. We're working on starting billing in parallel with clinical discharge so patients aren't waiting on paperwork once the doctor has cleared them. If you're open to it, please share your visit reference with our Patient Relations desk at patientrelations@vpslakeshore.example — we'd like to understand exactly where this broke down for you.`;
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  Hub.run({
+    out: '#out',
+    button: '#runBtn',
+    system: SYSTEM,
+    prompt: buildPrompt(),
+    demo: DEMO,
+    manualMinutes: 240,
+  });
+});
+</script>
+</body>
+</html>

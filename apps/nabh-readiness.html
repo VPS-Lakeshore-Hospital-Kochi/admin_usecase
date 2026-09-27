@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NABH readiness &amp; policy Q&amp;A</title>
+<link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .tabs button { border-radius:999px; }
+  .tabs button.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+  .mode { display:none; }
+  .mode.active { display:block; }
+  td.doc { font-family: 'DM Sans', monospace; font-size:12.5px; white-space:nowrap; }
+  .chapter-badge { font-size:11px; font-weight:700; color:var(--muted); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>NABH readiness &amp; policy Q&amp;A</h1>
+    <p>Maps the P&amp;P register to NABH 5th/6th edition chapters, flags overdue or missing documents, and answers "what does our policy say" questions with citations.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="tabs">
+    <button type="button" class="active" data-mode="gap">A · Gap scan</button>
+    <button type="button" data-mode="qa">B · Policy Q&amp;A</button>
+  </div>
+
+  <!-- MODE A: GAP SCAN -->
+  <div class="mode active" id="mode-gap">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>P&amp;P register (sample, 15 documents)</h2>
+        <p class="small" style="color:var(--muted);margin-top:-6px">Editable — change a status or due date and re-run. Today's date used for scoring: 27 Sep 2026.</p>
+        <div class="table-wrap">
+          <table id="ppTable">
+            <thead><tr><th>Doc no. &amp; title</th><th>Chapter</th><th>Reviewed</th><th>Revision due</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <label for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="baseline">Baseline register (mixed gaps)</option>
+          <option value="presurvey">2 weeks before mock survey (tighter)</option>
+        </select>
+        <div class="row" style="margin-top:14px">
+          <button class="primary" id="runGap">Run with Claude — chapter readiness &amp; 30-60-90 plan</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Claude output</h2>
+        <div class="claude-out" id="outGap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE B: POLICY Q&A -->
+  <div class="mode" id="mode-qa">
+    <div class="grid cols-2">
+      <div class="card">
+        <h2>Policy excerpts (sample)</h2>
+        <textarea id="policyText" style="min-height:260px"></textarea>
+        <label for="scenarioQA">Sample question</label>
+        <select id="scenarioQA">
+          <option value="autopulse">Who can authorise use of the Auto Pulse device outside ER?</option>
+          <option value="mercury">What's the spill procedure for mercury?</option>
+          <option value="custom">Custom question (type below)</option>
+        </select>
+        <label for="question">Question</label>
+        <textarea id="question" style="min-height:60px"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="primary" id="runQA">Run with Claude — answer with citation</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Claude output</h2>
+        <div class="claude-out" id="outQA"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Quality & Accreditation', title: 'NABH readiness & policy Q&A' });
+
+const TODAY = new Date('2026-09-27');
+
+// ---------- MODE A DATA ----------
+const REGISTER = {
+  baseline: [
+    { doc:'LHRC/P&P/HSM/11', title:'Hazardous Material Safety', chapter:'FMS', reviewed:'2026-05-05', due:'2029-05-05' },
+    { doc:'LHRC/P&P/ER/13', title:'Auto Pulse Mechanical CPR Device', chapter:'COP', reviewed:'2023-11-20', due:'2026-11-20' },
+    { doc:'LHRC/P&P/FS/02', title:'Fire Safety & Evacuation', chapter:'FMS', reviewed:'2023-08-10', due:'2026-08-10' },
+    { doc:'LHRC/P&P/BMW/01', title:'Biomedical Waste Management', chapter:'FMS', reviewed:'2024-01-15', due:'2027-01-15' },
+    { doc:'LHRC/P&P/HIC/04', title:'Hospital Infection Control Manual', chapter:'HIC', reviewed:'2023-06-01', due:'2026-06-01' },
+    { doc:'LHRC/P&P/MOM/07', title:'Management of Medication', chapter:'MOM', reviewed:'2024-03-22', due:'2027-03-22' },
+    { doc:'LHRC/P&P/PRE/03', title:'Patient Rights & Education Charter', chapter:'PRE', reviewed:'2023-09-05', due:'2026-09-05' },
+    { doc:'LHRC/P&P/HRM/09', title:'HR Credentialing & Privileging', chapter:'HRM', reviewed:'2024-02-14', due:'2027-02-14' },
+    { doc:'LHRC/P&P/IMS/06', title:'IT & Cybersecurity Policy', chapter:'IMS', reviewed:'2022-12-01', due:'2025-12-01' },
+    { doc:'LHRC/P&P/FMS/14', title:'Disaster Management Plan (Code Grey)', chapter:'FMS', reviewed:'2024-05-30', due:'2027-05-30' },
+    { doc:'LHRC/P&P/AAC/05', title:'Access, Assessment & Continuity of Care', chapter:'AAC', reviewed:'2023-10-11', due:'2026-10-11' },
+    { doc:'LHRC/P&P/PSQ/08', title:'Patient Safety Incident Reporting (CAPA)', chapter:'PSQ', reviewed:'2024-04-18', due:'2027-04-18' },
+    { doc:'LHRC/P&P/ROM/02', title:'Responsibilities of Management — Org Chart & DoA', chapter:'ROM', reviewed:'2023-07-25', due:'2026-07-25' },
+    { doc:'LHRC/P&P/COP/19', title:'Robotic Surgery Privileging & Consent', chapter:'COP', reviewed: null, due: null },
+    { doc:'LHRC/P&P/HIC/11', title:'Needle-Stick & Sharps Injury Protocol', chapter:'HIC', reviewed:'2024-06-02', due:'2027-06-02' },
+  ],
+  presurvey: [
+    { doc:'LHRC/P&P/HSM/11', title:'Hazardous Material Safety', chapter:'FMS', reviewed:'2026-05-05', due:'2029-05-05' },
+    { doc:'LHRC/P&P/ER/13', title:'Auto Pulse Mechanical CPR Device', chapter:'COP', reviewed:'2026-08-01', due:'2029-08-01' },
+    { doc:'LHRC/P&P/FS/02', title:'Fire Safety & Evacuation', chapter:'FMS', reviewed:'2026-07-01', due:'2029-07-01' },
+    { doc:'LHRC/P&P/BMW/01', title:'Biomedical Waste Management', chapter:'FMS', reviewed:'2024-01-15', due:'2027-01-15' },
+    { doc:'LHRC/P&P/HIC/04', title:'Hospital Infection Control Manual', chapter:'HIC', reviewed:'2023-06-01', due:'2026-11-15' },
+    { doc:'LHRC/P&P/MOM/07', title:'Management of Medication', chapter:'MOM', reviewed:'2024-03-22', due:'2027-03-22' },
+    { doc:'LHRC/P&P/PRE/03', title:'Patient Rights & Education Charter', chapter:'PRE', reviewed:'2026-09-01', due:'2029-09-01' },
+    { doc:'LHRC/P&P/HRM/09', title:'HR Credentialing & Privileging', chapter:'HRM', reviewed:'2024-02-14', due:'2027-02-14' },
+    { doc:'LHRC/P&P/IMS/06', title:'IT & Cybersecurity Policy', chapter:'IMS', reviewed:'2025-11-20', due:'2028-11-20' },
+    { doc:'LHRC/P&P/FMS/14', title:'Disaster Management Plan (Code Grey)', chapter:'FMS', reviewed:'2024-05-30', due:'2027-05-30' },
+    { doc:'LHRC/P&P/AAC/05', title:'Access, Assessment & Continuity of Care', chapter:'AAC', reviewed:'2023-10-11', due:'2026-10-15' },
+    { doc:'LHRC/P&P/PSQ/08', title:'Patient Safety Incident Reporting (CAPA)', chapter:'PSQ', reviewed:'2024-04-18', due:'2027-04-18' },
+    { doc:'LHRC/P&P/ROM/02', title:'Responsibilities of Management — Org Chart & DoA', chapter:'ROM', reviewed:'2026-08-20', due:'2029-08-20' },
+    { doc:'LHRC/P&P/COP/19', title:'Robotic Surgery Privileging & Consent', chapter:'COP', reviewed:'2026-09-10', due:'2029-09-10' },
+    { doc:'LHRC/P&P/HIC/11', title:'Needle-Stick & Sharps Injury Protocol', chapter:'HIC', reviewed:'2024-06-02', due:'2027-06-02' },
+  ],
+};
+
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+
+function statusOf(row) {
+  if (!row.due) return { tag:'bad', label:'Missing' };
+  const due = new Date(row.due);
+  const d = daysBetween(TODAY, due);
+  if (d < 0) return { tag:'bad', label:'Overdue ' + Math.abs(d) + 'd' };
+  if (d <= 90) return { tag:'warn', label:'Due in ' + d + 'd' };
+  return { tag:'ok', label:'Current' };
+}
+
+function renderRegister(key) {
+  const rows = REGISTER[key];
+  document.querySelector('#ppTable tbody').innerHTML = rows.map(r => {
+    const s = statusOf(r);
+    return `<tr><td class="doc">${Hub.esc(r.doc)}<br><span style="font-weight:500;font-family:inherit">${Hub.esc(r.title)}</span></td>
+      <td><span class="chapter-badge">${r.chapter}</span></td>
+      <td>${r.reviewed || '—'}</td>
+      <td>${r.due || '—'}</td>
+      <td><span class="tag ${s.tag}">${s.label}</span></td></tr>`;
+  }).join('');
+
+  const total = rows.length;
+  const overdue = rows.filter(r => statusOf(r).label.startsWith('Overdue')).length;
+  const missing = rows.filter(r => statusOf(r).label === 'Missing').length;
+  const dueSoon = rows.filter(r => statusOf(r).label.startsWith('Due in')).length;
+  const current = total - overdue - missing - dueSoon;
+  const score = Math.round((current + dueSoon * 0.5) / total * 100);
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Documents tracked</div><div class="value">${total}</div></div>
+    <div class="kpi"><div class="label">Overdue</div><div class="value" style="color:var(--bad)">${overdue}</div></div>
+    <div class="kpi"><div class="label">Due in 90 days</div><div class="value" style="color:var(--warn)">${dueSoon}</div></div>
+    <div class="kpi"><div class="label">Missing</div><div class="value" style="color:var(--bad)">${missing}</div></div>
+    <div class="kpi"><div class="label">Overall readiness</div><div class="value">${score}%</div></div>`;
+  return rows;
+}
+
+function registerAsText(rows) {
+  return rows.map(r => {
+    const s = statusOf(r);
+    return `${r.doc} — ${r.title} | Chapter: ${r.chapter} | Last reviewed: ${r.reviewed || 'NEVER'} | Revision due: ${r.due || 'NOT SET'} | Status: ${s.label}`;
+  }).join('\n');
+}
+
+document.getElementById('scenario').addEventListener('change', e => renderRegister(e.target.value));
+let currentRows = renderRegister('baseline');
+
+const DEMO_GAP = {
+  baseline: `## Chapter-wise readiness — VPS Lakeshore, 27 Sep 2026
+
+| Chapter | Docs | Current | Due ≤90d | Overdue/Missing | Readiness |
+|---|---|---|---|---|---|
+| FMS (Facility Mgmt & Safety) | 4 | 1 | 2 | 1 | 63% |
+| COP (Care of Patients) | 2 | 0 | 0 | 2 | 25% |
+| HIC (Infection Control) | 2 | 1 | 1 | 0 | 75% |
+| MOM (Medication Mgmt) | 1 | 1 | 0 | 0 | 100% |
+| PRE (Patient Rights & Education) | 1 | 0 | 1 | 0 | 50% |
+| HRM (HR Management) | 1 | 1 | 0 | 0 | 100% |
+| IMS (Info Mgmt System) | 1 | 0 | 0 | 1 | 0% |
+| AAC (Access, Assessment, Continuity) | 1 | 0 | 1 | 0 | 50% |
+| PSQ (Patient Safety & QI) | 1 | 1 | 0 | 0 | 100% |
+| ROM (Responsibility of Mgmt) | 1 | 0 | 1 | 0 | 50% |
+| **Overall** | **15** | **5** | **6** | **4** | **~63%** |
+
+**Top gaps (in order of survey risk)**
+1. **LHRC/P&P/IMS/06 — IT & Cybersecurity Policy** — overdue since 01-Dec-2025 (300 days). High risk: any cyber-incident review during survey will surface an expired governing document. *Owner: IT Head.*
+2. **LHRC/P&P/COP/19 — Robotic Surgery Privileging & Consent** — no reviewed/due date on record at all. With robotic transplant volumes growing, assessors will specifically probe privileging criteria for the robot programme. *Owner: Medical Superintendent + Credentialing Committee.*
+3. **LHRC/P&P/ER/13 — Auto Pulse Mechanical CPR Device** — overdue since 20-Nov-2025. Device-specific SOPs are a common COP tracer item. *Owner: ER Head of Dept.*
+4. **LHRC/P&P/HIC/04 — Infection Control Manual** — overdue since 01-Jun-2026; HIC is almost always tracer-walked on Day 1. *Owner: Infection Control Officer.*
+5. **LHRC/P&P/FS/02 — Fire Safety** and **LHRC/P&P/ROM/02 — Org chart/DoA** — both overdue/near-overdue; fire safety mock drills are frequently cross-checked against the SOP revision date. *Owner: Facilities Manager / CEO Office.*
+
+**30-60-90 day remediation plan**
+
+| Phase | Action | Owner | Target |
+|---|---|---|---|
+| 0–30 days | Reconstitute and approve IMS/06 (cybersecurity) and ER/13 (Auto Pulse) in P&P Committee; backdate review trail with VAPT report and device AMC as annexures | IT Head, ER HOD | 27-Oct-2026 |
+| 0–30 days | Draft COP/19 (robotic privileging) from scratch using existing credentialing matrix + robot OEM competency checklist | Med. Superintendent | 27-Oct-2026 |
+| 31–60 days | Revise HIC/04 and FS/02; run one live fire-drill and one hand-hygiene audit as evidence of implementation, not just paper revision | ICO, Facilities Mgr | 26-Nov-2026 |
+| 31–60 days | Refresh ROM/02 org chart to reflect current Delegation of Authority; circulate for department-head sign-off | CEO Office | 26-Nov-2026 |
+| 61–90 days | Internal mock survey (2 assessors) across all 10 chapters; close residual CAPAs; re-run this gap scan | Quality Manager | 25-Dec-2026 |
+
+**Likely mock-surveyor questions**
+- "Show me the last review date of your cybersecurity policy and evidence of the last VAPT/penetration test." (IMS)
+- "Who is credentialed to operate the robotic surgical system, and what is the re-credentialing cycle?" (COP)
+- "Walk me through the Auto Pulse device's maintenance log and who is trained to use it outside the ER." (COP)
+- "When was your last full-scale fire evacuation drill, and where are the records?" (FMS)
+- "Show me your current approved organisation chart with delegation of financial and clinical authority." (ROM)`,
+  presurvey: `## Chapter-wise readiness — VPS Lakeshore, 27 Sep 2026 (pre-survey scenario)
+
+| Chapter | Docs | Current | Due ≤90d | Overdue/Missing | Readiness |
+|---|---|---|---|---|---|
+| FMS | 4 | 3 | 1 | 0 | 88% |
+| COP | 2 | 2 | 0 | 0 | 100% |
+| HIC | 2 | 1 | 1 | 0 | 75% |
+| MOM | 1 | 1 | 0 | 0 | 100% |
+| PRE | 1 | 1 | 0 | 0 | 100% |
+| HRM | 1 | 1 | 0 | 0 | 100% |
+| IMS | 1 | 1 | 0 | 0 | 100% |
+| AAC | 1 | 0 | 1 | 0 | 50% |
+| PSQ | 1 | 1 | 0 | 0 | 100% |
+| ROM | 1 | 1 | 0 | 0 | 100% |
+| **Overall** | **15** | **12** | **2** | **0** | **~93%** |
+
+**Top gaps ahead of the mock survey**
+1. **LHRC/P&P/AAC/05 — Access, Assessment & Continuity of Care** revision falls due 15-Oct-2026, inside the survey window — get the P&P Committee to approve it *before* survey day so the "current version" on file is unambiguous.
+2. **LHRC/P&P/HIC/04 — Infection Control Manual** due 15-Nov-2026 — same treatment; assessors dislike a policy that is "about to expire."
+3. No overdue or missing documents remain — good position; focus effort on **implementation evidence** (drill records, training attendance, incident logs) rather than paperwork.
+
+**30-60-90 day plan**
+| Phase | Action | Owner | Target |
+|---|---|---|---|
+| 0–15 days | Fast-track approval of AAC/05 and HIC/04 at next P&P Committee | Quality Manager | 12-Oct-2026 |
+| 0–30 days | Compile tracer evidence folders (drills, training logs, incident reports) for each of the 10 chapters | Dept HODs | 27-Oct-2026 |
+| 31–60 days | Run two full mock-tracer walks (COP + FMS focus) with an external NABH consultant | Quality Manager | 26-Nov-2026 |
+| 61–90 days | Final management review, close any CAPAs from mock survey | CEO, Quality Manager | 25-Dec-2026 |
+
+**Likely mock-surveyor questions**
+- "Your Infection Control Manual is due for revision in a few weeks — show me the draft under review."
+- "Demonstrate a recent AAC-related continuity-of-care case, from admission to discharge planning."
+- "Show evidence that staff have been trained on the revised robotic-surgery consent process."`,
+};
+
+document.getElementById('runGap').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const rows = REGISTER[key];
+  const prompt = `You are the Quality & Accreditation lead at VPS Lakeshore Hospital, Kochi preparing for NABH accreditation (5th/6th edition standards). Here is our current Policies & Procedures (P&P) register with status computed as of 27 Sep 2026:\n\n${registerAsText(rows)}\n\nProduce: (1) a chapter-wise readiness score table (chapters: AAC, COP, MOM, PRE, HIC, PSQ, ROM, FMS, HRM, IMS), (2) the top 5 gaps ranked by survey risk with named owners, (3) a 30-60-90 day remediation plan with owners and target dates, (4) 5 likely mock-surveyor questions tied to the weakest chapters.`;
+  Hub.run({
+    out: '#outGap', button: '#runGap',
+    system: 'You are an NABH (National Accreditation Board for Hospitals & Healthcare Providers, India) accreditation consultant advising a 350-bed multi-specialty hospital in Kochi, Kerala.',
+    prompt, demo: DEMO_GAP[key], manualMinutes: 300,
+  });
+});
+
+// ---------- MODE B DATA ----------
+const POLICY_TEXT = `LHRC/P&P/ER/13 — Auto Pulse Mechanical CPR Device (rev. 3, reviewed 05-05-2026)
+Section 4.2 — Authorised Use: The Auto Pulse device is approved for use within the Emergency Department and the Cath Lab only, by ER physicians and Critical Care physicians who have completed the vendor-certified competency module (valid 2 years). Section 4.3 — Use Outside ER: Deployment of the device outside the ER or Cath Lab (e.g., during in-hospital transport code blue) requires verbal authorisation from the ER Medical Officer on duty OR the Critical Care Consultant on call, to be countersigned within 24 hours. Nursing staff may not independently authorise use.
+
+LHRC/P&P/HSM/11 — Hazardous Material Safety (rev. 4, reviewed 05-05-2026)
+Section 6 — Chemical Spill Response. Section 6.1 (Mercury spills, e.g., broken thermometer/sphygmomanometer): Evacuate the immediate area; do not use a vacuum cleaner or broom. Don PPE (nitrile gloves, N95). Use the designated Mercury Spill Kit (stored in each nursing station utility room) to contain droplets using the suction bulb/cardboard provided; place residue in the kit's sealed container; label as hazardous waste and hand over to the BMW (Biomedical Waste) contractor per LHRC/P&P/BMW/01. Ventilate the area for a minimum of 2 hours. Section 6.2 covers non-mercury chemical spills (housekeeping chemicals) — refer to MSDS on file with Housekeeping Supervisor.
+
+LHRC/P&P/HIC/04 — Hospital Infection Control Manual (rev. 6, reviewed 01-06-2023 — REVISION OVERDUE since 01-06-2026)
+Section 9 — Sharps and Needle-stick Injuries: Report to Infection Control Officer within 1 hour; post-exposure prophylaxis per protocol in Annexure C.`;
+
+document.getElementById('policyText').value = POLICY_TEXT;
+
+const QA_QUESTIONS = {
+  autopulse: 'Who can authorise use of the Auto Pulse device outside the ER?',
+  mercury: "What's the spill procedure for mercury?",
+  custom: '',
+};
+document.getElementById('scenarioQA').addEventListener('change', e => {
+  document.getElementById('question').value = QA_QUESTIONS[e.target.value] || '';
+});
+document.getElementById('question').value = QA_QUESTIONS.autopulse;
+
+const DEMO_QA = {
+  autopulse: `**Answer** (citing LHRC/P&P/ER/13, Section 4.3 — Use Outside ER):
+
+Outside the Emergency Department or Cath Lab, use of the Auto Pulse device requires **verbal authorisation from either the ER Medical Officer on duty or the Critical Care Consultant on call**, which must then be **countersigned in writing within 24 hours**.
+
+- Nursing staff are explicitly **not** permitted to authorise use independently (Section 4.3).
+- Within the ER/Cath Lab itself, only ER physicians and Critical Care physicians with a current (≤2-year) vendor competency certification may operate the device (Section 4.2).
+
+**Note:** the policy does not specify what happens if neither the ER MO nor the Critical Care Consultant is reachable within a clinically necessary window (e.g. a code blue in a general ward). This is a gap — recommend the P&P Committee add an escalation clause (e.g., default to the on-call Duty Manager or Code Blue team leader) at the next revision (due 20-11-2026).`,
+  mercury: `**Answer** (citing LHRC/P&P/HSM/11, Section 6.1 — Chemical Spill Response, Mercury Spills):
+
+1. Evacuate the immediate area immediately.
+2. **Do not** use a vacuum cleaner or broom — this aerosolises mercury vapour.
+3. Don PPE: nitrile gloves and an N95 mask.
+4. Use the **designated Mercury Spill Kit** (stationed in every nursing station utility room) — use the suction bulb/cardboard provided to contain droplets.
+5. Place all residue in the kit's sealed container, label it hazardous waste, and hand it to the BMW contractor per **LHRC/P&P/BMW/01**.
+6. Ventilate the area for a **minimum of 2 hours** before allowing re-entry.
+
+**Note:** this section (6.1) covers mercury specifically. For any other chemical/housekeeping spill, the policy directs staff to Section 6.2 and the relevant MSDS on file with the Housekeeping Supervisor — the excerpt provided does not include the full MSDS index, so confirm the specific chemical there if it isn't mercury.`,
+};
+
+document.getElementById('runQA').addEventListener('click', () => {
+  const text = document.getElementById('policyText').value;
+  const q = document.getElementById('question').value.trim();
+  const scKey = document.getElementById('scenarioQA').value;
+  const prompt = `Here are excerpts from VPS Lakeshore Hospital's approved policies and procedures:\n\n${text}\n\nQuestion: ${q}\n\nAnswer strictly from the excerpts above, citing the exact policy document number and section. If the excerpts do not fully answer the question, say so explicitly and note what is missing rather than guessing.`;
+  Hub.run({
+    out: '#outQA', button: '#runQA',
+    system: 'You are a policy compliance assistant for a NABH-accredited hospital. Only answer from the supplied policy text; be precise about citations and explicit about silences/gaps.',
+    prompt, demo: DEMO_QA[scKey] || DEMO_QA.autopulse, manualMinutes: 20,
+  });
+});
+
+// ---------- TAB SWITCHING ----------
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+    document.getElementById('mode-' + btn.dataset.mode).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
