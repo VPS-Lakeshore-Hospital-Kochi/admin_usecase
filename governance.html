@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Governance &amp; rollout</title>
+<meta name="description" content="How non-clinical departments at VPS Lakeshore Hospital can use Claude safely: principles, data rules, approval tiers, phased rollout and an hours-saved estimate.">
+<link rel="stylesheet" href="shared/hub.css">
+<style>
+  .g-tier { font-size: 11px; font-weight: 700; letter-spacing: .3px; }
+  .phase-card ul { margin: 6px 0 0; padding-left: 1.2em; }
+  .phase-card li { margin: 3px 0; }
+  .phase-card h3 .n { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .g-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .est-controls { margin-bottom: 12px; }
+  .est-controls label { display: inline-block; margin: 0 8px 0 0; }
+  .est-controls input[type="number"] { width: 90px; display: inline-block; }
+  input.runs { width: 70px; padding: 4px 6px; }
+  td.tier1 { color: var(--ok); }
+  td.tier2 { color: var(--warn); }
+  td.tier3 { color: var(--bad); }
+  .clinical-list { columns: 2; column-gap: 24px; padding-left: 1.2em; margin: 8px 0 0; }
+  .clinical-list li { break-inside: avoid; margin-bottom: 4px; }
+  @media (max-width: 480px) { .clinical-list { columns: 1; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Using Claude safely at VPS Lakeshore</h1>
+    <p>How non-clinical departments can adopt Claude with a named approver on every output, no patient data at
+      risk, and a clear order of rollout — not a legal document, and not a substitute for Legal, Compliance or IT
+      Security sign-off.</p>
+  </section>
+
+  <h2>Principles</h2>
+  <div class="grid cols-3" style="margin-bottom:24px">
+    <div class="card">
+      <h3>Human in the loop</h3>
+      <p>Claude drafts; a named person approves. Nothing posts to HIS, ERP or finance systems automatically —
+        every output is reviewed and entered by a human before it takes effect.</p>
+    </div>
+    <div class="card">
+      <h3>No patient-identifiable data in prototypes</h3>
+      <p>These pages run on synthetic or anonymised sample data only. In production, patient data flows only
+        through an approved, logged hospital gateway — never pasted into a public AI tool.</p>
+    </div>
+    <div class="card">
+      <h3>Accuracy</h3>
+      <p>Outputs cite the input they were drawn from. Figures are re-checked against source before anyone
+        relies on them for a decision.</p>
+    </div>
+    <div class="card">
+      <h3>Accountability</h3>
+      <p>Every use case has a named business owner (accountable for the decision) and a data owner
+        (accountable for what data feeds it).</p>
+    </div>
+    <div class="card">
+      <h3>Transparency</h3>
+      <p>Staff and recipients know when a letter, note or reply was AI-drafted. It is disclosed, not passed
+        off as fully manual work.</p>
+    </div>
+    <div class="card">
+      <h3>Scope</h3>
+      <p>This hub covers <b>non-clinical</b> use only. Clinical decision support is a separate, clinically
+        governed track — see below.</p>
+    </div>
+  </div>
+
+  <h2>Data rules</h2>
+  <p class="small" style="color:var(--muted);max-width:780px">Reference: India's Digital Personal Data
+    Protection Act, 2023 (DPDP) — consent or another lawful purpose, purpose limitation, data minimisation,
+    defined retention, and breach reporting. This table is a working guide, not legal advice —
+    <b>confirm classification and controls with Legal</b> before use.</p>
+  <div class="card" style="margin-bottom:24px">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data class</th><th>Allowed in prototype</th><th>Allowed in production</th><th>Controls</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Public<br><span class="small" style="color:var(--muted)">e.g. press releases, published rates</span></td>
+            <td><span class="tag ok">Yes</span></td>
+            <td><span class="tag ok">Yes</span></td>
+            <td>None beyond normal review before publishing.</td>
+          </tr>
+          <tr>
+            <td>Internal<br><span class="small" style="color:var(--muted)">e.g. rosters, SOP drafts, non-sensitive MIS</span></td>
+            <td><span class="tag ok">Yes</span> (sample/synthetic)</td>
+            <td><span class="tag warn">With approval</span></td>
+            <td>Business owner sign-off; no external sharing of raw output.</td>
+          </tr>
+          <tr>
+            <td>Confidential – business<br><span class="small" style="color:var(--muted)">e.g. vendor pricing, contracts, board papers</span></td>
+            <td><span class="tag warn">Sample data only</span></td>
+            <td><span class="tag warn">Via approved gateway</span></td>
+            <td>Access limited to role; logged; NDA-covered vendors only.</td>
+          </tr>
+          <tr>
+            <td>Personal data<br><span class="small" style="color:var(--muted)">e.g. employee or applicant records</span></td>
+            <td><span class="tag warn">Anonymised/sample only</span></td>
+            <td><span class="tag warn">Via approved gateway, minimised</span></td>
+            <td>DPDP: lawful purpose, minimise fields sent, defined retention, consent where applicable.</td>
+          </tr>
+          <tr>
+            <td>Sensitive / health data<br><span class="small" style="color:var(--muted)">e.g. patient records, diagnoses, bills tied to a patient</span></td>
+            <td><span class="tag bad">Never — synthetic only</span></td>
+            <td><span class="tag bad">Only via approved, logged hospital gateway</span></td>
+            <td>Tier 3 approval required; DPDP breach-reporting obligations apply; no public AI endpoint.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Approval tiers</h2>
+  <div class="grid cols-3" style="margin-bottom:8px">
+    <div class="card">
+      <h3><span class="tag ok g-tier">TIER 1</span> Drafting help</h3>
+      <p>Low risk — text drafts, summaries, Q&amp;A. Approved by the <b>team lead</b> before use.</p>
+    </div>
+    <div class="card">
+      <h3><span class="tag warn g-tier">TIER 2</span> Decision support on money or people</h3>
+      <p>Capex, vendor selection, hiring, attrition. Approved by the <b>department head</b>, with
+        <b>Finance</b> or <b>HR</b> as relevant.</p>
+    </div>
+    <div class="card">
+      <h3><span class="tag bad g-tier">TIER 3</span> Patient data or external parties</h3>
+      <p>Anything touching patient-identifiable data, insurers, or overseas parties. Approved by
+        <b>IT Security, Legal and Quality</b> together.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="table-wrap">
+      <table id="tier-table">
+        <thead><tr><th>Department</th><th>Prototype</th><th>Tier</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Rollout plan</h2>
+  <p class="small" style="color:var(--muted);max-width:780px">Phased and dependency-driven: identity and
+    master data come before automation, which comes before analytics.</p>
+  <div class="grid cols-2" id="phases" style="margin-bottom:24px"></div>
+
+  <h2>Hours-saved estimator</h2>
+  <p class="g-note">Estimate only — for planning discussion, not a committed savings figure. Manual minutes
+    are per occurrence, from the hub's own listing; runs/month and time-saved % are editable assumptions.</p>
+  <div class="kpis" id="est-kpis"></div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="row est-controls">
+      <label>Time saved on each run: <input id="pct" type="number" min="0" max="100" value="60"> %</label>
+      <span class="small" style="color:var(--muted)">applies to every row below</span>
+    </div>
+    <div class="table-wrap">
+      <table id="est-table">
+        <thead>
+          <tr><th>Department</th><th>Prototype</th><th class="num">Manual min/run</th><th class="num">Runs/month</th><th class="num">Hours saved/month</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <h2>Clinical track (out of scope here)</h2>
+  <div class="card" style="margin-bottom:24px">
+    <p>Clinical AI is a separate, clinically governed track — <b>governed by the Medical Superintendent /
+      clinical AI committee</b>, not this hub. Themes under that track:</p>
+    <ul class="clinical-list">
+      <li>AI triage &amp; symptom assessment</li>
+      <li>Clinical decision support</li>
+      <li>Smart clinical documentation</li>
+      <li>Diagnostics</li>
+      <li>Discharge &amp; readmission risk</li>
+      <li>Remote monitoring</li>
+    </ul>
+  </div>
+
+  <p class="footer-note">Prototype for internal discussion · synthetic data only · not a compliance sign-off.</p>
+</main>
+
+<script src="shared/claude.js"></script>
+<script src="shared/apps.js"></script>
+<script>
+Hub.mountHeader({ title: 'Governance & rollout' });
+
+const APPS = window.HUB_APPS;
+
+/* ---- Approval tiers ---- */
+const TIER = {
+  'patient-dedup': 3, 'contact-centre': 3, 'intl-desk': 3, 'tpa-preauth': 3, 'discharge-billing': 3,
+  'estimate-generator': 3, 'bed-flow': 3, 'patient-feedback': 3, 'data-quality': 3, 'credential-tracker': 3,
+  'capex-review': 2, 'audit-responder': 2, 'denial-analyser': 2, 'purchase-quotes': 2, 'three-way-match': 2,
+  'vendor-contracts': 2, 'stock-watch': 2, 'hr-screener': 2, 'exit-analysis': 2, 'contract-review': 2,
+};
+const tierOf = slug => TIER[slug] || 1;
+
+const tierBody = document.querySelector('#tier-table tbody');
+tierBody.innerHTML = APPS.slice().sort((a, b) => tierOf(a.slug) - tierOf(b.slug) || a.dept.localeCompare(b.dept))
+  .map(a => `<tr><td>${Hub.esc(a.dept)}</td><td>${Hub.esc(a.title)}</td><td class="tier${tierOf(a.slug)}"><b>Tier ${tierOf(a.slug)}</b></td></tr>`)
+  .join('');
+
+/* ---- Rollout phases ---- */
+const PHASES = [
+  { name: 'Phase 0 — Foundation', items: [], fixed: [
+      'Policy sign-off on this page’s principles and data rules',
+      'Approved gateway and logging in place for any patient-adjacent use',
+      'Data steward named for master data and identity',
+      'Pilot users trained on demo vs live mode and what not to paste in',
+    ] },
+  { name: 'Phase 1 — Make data trustworthy', slugs: ['data-quality', 'master-data', 'patient-dedup'] },
+  { name: 'Phase 2 — Automate the manual', slugs: ['mis-pipeline', 'ops-intake', 'three-way-match', 'tpa-preauth', 'discharge-billing', 'hr-letters', 'board-papers', 'docusign-tracker'] },
+  { name: 'Phase 3 — Scale across departments', slugs: [] },
+  { name: 'Phase 4 — See, then predict', slugs: ['enquiry-waterfall', 'ceo-copilot', 'market-scan', 'equipment-utilisation', 'bed-flow'] },
+];
+const assigned = new Set(PHASES.flatMap(p => p.slugs || []));
+PHASES.find(p => p.name.startsWith('Phase 3')).slugs = APPS.map(a => a.slug).filter(s => !assigned.has(s));
+
+const bySlug = s => APPS.find(a => a.slug === s);
+document.getElementById('phases').innerHTML = PHASES.map(p => `
+  <div class="card phase-card">
+    <h3>${Hub.esc(p.name)} <span class="n">(${(p.items ? p.items.length : p.slugs.length)} item${(p.items ? p.items.length : p.slugs.length) === 1 ? '' : 's'})</span></h3>
+    <ul>${p.items ? p.items.map(t => `<li>${Hub.esc(t)}</li>`).join('') :
+      p.slugs.map(s => bySlug(s)).filter(Boolean).map(a => `<li>${Hub.esc(a.title)} <span class="small" style="color:var(--muted)">(${Hub.esc(a.dept)})</span></li>`).join('')}</ul>
+  </div>`).join('');
+
+/* ---- Hours-saved estimator ---- */
+const RUNS_DAILY = new Set(['contact-centre', 'intl-desk', 'ops-intake', 'bed-flow', 'tpa-preauth', 'discharge-billing', 'estimate-generator']);
+const RUNS_MONTHLY = new Set(['finance-mis', 'capex-review', 'mis-pipeline', 'board-papers', 'compliance-calendar', 'market-scan', 'exit-analysis', 'incident-trends', 'nabh-readiness', 'reputation-monitor', 'docusign-tracker']);
+const defaultRuns = slug => RUNS_DAILY.has(slug) ? 20 : RUNS_MONTHLY.has(slug) ? 4 : 8;
+
+const estBody = document.querySelector('#est-table tbody');
+estBody.innerHTML = APPS.map(a => `
+  <tr data-slug="${a.slug}">
+    <td>${Hub.esc(a.dept)}</td>
+    <td>${Hub.esc(a.title)}</td>
+    <td class="num">${a.manual}</td>
+    <td class="num"><input class="runs" type="number" min="0" value="${defaultRuns(a.slug)}"></td>
+    <td class="num hrs">—</td>
+  </tr>`).join('');
+
+function recalc() {
+  const pct = Math.max(0, Math.min(100, Number(document.getElementById('pct').value) || 0)) / 100;
+  let totalHrs = 0;
+  const rows = [];
+  estBody.querySelectorAll('tr').forEach(tr => {
+    const slug = tr.dataset.slug;
+    const app = bySlug(slug);
+    const runs = Number(tr.querySelector('.runs').value) || 0;
+    const hrs = (app.manual * runs * pct) / 60;
+    tr.querySelector('.hrs').textContent = hrs.toFixed(1);
+    totalHrs += hrs;
+    rows.push({ title: app.title, dept: app.dept, hrs });
+  });
+  document.querySelector('#est-table tfoot').innerHTML =
+    `<tr><td colspan="4"><b>Total</b></td><td class="num"><b>${totalHrs.toFixed(0)} h</b></td></tr>`;
+
+  const top5 = rows.slice().sort((x, y) => y.hrs - x.hrs).slice(0, 5);
+  document.getElementById('est-kpis').innerHTML = `
+    <div class="kpi"><div class="label">Total hours saved / month (est.)</div><div class="value">${totalHrs.toFixed(0)} h</div></div>
+    <div class="kpi"><div class="label">FTE equivalent (160 h/month)</div><div class="value">${(totalHrs / 160).toFixed(1)}</div></div>
+    <div class="kpi"><div class="label">Top use case</div><div class="value" style="font-size:1rem">${top5[0] ? Hub.esc(top5[0].title) : '—'}</div></div>
+    <div class="kpi"><div class="label">Top 5 use cases</div><div class="value" style="font-size:.85rem;font-weight:500;line-height:1.5">${top5.map(r => Hub.esc(r.title) + ' — ' + r.hrs.toFixed(0) + 'h').join('<br>')}</div></div>`;
+}
+document.getElementById('pct').addEventListener('input', recalc);
+estBody.addEventListener('input', e => { if (e.target.classList.contains('runs')) recalc(); });
+recalc();
+</script>
+</body>
+</html>
