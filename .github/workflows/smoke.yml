@@ -24,5 +24,7 @@ jobs:
           npm init -y >/dev/null
           npm install --no-save playwright@1
           npx playwright install --with-deps chromium
+      - name: Gateway unit tests
+        run: node --test tests/worker.test.mjs
       - name: Run smoke test
         run: node tests/smoke.mjs

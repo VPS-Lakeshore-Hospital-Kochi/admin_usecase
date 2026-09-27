@@ -69,8 +69,15 @@ Or publish the folder to GitHub Pages.
 
 ## Demo vs live mode
 
-- **Demo mode** (default): each prototype returns a pre-written sample output, so the hub can be shown with no API key and no network.
-- **Live mode**: click **Settings**, paste an Anthropic API key. Prototypes then call the Claude Messages API directly from the browser with the on-screen input. The key is stored only in that browser's `localStorage`. This is fine for internal demos; a production rollout should route calls through a hospital-controlled backend (key custody, audit logging, PHI/DPDP controls).
+Open **Settings** on any page to choose how Claude is reached:
+
+| Mode | Who it's for | How it works |
+|---|---|---|
+| **Demo mode** (default) | Anyone, offline, on stage | Pre-written outputs built from the selected record, streamed so the page behaves as it does in live mode. Claude does not read the input. |
+| **Hospital gateway** | Presenters to admin and management | Live Claude through the Cloudflare Worker in `proxy/`, which holds the hospital's API key. Presenters enter only a passcode. See `proxy/README.md` to deploy it. |
+| **Own API key** | Developers | Calls the Claude API directly from the browser with a key stored in that browser only. |
+
+Live calls stream from `claude-opus-5` with server-side refusal fallbacks. The gateway allowlists models, caps output length and daily requests, and logs metadata only. A shared passcode is fine for synthetic-data demos; real hospital data needs SSO, per-user audit logging and DPDP review first.
 
 ## Files in and out
 
@@ -81,7 +88,11 @@ Or publish the folder to GitHub Pages.
 ## Structure
 
 - `shared/hub.css` — design system (VPS Lakeshore "In good hands" palette, light/dark)
-- `shared/claude.js` — `Hub.mountHeader`, `Hub.run`, `Hub.ask`, Markdown renderer, settings modal
+- `shared/claude.js` — `Hub.mountHeader`, `Hub.run`, `Hub.ask` (streaming), Markdown renderer, settings modal, file upload, Word export
+- `shared/kit.js` — demo toolkit: state, maker/approver roles, activity log, tabs, workflow steps, tables, review & approval, Excel export, guided tour, brand charts
+- `data/*.json` + `scripts/gen/*.mjs` — seeded synthetic datasets for the fleshed-out demos and the generators that produce them
+- `proxy/` — Cloudflare Worker gateway that holds the hospital API key (with `tests/worker.test.mjs`)
+- `docs/FLAGSHIP_BRIEF.md`, `docs/flagship-template.html` — the pattern every fleshed-out demo follows
 - `shared/apps.js` — the prototype registry (hub tiles, governance page and this table come from it)
 - `apps/*.html` — one self-contained prototype per use case
 - `tests/smoke.mjs` — Playwright smoke test (every page at 1280px and 375px: demo output, JS/network errors, overflow, hub links); runs on every PR via `.github/workflows/smoke.yml`
