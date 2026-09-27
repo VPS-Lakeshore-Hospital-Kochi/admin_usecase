@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patient identity de-duplication</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Patient identity de-duplication</h1>
+    <p>Match same-day registrations from front office, call centre and casualty for likely duplicate patient identities, and get a merge recommendation drafted for MRD sign-off.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample registrations</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="d1">Batch A — mixed source, name spelling variants</option>
+          <option value="d2">Batch B — call-centre pre-registrations</option>
+        </select>
+      </div>
+      <label>Registrations (editable, pipe-separated: Reg ID | UHID | Name | DOB | Mobile | Address | Source)</label>
+      <textarea id="extract" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Pairwise match score (deterministic)</h2>
+    <div class="table-wrap"><table id="matchTable">
+      <thead><tr><th>Reg A</th><th>Reg B</th><th class="num">Score</th><th>Result</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Human in the loop</h3>
+    <p class="small">Claude only <b>proposes</b> which pairs are likely the same patient and which record to keep. <b>Divya Suresh, MRD In-charge</b> reviews and signs off every merge — no UHIDs are merged, deactivated or relinked in the HIS automatically.</p>
+  </div>
+
+  <p class="footer-note">All names, UHIDs and mobile numbers are synthetic (LHK-000xxx series). Scenario is generic to any Indian hospital front office.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'Patient identity de-duplication' });
+
+const HEADERS = ['Reg ID','UHID','Name','DOB','Mobile','Address','Source'];
+
+const SCENARIOS = {
+d1: [
+['REG-9001','LHK-000301','Mohammed Rafeeq K','1985-03-14','9846012301','Edappally, Kochi','Front office'],
+['REG-9002','','Muhammed Rafiq','1985-03-14','9846012301','Edappally, Ernakulam','Call centre'],
+['REG-9003','LHK-000302','Saritha Menon','1990-07-02','9846012302','Kadavanthra, Kochi','Front office'],
+['REG-9004','LHK-000303','Sarita Menon P','1990-07-22','9846012303','Kadavanthra, Kochi','Casualty'],
+['REG-9005','LHK-000304','Antony Joseph','1972-11-05','9846012304','Palarivattom, Kochi','Front office'],
+['REG-9006','','Antony P Joseph','1972-11-05','9846012399','Palarivattom, Kochi','Call centre'],
+['REG-9007','LHK-000305','Nabeela Firoz','1998-01-30','9846012305','Kaloor, Kochi','Front office'],
+['REG-9008','LHK-000306','Nabeela Firose','1998-01-30','9846012305','Kaloor, Kochi','Casualty'],
+['REG-9009','LHK-000307','Baiju Varghese','1965-05-19','9846012306','Vyttila, Kochi','Front office'],
+['REG-9010','LHK-000308','Rajesh Kumar','1980-09-09','9846012307','Panampilly Nagar, Kochi','Call centre'],
+['REG-9011','','Rajesh Kumar T','1980-09-09','9846012307','Panampilly Nagar, Kochi','Casualty'],
+['REG-9012','LHK-000309','Fathima Noora','2001-12-25','9846012308','Tripunithura, Kochi','Front office'],
+],
+d2: [
+['REG-9101','LHK-000401','Sherin Thomas','1988-06-11','9847112401','Aluva, Kochi','Front office'],
+['REG-9102','','Sherin K Thomas','1988-06-11','9847112401','Aluva, Ernakulam','Call centre'],
+['REG-9103','LHK-000402','Ummer Farooq','1977-02-18','9847112402','Perumbavoor','Front office'],
+['REG-9104','LHK-000403','Umer Farook','1977-02-18','9847112498','Perumbavoor','Call centre'],
+['REG-9105','LHK-000404','Leelamma George','1955-08-01','9847112403','Muvattupuzha','Casualty'],
+['REG-9106','','Leelamma Georgekutty','1955-08-01','9847112403','Muvattupuzha','Call centre'],
+['REG-9107','LHK-000405','Arun Prasad','1993-04-23','9847112404','Kalamassery','Front office'],
+['REG-9108','LHK-000406','Arjun Prasad','1994-04-23','9847112405','Kalamassery','Call centre'],
+['REG-9109','LHK-000407','Salma Beevi','1968-10-10','9847112406','Angamaly','Front office'],
+['REG-9110','','Salma Beevi K','1968-10-10','9847112406','Angamaly','Call centre'],
+['REG-9111','LHK-000408','Vishnu Mohan','1999-01-05','9847112407','Tripunithura','Front office'],
+['REG-9112','LHK-000409','Bincy Alex','1991-03-17','9847112408','Kakkanad','Casualty'],
+]
+};
+
+function toText(rows) { return rows.map(r => r.join(' | ')).join('\n'); }
+function fromText(t) { return t.trim().split('\n').filter(Boolean).map(l => l.split('|').map(c => c.trim())); }
+
+function nameSim(a, b) {
+  const norm = s => s.toUpperCase().replace(/[^A-Z ]/g,'').split(' ').filter(Boolean);
+  const wa = norm(a), wb = norm(b);
+  let hits = 0;
+  wa.forEach(w => { if (wb.some(x => x === w || x.slice(0,4) === w.slice(0,4))) hits++; });
+  return hits / Math.max(wa.length, wb.length);
+}
+function score(r1, r2) {
+  let s = 0;
+  s += nameSim(r1[2], r2[2]) * 0.5;
+  if (r1[3] === r2[3]) s += 0.3;
+  if (r1[4] === r2[4]) s += 0.2;
+  return Math.round(s * 100) / 100;
+}
+
+function computePairs(rows) {
+  const pairs = [];
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = i + 1; j < rows.length; j++) {
+      const sc = score(rows[i], rows[j]);
+      if (sc >= 0.6) pairs.push({ a: rows[i], b: rows[j], score: sc });
+    }
+  }
+  return pairs.sort((x,y) => y.score - x.score);
+}
+
+function renderKPIs(rows, pairs) {
+  const likely = pairs.filter(p => p.score >= 0.85).length;
+  const review = pairs.filter(p => p.score >= 0.6 && p.score < 0.85).length;
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Registrations checked</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Pairs scored ≥ 0.60</div><div class="value">${pairs.length}</div></div>
+    <div class="kpi"><div class="label">Likely duplicates (≥0.85)</div><div class="value">${likely}</div></div>
+    <div class="kpi"><div class="label">Needs review (0.60–0.85)</div><div class="value">${review}</div></div>`;
+}
+
+function renderTable(pairs) {
+  const tbody = document.querySelector('#matchTable tbody');
+  tbody.innerHTML = pairs.map(p => {
+    const tag = p.score >= 0.85 ? 'bad' : 'warn';
+    const label = p.score >= 0.85 ? 'Likely duplicate' : 'Needs review';
+    return `<tr><td>${Hub.esc(p.a[0])} — ${Hub.esc(p.a[2])}</td><td>${Hub.esc(p.b[0])} — ${Hub.esc(p.b[2])}</td><td class="num">${p.score.toFixed(2)}</td><td><span class="tag ${tag}">${label}</span></td></tr>`;
+  }).join('');
+}
+
+function recompute() {
+  const rows = fromText(document.getElementById('extract').value);
+  const pairs = computePairs(rows);
+  renderKPIs(rows, pairs);
+  renderTable(pairs);
+  return { rows, pairs };
+}
+
+function loadScenario(key) {
+  document.getElementById('extract').value = toText(SCENARIOS[key]);
+  recompute();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('extract').addEventListener('input', recompute);
+loadScenario('d1');
+
+const DEMO = {
+d1: `## Match pairs with reasoning
+
+1. **REG-9001 (Mohammed Rafeeq K, front office) ↔ REG-9002 (Muhammed Rafiq, call centre) — score 0.85+, likely duplicate.** Same DOB, same mobile, near-identical name (common Malayalam-to-English transliteration variance: Mohammed/Muhammed, Rafeeq/Rafiq). Address differs only in "Kochi" vs "Ernakulam" — same locality (Edappally), effectively the same address written differently.
+2. **REG-9005 (Antony Joseph) ↔ REG-9006 (Antony P Joseph) — needs review.** Same DOB, same address, but mobile numbers differ (9846012304 vs ...399) — could be an updated contact number for the same person, or two family members with similar names. Recommend front-desk callback to confirm before merging.
+3. **REG-9007 (Nabeela Firoz) ↔ REG-9008 (Nabeela Firose) — likely duplicate.** Identical DOB and mobile; "Firoz"/"Firose" is a spelling variant of the same surname captured by two different staff (front office vs casualty).
+4. **REG-9010 (Rajesh Kumar) ↔ REG-9011 (Rajesh Kumar T) — likely duplicate.** Identical DOB, mobile and address; "T" is a middle initial dropped/added inconsistently — classic call-centre vs casualty duplicate.
+5. **REG-9003 (Saritha Menon) ↔ REG-9004 (Sarita Menon P) — needs review.** DOB differs (1990-07-02 vs 1990-07-22) — could be a genuine data-entry typo in one record or two different people; do not auto-merge, verify DOB against ID proof.
+
+## Merge recommendation per pair
+
+| Pair | Recommendation | Record to keep |
+|---|---|---|
+| REG-9001 / REG-9002 | Merge — high confidence | REG-9001 (has UHID LHK-000301; carry call-centre contact note into remarks) |
+| REG-9005 / REG-9006 | Hold — call back to confirm mobile before merging | Pending confirmation |
+| REG-9007 / REG-9008 | Merge — high confidence | REG-9007 (has UHID LHK-000305, earlier record) |
+| REG-9010 / REG-9011 | Merge — high confidence | REG-9010 (has UHID LHK-000308, front-desk-verified) |
+| REG-9003 / REG-9004 | Hold — verify DOB against ID proof, do not merge on name similarity alone | Pending confirmation |
+
+## Front-desk process fixes
+
+- **Mandatory search-before-register:** Require staff to search by mobile number AND DOB (not name alone) before creating a new UHID, across front office, call centre and casualty counters.
+- **OTP on mobile at registration:** Send an OTP to the mobile number provided; if the number already exists against another name, surface a "possible existing patient" prompt before a new UHID is issued.
+- **Standardised name transliteration list:** Maintain a common list of Malayalam-name English spelling variants (Mohammed/Muhammed, Firoz/Firose, etc.) so staff recognise likely matches at the counter, not just in a downstream de-dup run.
+- **Call-centre pre-registration flag:** Any call-centre-created record without a UHID should be explicitly linked to (or ruled out against) an existing UHID within 24 hours, not left as a standalone blank-UHID row.
+
+## Note
+
+All four merge/hold recommendations above require **MRD sign-off** before any UHID is merged or deactivated in the HIS. This tool proposes matches only; it does not alter patient records.`,
+
+d2: `## Match pairs with reasoning
+
+1. **REG-9101 (Sherin Thomas) ↔ REG-9102 (Sherin K Thomas) — likely duplicate.** Same DOB, same mobile; "K" middle initial added by call centre. Address "Kochi" vs "Ernakulam" is the same locality naming variance.
+2. **REG-9103 (Ummer Farooq) ↔ REG-9104 (Umer Farook) — likely duplicate.** Same DOB, same locality; mobile differs in last two digits (...402 vs ...498) — likely a transcription slip by the call-centre agent on a phone-in registration. Recommend confirming the correct number before merge.
+3. **REG-9105 (Leelamma George) ↔ REG-9106 (Leelamma Georgekutty) — likely duplicate.** Identical DOB and mobile; "George"/"Georgekutty" is a common short-form/full-form surname variant.
+4. **REG-9107 (Arun Prasad) ↔ REG-9108 (Arjun Prasad) — needs review.** DOB differs by one year (1993 vs 1994) and mobile differs by one digit — plausible sibling pair with similar names rather than one person; do not merge without ID verification.
+5. **REG-9109 (Salma Beevi) ↔ REG-9110 (Salma Beevi K) — likely duplicate.** Identical DOB, mobile and locality; "K" initial dropped in one record.
+
+## Merge recommendation per pair
+
+| Pair | Recommendation | Record to keep |
+|---|---|---|
+| REG-9101 / REG-9102 | Merge — high confidence | REG-9101 (has UHID LHK-000401) |
+| REG-9103 / REG-9104 | Merge — confirm correct mobile first | REG-9103 (has UHID LHK-000402) |
+| REG-9105 / REG-9106 | Merge — high confidence | REG-9105 (has UHID LHK-000404) |
+| REG-9107 / REG-9108 | Hold — verify with ID proof, likely two different people | Pending confirmation |
+| REG-9109 / REG-9110 | Merge — high confidence | REG-9109 (has UHID LHK-000407) |
+
+## Front-desk process fixes
+
+- **Mandatory search-before-register:** Call-centre agents must search by mobile + DOB before creating a pre-registration; this batch shows call centre as the main source of blank-UHID duplicate rows.
+- **OTP on mobile at registration:** Especially for phone-in call-centre bookings, an OTP step would have caught the Ummer/Umer mobile transcription error immediately.
+- **Callback verification for mismatched mobiles:** Where name and DOB match strongly but mobile differs slightly, route to a callback queue rather than auto-creating a new UHID.
+- **Sibling/family safeguard:** Where DOB differs by exactly one year with similar names (Arun/Arjun Prasad), prompt staff to check ID proof rather than assuming a typo.
+
+## Note
+
+All merge recommendations above require **MRD sign-off** before any UHID is merged or deactivated in the HIS. This tool proposes matches only; it does not alter patient records.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const { rows, pairs } = recompute();
+  const extractText = document.getElementById('extract').value;
+  const pairSummary = pairs.map(p => `${p.a[0]} (${p.a[2]}) vs ${p.b[0]} (${p.b[2]}): score ${p.score.toFixed(2)}`).join('\n') || 'No pairs scored ≥0.60';
+  const prompt = `You are assisting the MRD/front-office team at VPS Lakeshore Hospital, Kochi with patient identity de-duplication across front office, call centre and casualty registrations.
+
+Registrations:
+${extractText}
+
+Deterministic pairwise match scores (name similarity + DOB + mobile match, already computed):
+${pairSummary}
+
+Provide: (1) match pairs with reasoning for each, (2) a merge recommendation per pair (merge / hold for verification) and which registration to keep, (3) front-desk process fixes (mandatory search-before-register, OTP on mobile, etc), (4) a closing note that merges require MRD sign-off and are never automatic. Be specific to the rows shown.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a senior hospital MRD (medical records) analyst at a large Indian multi-specialty hospital, expert in patient identity resolution and front-desk registration workflows.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

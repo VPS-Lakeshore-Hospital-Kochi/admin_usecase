@@ -32,7 +32,9 @@ for (const [path, width] of [['index.html', 1280], ['governance.html', 1280], ['
     for (const h of hrefs) if (!APPS.includes(h.replace(/^apps\/|\.html$/g, ''))) errors.push(`broken tile link ${h}`);
     note = `${hrefs.length} tiles`;
   } else if (path === 'governance.html') {
-    note = (await page.locator('a[href^="apps/"]').count()) + ' app links';
+    const links = await page.locator('a[href^="apps/"]').count();
+    note = `${links} app links`;
+    if (links !== APPS.length) errors.push(`governance links ${links} of ${APPS.length} apps`);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     if (overflow) errors.push(`horizontal overflow at ${width}px`);
   } else {

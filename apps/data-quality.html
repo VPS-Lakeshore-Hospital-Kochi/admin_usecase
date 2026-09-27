@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data quality &amp; SOP compliance console</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Data quality &amp; SOP compliance console</h1>
+    <p>Run rule checks on a weekly HIS extract, tag issues to a data-quality dimension, and get a prioritised fix list drafted for owner sign-off.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample weekly HIS extract</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="wk1">Week 38 — OPD-heavy registration batch</option>
+          <option value="wk2">Week 39 — surgical/IP-heavy batch</option>
+        </select>
+      </div>
+      <label>Extract (editable, pipe-separated)</label>
+      <textarea id="extract" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Rule-check results (deterministic)</h2>
+    <div class="table-wrap"><table id="ruleTable">
+      <thead><tr><th>Rule</th><th>Dimension</th><th class="num">Rows flagged</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Human in the loop</h3>
+    <p class="small">Claude only <b>proposes</b> the prioritised issue list, root causes and SOP text. <b>Anjali Pillai, Manager – Data &amp; MIS</b> reviews and signs off the weekly compliance note before it is circulated. Nothing is changed inside the HIS automatically — any master or record fix is applied by the module owner through normal HIS access.</p>
+  </div>
+
+  <p class="footer-note">All UHIDs, names and mobile numbers are synthetic (LHK-000xxx series). No real audit findings are referenced; scenario is generic to any Indian hospital.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'Data quality & SOP compliance console' });
+
+// row fields: UHID|Patient name|Mobile|Doctor code|Diagnosis field|Admission time|Discharge time|Payer
+const HEADERS = ['UHID','Patient name','Mobile','Doctor code','Diagnosis field','Admission','Discharge','Payer'];
+
+const SCENARIOS = {
+wk1: [
+['LHK-000101','Ravi Nair','9847000101','DR-014','I10 - Hypertension','2026-09-08 09:10','2026-09-08 11:20','Self-pay'],
+['LHK-000102','Beena Thomas','9847000102','DR-021','fever with cold, ?viral','2026-09-08 09:40','2026-09-08 10:10','Star Health'],
+['','Ajith Kumar S','9847000103','DR-014','J06 - URTI','2026-09-08 10:05','2026-09-08 10:35','CGHS'],
+['LHK-000104','Fathima Beevi','9847000103','DR-099','E11 - Type 2 DM','2026-09-08 10:15','2026-09-08 10:45',''],
+['LHK-000105','Sunil Varma','9847000104','DR-021','back pain, needs physio r/o disc','2026-09-08 10:30','2026-09-08 11:00','Medi Assist'],
+['LHK-000106','Meera Pillai','9847000105','DR-014','N39.0 - UTI','2026-09-08 11:00','2026-09-08 10:50','Self-pay'],
+['LHK-000107','George Mathew','9847000106','DR-033','K29 - Gastritis','2026-09-08 11:15','2026-09-08 11:45','Star Health'],
+['LHK-000108','Anitha Raj','9847000105','DR-021','H10 - Conjunctivitis','2026-09-08 11:20','2026-09-08 11:40',''],
+['LHK-000109','Joseph Sebastian','9847000107','DR-999','chest pain eval, cardio ref','2026-09-08 11:40','2026-09-08 12:30','CGHS'],
+['LHK-000110','Nisha K R','9847000108','DR-033','L23 - Contact dermatitis','2026-09-08 12:00','2026-09-08 12:20','Medi Assist'],
+['LHK-000111','Prasad Menon','9847000109','DR-014','M54 - Backache','2026-09-08 12:10','2026-09-08 12:40','Self-pay'],
+['LHK-000112','Devika S','9847000110','DR-021','A09 - Gastroenteritis','2026-09-08 12:25','2026-09-08 12:55',''],
+['LHK-000113','Thomas Abraham','9847000111','DR-033','R51 - Headache','2026-09-08 12:45','2026-09-08 13:05','Star Health'],
+['LHK-000114','Lakshmi Nair','9847000112','DR-014','sugar check, on medication','2026-09-08 13:00','2026-09-08 13:20','CGHS'],
+['LHK-000115','Vinod Chandran','9847000113','DR-021','J45 - Asthma','2026-09-08 13:10','2026-09-08 13:40','Medi Assist'],
+],
+wk2: [
+['LHK-000201','Deepa Suresh','9847100201','DR-045','I21 - Acute MI','2026-09-15 02:40','2026-09-16 14:00','Group Mediclaim'],
+['LHK-000202','Ashraf K M','9847100202','DR-052','k80 gallstones, lap chole planned','2026-09-15 08:00','2026-09-17 10:30','Star Health'],
+['','Sini Jacob','9847100203','DR-045','S72 - Fracture femur','2026-09-15 09:15','2026-09-18 11:00',''],
+['LHK-000204','Manoj Pillai','9847100204','DR-777','M17 - Osteoarthritis knee','2026-09-15 09:30','2026-09-20 12:00','Star Health'],
+['LHK-000205','Rekha Menon','9847100202','DR-052','N20 - Renal calculus','2026-09-15 10:00','2026-09-17 09:00','Medi Assist'],
+['LHK-000206','Bijoy Thomas','9847100205','DR-045','I25 - CAD, PTCA done','2026-09-15 10:20','2026-09-18 10:20','CGHS'],
+['LHK-000207','Sona Varghese','9847100206','DR-063','K35 - Appendicitis','2026-09-15 11:00','2026-09-16 09:00',''],
+['LHK-000208','Rajan Nair','9847100207','DR-052','swelling in abdomen, scan advised','2026-09-15 11:30','2026-09-19 11:00','Star Health'],
+['LHK-000209','Priya Kurian','9847100207','DR-045','O80 - Normal delivery','2026-09-15 12:00','2026-09-17 12:30','Self-pay'],
+['LHK-000210','Anoop Krishnan','9847100208','DR-063','J18 - Pneumonia','2026-09-15 13:00','2026-09-20 09:00','Medi Assist'],
+['LHK-000211','Teena Sam','9847100209','DR-999','ca breast, onco ref for staging','2026-09-15 13:20','2026-09-25 10:00','CGHS'],
+['LHK-000212','Vinaya Das','9847100210','DR-063','C50 - Breast malignancy','2026-09-15 13:40','2026-09-22 10:00',''],
+['LHK-000213','Suresh Babu','9847100211','DR-045','I63 - Ischaemic stroke','2026-09-15 14:00','2026-09-15 13:30','Star Health'],
+['LHK-000214','Nimmy Roy','9847100212','DR-052','K80 Abdomen + Contrast','2026-09-15 14:20','2026-09-18 09:30','Medi Assist'],
+['LHK-000215','Alex George','9847100213','DR-063','S06 - Head injury','2026-09-15 15:00','2026-09-17 15:00',''],
+]
+};
+
+function toText(rows) { return [HEADERS.join(' | '), ...rows.map(r => r.join(' | '))].join('\n'); }
+function fromText(t) { return t.trim().split('\n').slice(1).map(l => l.split('|').map(c => c.trim())); }
+
+const RULES = [
+  { key: 'blankUHID', label: 'Blank UHID at registration', dim: 'Completeness',
+    test: r => r[0] === '' },
+  { key: 'mobileReuse', label: 'Mobile number reused across different patient names', dim: 'Uniqueness',
+    group: true },
+  { key: 'freeText', label: 'Free-text entered in coded diagnosis field', dim: 'Validity',
+    test: r => /[a-z]/.test(r[4]) && !/^[A-Z]\d/.test(r[4]) },
+  { key: 'dischargeBeforeAdm', label: 'Discharge time before admission time', dim: 'Timeliness',
+    test: r => new Date(r[6]) < new Date(r[5]) },
+  { key: 'missingPayer', label: 'Missing payer / billing class', dim: 'Accuracy',
+    test: r => r[7] === '' },
+  { key: 'docCodeInconsistent', label: 'Doctor code not in active roster (e.g. DR-999/DR-777)', dim: 'Consistency',
+    test: r => ['DR-999','DR-777'].includes(r[3]) },
+];
+
+function computeRules(rows) {
+  const counts = {};
+  RULES.forEach(rule => {
+    if (rule.group) {
+      const byMobile = {};
+      rows.forEach(r => { (byMobile[r[2]] = byMobile[r[2]] || new Set()).add(r[1]); });
+      counts[rule.key] = Object.values(byMobile).filter(s => s.size > 1).length;
+    } else {
+      counts[rule.key] = rows.filter(rule.test).length;
+    }
+  });
+  return counts;
+}
+
+function renderKPIs(rows, counts) {
+  const total = Object.values(counts).reduce((a,b) => a+b, 0);
+  const clean = rows.length - Math.min(rows.length, total);
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Rows in extract</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Total flags raised</div><div class="value">${total}</div></div>
+    <div class="kpi"><div class="label">Rules breached</div><div class="value">${Object.values(counts).filter(c=>c>0).length}/${RULES.length}</div></div>
+    <div class="kpi"><div class="label">Rows with zero flags</div><div class="value">${clean < 0 ? 0 : clean}</div></div>`;
+}
+
+function renderTable(counts) {
+  const tbody = document.querySelector('#ruleTable tbody');
+  tbody.innerHTML = RULES.map(rule => {
+    const n = counts[rule.key];
+    const tag = n === 0 ? 'ok' : n <= 2 ? 'warn' : 'bad';
+    return `<tr><td>${Hub.esc(rule.label)}</td><td><span class="tag ${tag}">${rule.dim}</span></td><td class="num">${n}</td></tr>`;
+  }).join('');
+}
+
+function recompute() {
+  const rows = fromText(document.getElementById('extract').value);
+  const counts = computeRules(rows);
+  renderKPIs(rows, counts);
+  renderTable(counts);
+  return { rows, counts };
+}
+
+function loadScenario(key) {
+  document.getElementById('extract').value = toText(SCENARIOS[key]);
+  recompute();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('extract').addEventListener('input', recompute);
+loadScenario('wk1');
+
+const DEMO = {
+wk1: `## Prioritised issue list
+
+1. **Free-text in coded diagnosis field (Validity)** — 5 rows (e.g. "fever with cold, ?viral", "back pain, needs physio r/o disc"). Highest volume issue; blocks reliable ICD-coded reporting and MIS trend analysis.
+2. **Missing payer/billing class (Accuracy)** — 4 rows. Directly delays billing and payer-wise revenue MIS.
+3. **Blank UHID at registration (Completeness)** — 1 row (Ajith Kumar S). High severity per-row: risks a duplicate identity being created downstream.
+4. **Doctor code not in active roster (Consistency)** — DR-999 used once; likely a locum/visiting consultant not yet mapped in the doctor master.
+5. **Discharge before admission timestamp (Timeliness)** — 1 row (Meera Pillai); almost certainly a clock/entry error at OPD billing desk.
+6. **Mobile number reused across different names** — 3 mobiles shared by 2 patients each; plausible (family members sharing a phone) but needs a quick check.
+
+## Likely root cause per rule
+
+| Rule | Root cause | Process vs system |
+|---|---|---|
+| Free-text diagnosis | Front-desk staff typing symptoms instead of selecting ICD code from picklist under time pressure | Process |
+| Missing payer | Payer field not marked mandatory in registration screen | System |
+| Blank UHID | Casualty/emergency registration bypasses UHID generation step | Process |
+| Doctor code invalid | New/visiting consultants not onboarded into doctor master before first case | System |
+| Discharge < admission | Manual time entry instead of system auto-timestamp | Process |
+| Mobile reuse | Shared family phone at registration (needs manual review, not automatically an error) | Process (verify) |
+
+## Owner-wise fix list
+
+- **Front Office Supervisor:** Retrain OPD desk staff on ICD-coded picklist use; no free-text diagnosis entry without supervisor override (5 rows).
+- **Registration/Casualty Duty Manager:** Enforce UHID generation before any billing entry, including emergency walk-ins (1 row).
+- **Billing Desk Lead:** Make payer field mandatory before bill closure; run daily blank-payer report (4 rows).
+- **HIS Admin (Doctor Master):** Onboard DR-999 into active roster or correct the code before next extract (1 row).
+- **MIS Executive:** Verify the 3 shared-mobile pairs are genuine family members, not a data-entry mix-up.
+
+## Draft SOP line (worst issue — free-text diagnosis)
+
+*"SOP-REG-07 (rev): Diagnosis/complaint at registration and OPD billing must be selected from the coded ICD picklist only. Free-text entry is permitted solely as a supplementary note field and must never replace the coded selection. Any registration saved with a non-coded diagnosis value is auto-flagged for same-day correction by the Front Office Supervisor."*
+
+## Weekly compliance note (draft)
+
+*"Week 38 HIS extract review: 15 records checked across 6 rules. Free-text diagnosis entry (5 rows) and missing payer (4 rows) remain the top recurring issues, both process-driven. One blank-UHID case requires immediate MRD attention to prevent a duplicate identity. Recommend front-desk refresher training and a mandatory-field check on the registration screen. Full row-level detail attached for owner action; re-check scheduled next Monday."*`,
+
+wk2: `## Prioritised issue list
+
+1. **Free-text in coded diagnosis field (Validity)** — 6 rows in this IP-heavy batch (e.g. "swelling in abdomen, scan advised", "ca breast, onco ref for staging"), several on high-value surgical/oncology cases — directly affects clinical coding and payer claim accuracy.
+2. **Missing payer/billing class (Accuracy)** — 4 rows, including a multi-day admission (Sona Varghese, 1 night) with no payer tagged — billing risk.
+3. **Discharge before admission timestamp (Timeliness)** — 1 row (Suresh Babu, stroke case) — needs urgent correction as LOS-based billing depends on it.
+4. **Blank UHID (Completeness)** — 1 row (Sini Jacob, fracture femur) — emergency ortho admission bypassed identity check.
+5. **Doctor code not in active roster (Consistency)** — DR-999 and DR-777 both appear — 2 rows, both look like visiting/locum consultants (oncology, ortho).
+6. **Mobile reused across names** — 2 mobiles shared by 2 patients each.
+
+## Likely root cause per rule
+
+| Rule | Root cause | Process vs system |
+|---|---|---|
+| Free-text diagnosis | Casualty/OT team logging provisional diagnosis in free text pending final coding | Process |
+| Missing payer | TPA/insurer desk update happens after registration, sync back to HIS master is manual | System |
+| Discharge < admission | Discharge summary backdated in the system after the fact | Process |
+| Blank UHID | Emergency trauma admission registered before MRD could issue UHID | Process |
+| Doctor code invalid | Visiting consultant empanelment not reflected in doctor master in time for OT list | System |
+| Mobile reuse | Family members admitted together, shared contact number | Process (verify) |
+
+## Owner-wise fix list
+
+- **MRD In-charge:** Same-shift UHID issuance for all emergency admissions, including trauma/OT direct admits (1 row).
+- **TPA/Insurance Desk:** Push payer confirmation into HIS within 4 hours of registration; daily blank-payer report to billing (4 rows).
+- **Nursing/OT Coordinator:** Lock discharge-time field to system timestamp, remove free manual override (1 row).
+- **Medical Records Coding Team:** Convert the 6 free-text diagnosis entries to ICD codes retrospectively and flag the treating units for coded entry going forward.
+- **HIS Admin (Doctor Master):** Fast-track empanelment sync for visiting consultants before their first OT list (2 rows: DR-999, DR-777).
+
+## Draft SOP line (worst issue — free-text diagnosis)
+
+*"SOP-REG-07 (rev): For IP/surgical admissions, the admitting unit must select a provisional ICD-coded diagnosis at the time of admission; free text may supplement but not substitute the code. Final diagnosis must be coded within 24 hours of discharge by Medical Records before the bill is closed."*
+
+## Weekly compliance note (draft)
+
+*"Week 39 HIS extract review: 15 IP/surgical records checked. Free-text diagnosis (6 rows) is the top issue this week, concentrated in emergency and oncology admissions where provisional notes are logged before formal coding. One discharge-before-admission timestamp error (stroke case) needs same-day correction as it affects LOS-based billing. Two visiting-consultant doctor codes require roster sync. Recommend expediting TPA payer confirmation turnaround and coded-diagnosis training for casualty/OT teams. Full detail attached; re-check scheduled next Monday."*`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const { rows, counts } = recompute();
+  const extractText = document.getElementById('extract').value;
+  const ruleSummary = RULES.map(r => `${r.label} (${r.dim}): ${counts[r.key]} rows`).join('\n');
+  const prompt = `You are assisting the IT & Data Governance team at VPS Lakeshore Hospital, Kochi with a weekly HIS data-quality and SOP compliance review.
+
+Weekly HIS extract (registration/admission/billing records):
+${extractText}
+
+Deterministic rule-check counts (already computed in the app):
+${ruleSummary}
+
+Provide: (1) a prioritised issue list, (2) likely root cause per rule tagged as process vs system, (3) an owner-wise fix list (name a plausible department owner per item), (4) a draft SOP line for the worst-ranked issue, (5) a short weekly compliance note suitable for circulation. Keep it specific to this extract.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a senior hospital data governance analyst at a large Indian multi-specialty hospital, expert in HIS master data, SOP drafting and data-quality dimensions (completeness, uniqueness, validity, timeliness, accuracy, consistency).',
+    prompt, demo: DEMO[key], manualMinutes: 180,
+  });
+});
+</script>
+</body>
+</html>

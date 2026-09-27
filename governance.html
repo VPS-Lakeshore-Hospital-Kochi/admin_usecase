@@ -203,7 +203,7 @@ tierBody.innerHTML = APPS.slice().sort((a, b) => tierOf(a.slug) - tierOf(b.slug)
 
 /* ---- Rollout phases ---- */
 const PHASES = [
-  { name: 'Phase 0 — Foundation', items: [], fixed: [
+  { name: 'Phase 0 — Foundation', items: [
       'Policy sign-off on this page’s principles and data rules',
       'Approved gateway and logging in place for any patient-adjacent use',
       'Data steward named for master data and identity',
@@ -222,7 +222,7 @@ document.getElementById('phases').innerHTML = PHASES.map(p => `
   <div class="card phase-card">
     <h3>${Hub.esc(p.name)} <span class="n">(${(p.items ? p.items.length : p.slugs.length)} item${(p.items ? p.items.length : p.slugs.length) === 1 ? '' : 's'})</span></h3>
     <ul>${p.items ? p.items.map(t => `<li>${Hub.esc(t)}</li>`).join('') :
-      p.slugs.map(s => bySlug(s)).filter(Boolean).map(a => `<li>${Hub.esc(a.title)} <span class="small" style="color:var(--muted)">(${Hub.esc(a.dept)})</span></li>`).join('')}</ul>
+      p.slugs.map(s => bySlug(s)).filter(Boolean).map(a => `<li><a href="${a.href}">${Hub.esc(a.title)}</a> <span class="small" style="color:var(--muted)">(${Hub.esc(a.dept)})</span></li>`).join('')}</ul>
   </div>`).join('');
 
 /* ---- Hours-saved estimator ---- */

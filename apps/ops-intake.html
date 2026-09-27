@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatsApp KPI intake</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>WhatsApp KPI intake</h1>
+    <p>Turn messy WhatsApp group updates from OT, F&amp;B and stores supervisors into a clean daily KPI table, and see what a proper replacement entry form looks like.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample WhatsApp group log</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="d1">Morning shift — 27 Sep</option>
+          <option value="d2">Evening shift — 27 Sep</option>
+        </select>
+      </div>
+      <label>Pasted messages (editable, one per line)</label>
+      <textarea id="extract" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>Messages per unit (deterministic)</h2>
+    <div class="table-wrap"><table id="unitTable">
+      <thead><tr><th>Unit</th><th class="num">Messages</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Human in the loop</h3>
+    <p class="small">Claude only <b>proposes</b> the structured KPI table and the daily-entry form design. <b>Vineeth Nair, Operations Manager</b> reviews, confirms ambiguous values with the sender, and approves the daily KPI note before it is circulated. No system or HIS record is updated automatically.</p>
+  </div>
+
+  <p class="footer-note">All names, wards and figures are synthetic and illustrative only; scenario is generic to any Indian hospital's daily ops reporting.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'WhatsApp KPI intake' });
+
+const SCENARIOS = {
+d1: `[07:55] OT Supervisor - Anil: OT1 first case 8:40 start, 6 cases, 1 cancelled pt not fasting
+[08:02] OT Supervisor - Anil: OT2 first case 8:15, 4 cases today, no cancellation
+[08:10] F&B Supervisor - Beena: breakfast trays 198, 2 complaints cold food
+[08:15] F&B Supervisor - Beena: lunch trays est 212 today
+[08:20] Stores Supervisor - Rajesh: stockout: 3way cannula, size 18G syringes low stock
+[08:22] Stores Supervisor - Rajesh: indent raised for both items, will reach by evening
+[08:40] OT Supervisor - Anil: OT3 not functioning today, AC repair, 2 cases shifted to OT1
+[09:05] F&B Supervisor - Beena: 3 special diet trays added (diabetic x2, renal x1)
+[09:10] OT Supervisor - Anil: correction OT1 total cases now 8 after shift from OT3
+[09:30] Stores Supervisor - Rajesh: gloves size M running low, indent raised
+[09:45] F&B Supervisor - Beena: lunch trays served 210, 1 complaint late delivery ward 4th floor
+[10:00] OT Supervisor - Anil: all OT closed by 3pm today, holiday tomorrow`,
+d2: `[14:10] OT Supervisor - Suma: OT1 afternoon list started 2:20, 3 cases planned
+[14:30] Stores Supervisor - Manoj: syringe 10ml stockout reported by ICU
+[14:35] Stores Supervisor - Manoj: indent raised, ETA tomorrow morning
+[15:00] F&B Supervisor - Divya: dinner trays est 205
+[15:20] OT Supervisor - Suma: OT2 1 case cancelled, surgeon unavailable
+[15:45] F&B Supervisor - Divya: dinner trays served 201, 4 complaints - 2 cold food 2 wrong diet
+[16:10] OT Supervisor - Suma: OT1 all 3 cases done by 5:30, no cancellation
+[16:30] Stores Supervisor - Manoj: BP cuff adult size shortage in ward 2
+[17:00] F&B Supervisor - Divya: correction dinner trays served actually 198 not 201
+[17:15] OT Supervisor - Suma: OT2 net 3 cases done after 1 cancellation, 1 added emergency`
+};
+
+function extractUnit(line) {
+  if (/OT/i.test(line)) return 'OT';
+  if (/F&B/i.test(line)) return 'F&B';
+  if (/Stores/i.test(line)) return 'Stores';
+  return 'Other';
+}
+
+function renderKPIs(lines, counts) {
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Messages pasted</div><div class="value">${lines.length}</div></div>
+    <div class="kpi"><div class="label">OT messages</div><div class="value">${counts.OT || 0}</div></div>
+    <div class="kpi"><div class="label">F&amp;B messages</div><div class="value">${counts['F&B'] || 0}</div></div>
+    <div class="kpi"><div class="label">Stores messages</div><div class="value">${counts.Stores || 0}</div></div>`;
+}
+
+function renderTable(counts) {
+  const tbody = document.querySelector('#unitTable tbody');
+  tbody.innerHTML = Object.entries(counts).map(([unit, n]) =>
+    `<tr><td>${Hub.esc(unit)}</td><td class="num">${n}</td></tr>`).join('');
+}
+
+function recompute() {
+  const text = document.getElementById('extract').value;
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const counts = {};
+  lines.forEach(l => { const u = extractUnit(l); counts[u] = (counts[u] || 0) + 1; });
+  renderKPIs(lines, counts);
+  renderTable(counts);
+  return { lines, counts };
+}
+
+function loadScenario(key) {
+  document.getElementById('extract').value = SCENARIOS[key];
+  recompute();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('extract').addEventListener('input', recompute);
+loadScenario('d1');
+
+const DEMO = {
+d1: `## Clean structured table
+
+| Date | Unit | KPI | Value | Unit of measure | Note |
+|---|---|---|---|---|---|
+| 2026-09-27 | OT1 | First case start time | 08:40 | hh:mm | Later corrected to include 2 shifted cases |
+| 2026-09-27 | OT1 | Cases done | 8 | count | Original 6 + 2 shifted from OT3; 1 cancelled (patient not fasting) |
+| 2026-09-27 | OT2 | First case start time | 08:15 | hh:mm | No cancellations |
+| 2026-09-27 | OT2 | Cases done | 4 | count | — |
+| 2026-09-27 | OT3 | Status | Not functioning | text | AC repair; 2 cases shifted to OT1 |
+| 2026-09-27 | All OT | Closure time | 15:00 | hh:mm | Holiday next day |
+| 2026-09-27 | F&B | Breakfast trays served | 198 | count | 2 complaints, cold food |
+| 2026-09-27 | F&B | Lunch trays served | 210 | count | Estimate was 212; 1 complaint, late delivery (4th floor) |
+| 2026-09-27 | F&B | Special diet trays | 3 | count | Diabetic x2, renal x1 |
+| 2026-09-27 | Stores | Stockout — 3-way cannula | 1 | item flagged | Indent raised, ETA evening |
+| 2026-09-27 | Stores | Low stock — 18G syringes | 1 | item flagged | Indent raised, ETA evening |
+| 2026-09-27 | Stores | Low stock — gloves size M | 1 | item flagged | Indent raised, ETA not stated — confirm with sender |
+
+## Missing/ambiguous values to confirm with sender
+
+- **OT1 case count:** Two messages give different totals (6, then corrected to 8 after shift from OT3). Table uses the corrected 8, but confirm this is final with Anil before circulating.
+- **Lunch trays served vs estimate:** 212 was an estimate at 08:15; actual served (210) came later — confirm 210 is the final served count, not itself provisional.
+- **Gloves size M indent ETA:** Not stated (unlike the other two stockouts, which have an evening ETA) — needs a follow-up message to Rajesh.
+- **OT3 downtime duration:** "AC repair" given as reason but no expected resolution time — useful for tomorrow's OT planning, should be asked.
+
+## Proposed fixed daily-entry form (per unit)
+
+**OT Supervisor — Daily OT Log** (one row per OT per shift): OT number | First case start time | Cases scheduled | Cases done | Cases cancelled | Cancellation reason (dropdown: patient not fit/fasting, surgeon unavailable, equipment, other) | OT closure time | Remarks.
+
+**F&B Supervisor — Daily Meal Log** (one row per meal): Meal (breakfast/lunch/dinner) | Trays estimated | Trays served | Complaints count | Complaint type (dropdown: cold food, late delivery, wrong diet, other) | Special diet trays (by type) | Remarks.
+
+**Stores Supervisor — Daily Stock Log** (one row per item flagged): Item name | Status (dropdown: stockout, low stock) | Ward/department reporting | Indent raised (Y/N) | Expected resupply date/time | Remarks.
+
+A single shared web form (even a basic structured form replacing the WhatsApp group) with dropdowns for reason/complaint codes would remove the need to manually parse free-text messages each morning, and would make the "confirm with sender" follow-ups above unnecessary going forward.`,
+
+d2: `## Clean structured table
+
+| Date | Unit | KPI | Value | Unit of measure | Note |
+|---|---|---|---|---|---|
+| 2026-09-27 | OT1 | Afternoon list start time | 14:20 | hh:mm | 3 cases planned |
+| 2026-09-27 | OT1 | Cases done | 3 | count | Completed by 17:30, no cancellation |
+| 2026-09-27 | OT2 | Cases planned vs done | 3 net done | count | 1 cancelled (surgeon unavailable), 1 emergency case added |
+| 2026-09-27 | F&B | Dinner trays served | 198 | count | Corrected from an earlier reported 201 |
+| 2026-09-27 | F&B | Dinner tray complaints | 4 | count | 2 cold food, 2 wrong diet |
+| 2026-09-27 | Stores | Stockout — 10ml syringe (ICU) | 1 | item flagged | Indent raised, ETA next morning |
+| 2026-09-27 | Stores | Shortage — BP cuff, adult size (Ward 2) | 1 | item flagged | Indent status not stated — confirm with sender |
+
+## Missing/ambiguous values to confirm with sender
+
+- **Dinner trays served — corrected figure:** Original message said 201, a later message corrected it to 198. Table uses the corrected 198; confirm with Divya this is truly final before it goes into the daily note.
+- **Dinner trays estimated vs served:** Estimate was 205, actual reported as 198 (a gap of 7) — worth a one-line reason (no-shows, discharge before dinner, etc) for the F&B report.
+- **BP cuff shortage — indent status:** Unlike the syringe stockout, no indent/ETA was mentioned for the BP cuff — needs a follow-up to Manoj.
+- **OT2 case sequencing:** Message order suggests 1 cancellation then 1 added emergency case, netting to 3 — confirm the net figure (3) is what should be reported as "cases done," not the gross list count.
+
+## Proposed fixed daily-entry form (per unit)
+
+**OT Supervisor — Daily OT Log** (one row per OT per shift): OT number | List start time | Cases planned | Cases cancelled | Cancellation reason (dropdown) | Emergency cases added | Cases done (net) | List closure time | Remarks.
+
+**F&B Supervisor — Daily Meal Log** (one row per meal): Meal | Trays estimated | Trays served | If served < estimated, reason (dropdown: patient discharged, NPO, other) | Complaints count | Complaint type (dropdown) | Remarks.
+
+**Stores Supervisor — Daily Stock Log** (one row per item flagged): Item name | Reporting ward/unit | Status (stockout/shortage) | Indent raised (Y/N) | Expected resupply date/time | Remarks.
+
+Replacing the WhatsApp thread with this structured daily form for each supervisor would remove same-day back-and-forth to resolve corrections (like the dinner-tray figure change) and give Operations a clean, timestamped log instead of a scrolling chat.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const { lines, counts } = recompute();
+  const text = document.getElementById('extract').value;
+  const countSummary = Object.entries(counts).map(([u,n]) => `${u}: ${n} messages`).join(', ');
+  const prompt = `You are assisting the Operations/IT & Data Governance team at VPS Lakeshore Hospital, Kochi with turning pasted WhatsApp group messages from unit supervisors (OT, F&B, Stores) into structured daily KPI data.
+
+Pasted WhatsApp messages:
+${text}
+
+Message counts per unit (already computed): ${countSummary}
+
+Provide: (1) a clean structured table with columns Date, Unit, KPI, Value, Unit of measure, Note, (2) missing or ambiguous values that need to be confirmed with the sender before the note is finalised, (3) a proposed fixed daily-entry form per unit (OT, F&B, Stores) so the WhatsApp step can eventually be replaced. Resolve any corrections mentioned later in the thread (e.g. a supervisor correcting an earlier figure) and use the corrected value, noting the correction.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are a hospital operations analyst at a large Indian multi-specialty hospital, expert in turning informal supervisor WhatsApp updates into clean daily operational KPI reporting.',
+    prompt, demo: DEMO[key], manualMinutes: 60,
+  });
+});
+</script>
+</body>
+</html>
