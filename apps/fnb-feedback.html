@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food service feedback &amp; waste</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Food service feedback &amp; waste</h1>
+    <p>Turn a week of tray feedback, plate-waste and canteen sales data into themes, portion/menu changes and a kitchen action list.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample input</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="normal">Regular week</option>
+          <option value="bad">Complaint-heavy week (breakfast delays)</option>
+        </select>
+      </div>
+      <label>Tray feedback, waste &amp; sales data (editable)</label>
+      <textarea id="input" rows="18"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+      <p class="footer-note" style="margin-top:10px">Human in the loop: therapeutic-diet menu changes need the Chief Dietitian's sign-off before the kitchen implements them.</p>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic feedback comments and figures for demonstration only. No real patient identifiers.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Housekeeping & F&B', title: 'Food service feedback & waste' });
+
+const SCENARIOS = {
+normal: `TRAY FEEDBACK COMMENTS (week of Sep 15-21)
+- "Food was okay, thoda late vannu breakfast" (Ward 3B, Mon)
+- "Rasam superb, but chicken curry was cold by the time it reached" (Ward 2A, Mon)
+- "Diabetic diet chapati was too thick, difficult to chew" (Ward 4C, Tue)
+- "Good taste, portion size perfect" (Ward 1A, Tue)
+- "Lunch rice was cold, curry good" (Ward 3B, Wed)
+- "Nurse said low-salt diet tasted bland, patient didn't finish" (Ward 4C, Wed)
+- "Dinner came on time today, thanks" (Ward 2A, Thu)
+- "Breakfast idli was hard, upma was better" (Ward 1A, Fri)
+- "Portion too small for post-op patient, still hungry" (Ward 2A, Fri)
+- "Overall satisfied, staff was polite" (Ward 3B, Sat)
+
+TRAY RETURN COUNTS: Breakfast 210, Lunch 245, Dinner 230 (avg/day across week)
+
+PLATE-WASTE (kg, average per day)
+Meal | Menu item | Waste kg
+Breakfast | Idli/Sambar | 4.2
+Breakfast | Upma | 1.5
+Lunch | Rice + Sambar | 3.0
+Lunch | Chicken curry (non-veg tray) | 5.8
+Lunch | Diabetic thali | 4.5
+Dinner | Chapati + curry | 2.8
+Dinner | Low-salt/renal diet tray | 5.2
+
+CANTEEN SALES (staff/visitor canteen, week total)
+Tea/coffee: ₹42,000 | Snacks: ₹58,000 | Meals (thali): ₹1,25,000 | Total: ₹2,25,000`,
+bad: `TRAY FEEDBACK COMMENTS (week of Sep 8-14)
+- "Breakfast 40 min late every day this week, patients complaining" (Ward 2A, Mon)
+- "Idli cold and hard, sambar watery" (Ward 3B, Mon)
+- "Diabetic diet same chapati-sabzi every single day, patient bored, not eating" (Ward 4C, Mon)
+- "Low-salt diet very bland, mother-in-law refusing to eat, please season better" (Ward 4C, Tue)
+- "Breakfast still late, 9:15 for a 8 AM slot" (Ward 1A, Tue)
+- "Lunch chicken curry too spicy for post-op patient" (Ward 2A, Wed)
+- "Tray came with wrong diet card, veg patient got non-veg" (Ward 3B, Wed)
+- "Breakfast late again, cold tea" (Ward 2A, Thu)
+- "Portion for renal diet patient too small, still hungry after" (Ward 4C, Thu)
+- "Good service today for once, on time" (Ward 1A, Fri)
+
+TRAY RETURN COUNTS: Breakfast 195, Lunch 240, Dinner 225 (avg/day across week)
+
+PLATE-WASTE (kg, average per day)
+Meal | Menu item | Waste kg
+Breakfast | Idli/Sambar | 7.5
+Breakfast | Upma | 2.0
+Lunch | Rice + Sambar | 3.2
+Lunch | Chicken curry (non-veg tray) | 4.0
+Lunch | Diabetic thali | 6.8
+Dinner | Chapati + curry | 3.0
+Dinner | Low-salt/renal diet tray | 7.2
+
+CANTEEN SALES (staff/visitor canteen, week total)
+Tea/coffee: ₹38,500 | Snacks: ₹51,000 | Meals (thali): ₹1,08,000 | Total: ₹1,97,500`,
+};
+
+const COST_PER_KG = 180; // approx blended food cost per kg, ₹
+
+function parseWaste(text) {
+  const rows = [];
+  text.split('\n').forEach(l => {
+    const m = l.match(/^(Breakfast|Lunch|Dinner)\s*\|\s*(.+?)\s*\|\s*([\d.]+)\s*$/i);
+    if (m) rows.push({ meal: m[1], item: m[2].trim(), kg: Number(m[3]) });
+  });
+  return rows;
+}
+function parseReturns(text) {
+  const m = text.match(/Breakfast\s*(\d+).*Lunch\s*(\d+).*Dinner\s*(\d+)/is);
+  return m ? { b: Number(m[1]), l: Number(m[2]), d: Number(m[3]) } : { b: 0, l: 0, d: 0 };
+}
+
+function computeKPIs() {
+  const text = document.getElementById('input').value;
+  const waste = parseWaste(text);
+  const returns = parseReturns(text);
+  const totalWasteKg = waste.reduce((a, r) => a + r.kg, 0);
+  const byMeal = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+  waste.forEach(r => byMeal[r.meal] = (byMeal[r.meal] || 0) + r.kg);
+  const top = [...waste].sort((a, b) => b.kg - a.kg).slice(0, 3);
+  const totalTrays = returns.b + returns.l + returns.d;
+  const wastePct = totalTrays ? ((totalWasteKg * 1000) / (totalTrays * 400) * 100).toFixed(1) : '—'; // assume ~400g/tray baseline
+  const weeklyCost = Math.round(totalWasteKg * 7 * COST_PER_KG);
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="label">Total waste/day</div><div class="value">${totalWasteKg.toFixed(1)} kg</div></div>
+    <div class="kpi"><div class="label">Est. waste %</div><div class="value">${wastePct}%</div></div>
+    <div class="kpi"><div class="label">Worst meal (waste)</div><div class="value" style="font-size:1.1rem">${Object.entries(byMeal).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—'}</div></div>
+    <div class="kpi"><div class="label">Top wasted item</div><div class="value" style="font-size:1.1rem">${top[0]?.item || '—'}</div></div>
+    <div class="kpi"><div class="label">Est. weekly waste cost</div><div class="value">${Hub.inr(weeklyCost)}</div></div>
+    <div class="kpi"><div class="label">Trays served/day (avg)</div><div class="value">${totalTrays}</div></div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('input').value = SCENARIOS[key];
+  computeKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('input').addEventListener('input', computeKPIs);
+loadScenario('normal');
+
+const DEMO = {
+normal: `## Themes from feedback
+
+1. **Temperature complaints (moderate).** Chicken curry and lunch rice arriving cold twice this week — likely a trolley-hold-time issue on the Ward 2A/3B route, not a cooking problem.
+2. **Therapeutic diet palatability.** Diabetic chapati "too thick", low-salt diet "bland" — recurring theme, not a one-off.
+3. **Portion size for recovering patients.** One post-op patient found portions too small; general trays rated fine on size.
+4. **Breakfast texture.** Idli "hard" once — worth checking steaming time, minor compared to other weeks.
+
+## Menu / portion changes
+
+- Thin the diabetic-diet chapati and reduce steaming batch size for better texture retention.
+- Season low-salt/renal trays with permitted herbs (curry leaves, lemon, cumin) rather than salt substitutes to improve acceptance without breaching the diet order — **route through the dietitian before changing the recipe card.**
+- Offer a modest second-helping option for post-op/high-calorie trays.
+
+## Cost of waste
+
+At ~180/kg blended food cost, daily plate waste (~27 kg across meals) costs roughly ₹4,800/day, or **about ₹34,000/week** — the diabetic thali (4.5 kg/day) and low-salt/renal tray (5.2 kg/day) together account for over a third of this.
+
+## Kitchen action list
+
+1. Check trolley dispatch timing for Ward 2A/3B lunch route — confirm hot-box seal and delivery sequence.
+2. Reduce diabetic-thali standard portion by ~10% and monitor return rate for 1 week (it is consistently under-eaten as-is).
+3. Trial herb-based seasoning for low-salt trays — **dietitian approval required before rollout.**
+4. Spot-check idli steaming batches on Fridays.
+5. Share weekly waste-cost figure with kitchen staff meeting to build ownership.
+
+**Note:** Any change to diabetic, low-salt/renal or other therapeutic diet menus must be approved by the Chief Dietitian before the kitchen implements it — this is a clinical diet order, not a taste preference.`,
+bad: `## Themes from feedback
+
+1. **Breakfast delivery delays (dominant theme, 4 of 10 comments).** Breakfast running 40-75 minutes late across the week — this is the single biggest driver of dissatisfaction and directly correlates with the week's highest idli/sambar waste (7.5 kg/day, up from a normal ~4 kg).
+2. **Therapeutic diet monotony and blandness.** Diabetic diet repeating the same chapati-sabzi daily; low-salt diet again rated bland — patients are actively refusing trays, not just disliking taste.
+3. **Diet-card mix-up (safety-adjacent).** A veg patient received a non-veg tray — this is a process failure, not a feedback item, and needs same-day root-cause review.
+4. **Portion size for renal diet** — patients reporting hunger, waste data shows renal tray waste nearly doubled (7.2 kg/day) suggesting under-eating rather than over-portioning; likely linked to blandness, not size.
+
+## Menu / portion changes
+
+- Introduce a 2-week rotating menu for diabetic diet (currently repeats daily) — **dietitian approval required.**
+- Season low-salt/renal trays with permitted herbs/lemon — **dietitian approval required** before recipe-card change.
+- Do not reduce renal tray portions — root cause is palatability, not quantity.
+
+## Cost of waste
+
+Daily plate waste is up to ~33.7 kg (from a normal ~27 kg), costing roughly ₹6,070/day or **about ₹42,500/week** — a ₹8,500/week increase over a typical week, concentrated in breakfast and the two therapeutic diets.
+
+## Kitchen action list
+
+1. **Urgent: fix breakfast dispatch timing** — trace why breakfast is running 40-75 min late every day this week; check kitchen start time, trolley loading sequence, and ward round handover overlap.
+2. **Same-day incident review** for the diet-card mix-up (veg/non-veg swap) with the ward pantry staff — this is a patient-safety near-miss, log it formally.
+3. Draft a 2-week rotating diabetic menu for dietitian sign-off.
+4. Trial herb/lemon seasoning for low-salt/renal trays for dietitian sign-off.
+5. Reduce spice level on non-veg lunch curry for post-op trays per feedback.
+6. Report the week's waste-cost increase (+₹8,500) to F&B manager alongside the breakfast-delay fix.
+
+**Note:** Any change to diabetic, low-salt/renal or other therapeutic diet menus must be approved by the Chief Dietitian before the kitchen implements it — this is a clinical diet order, not a taste preference.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const input = document.getElementById('input').value;
+  const prompt = `You are helping the Food & Beverage manager at VPS Lakeshore Hospital, Kochi review a week of patient tray feedback and plate-waste data.
+
+Input data:
+${input}
+
+Provide: (1) themes from the feedback comments (temperature, timing, therapeutic diet palatability, portion size, safety issues), (2) suggested menu/portion changes, (3) estimated cost of waste in ₹ (use ₹180/kg blended food cost unless the data suggests otherwise), (4) a kitchen action list. Clearly flag that any therapeutic diet (diabetic, low-salt/renal) menu or recipe change needs the dietitian's approval before the kitchen implements it.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital Food & Beverage manager at a 350-bed Kerala hospital, working closely with clinical nutrition/dietetics on patient meal service quality.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

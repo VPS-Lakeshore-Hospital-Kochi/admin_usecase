@@ -2,7 +2,7 @@
 
 **Live:** https://vps-lakeshore-hospital-kochi.github.io/admin_usecase/ (served from the `gh-pages` branch, which `.github/workflows/sync-gh-pages.yml` keeps in step with `main` on every merge)
 
-39 working prototypes across 12 departments showing how the non-clinical departments of VPS Lakeshore Hospital, Kochi can use Claude.
+49 working prototypes across 18 departments showing how the non-clinical departments of VPS Lakeshore Hospital, Kochi can use Claude.
 Static HTML — no build step, no server-side code.
 
 | Department | Prototype | Page |
@@ -46,6 +46,16 @@ Static HTML — no build step, no server-side code.
 | IT & Data Governance | Master data steward assistant | `apps/master-data.html` |
 | IT & Data Governance | Patient identity de-duplication | `apps/patient-dedup.html` |
 | IT & Data Governance | WhatsApp KPI intake | `apps/ops-intake.html` |
+| IT & Data Governance | IT helpdesk triage & answers | `apps/it-helpdesk.html` |
+| IT & Data Governance | User access review | `apps/access-review.html` |
+| Medical Records | Record completeness audit | `apps/mrd-completeness.html` |
+| Medical Records | Records release desk | `apps/mrd-release.html` |
+| Housekeeping & F&B | Room turnaround planner | `apps/housekeeping-turnaround.html` |
+| Housekeeping & F&B | Food service feedback & waste | `apps/fnb-feedback.html` |
+| Security | Security incident & visitor log review | `apps/security-log.html` |
+| Transport & Ambulance | Ambulance trip analyser | `apps/ambulance-log.html` |
+| CSR | CSR project reporter | `apps/csr-report.html` |
+| Training & Academics | Mandatory training planner | `apps/training-planner.html` |
 
 ★ = flagship. Also: [`governance.html`](governance.html) — principles, data rules, approval tiers, phased rollout and an hours-saved estimator.
 

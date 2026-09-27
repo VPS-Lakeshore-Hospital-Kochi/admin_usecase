@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mandatory training planner</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Mandatory training planner</h1>
+    <p>Check the staff training register against validity rules and get Claude to build the next refresher batch schedule.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample training register</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="q3">Q3 review — mixed wards</option>
+          <option value="q4">Q4 review — heavy overdue backlog</option>
+        </select>
+      </div>
+      <label>Rules: Fire safety 1 yr · BLS 2 yrs · Infection control 1 yr · POSH 1 yr</label>
+      <label>Register (editable, one row per line)</label>
+      <textarea id="log" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap"></div>
+
+  <p class="footer-note">Human in the loop: batches confirmed by the Head of Training &amp; Academics before manager notifications go out. All employee IDs and names are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Training & Academics', title: 'Mandatory training planner' });
+
+const TODAY = new Date('2026-09-27');
+const VALIDITY = { fire: 365, bls: 730, ic: 365, posh: 365 };
+
+const SCENARIOS = {
+q3: `EmpID | Name | Dept | Role | Fire | BLS | IC | POSH | Shift
+E1042 | Anu Thomas | ICU | Staff Nurse | 2025-11-10 | 2025-02-14 | 2026-08-01 | 2025-12-20 | Rotating
+E1043 | Ravi Krishnan | Emergency | Duty Doctor | 2025-06-02 | 2024-09-18 | 2026-01-15 | 2025-10-05 | Night
+E1044 | Sherin Jacob | Ward 4 | Staff Nurse | 2026-03-01 | 2025-05-20 | 2025-07-10 | 2026-02-11 | Day
+E1045 | Manoj Pillai | Housekeeping | Supervisor | 2025-01-20 | - | 2025-08-15 | 2025-09-30 | Day
+E1046 | Divya Nair | OT | OT Technician | 2025-12-05 | 2025-11-02 | 2026-04-01 | 2025-11-18 | Rotating
+E1047 | Suresh Kumar | Security | Guard | 2025-04-12 | - | - | 2025-08-22 | Night
+E1048 | Meera Varghese | ICU | Staff Nurse | 2025-10-30 | 2024-12-01 | 2025-09-05 | 2026-01-09 | Rotating
+E1049 | Arun Das | Emergency | Staff Nurse | 2026-01-18 | 2025-03-25 | 2025-06-20 | 2025-07-14 | Night
+E1050 | Fathima Beevi | Ward 2 | Staff Nurse | 2025-08-09 | 2025-06-30 | 2026-05-12 | 2025-12-01 | Day
+E1051 | Jose Mathew | Dietary | Cook | 2025-05-16 | - | 2025-09-20 | 2025-06-11 | Day
+E1052 | Priya Menon | Pharmacy | Pharmacist | 2026-02-20 | 2025-01-10 | 2026-03-05 | 2025-08-30 | Day
+E1053 | Vishnu Nambiar | ICU | Staff Nurse | 2025-09-01 | 2024-10-15 | 2025-05-28 | 2026-03-02 | Rotating
+E1054 | Lekshmi Pillai | Ward 4 | Staff Nurse | 2025-07-22 | 2025-08-19 | 2025-10-10 | 2025-05-05 | Day
+E1055 | Tomy Abraham | Maintenance | Technician | 2025-03-14 | - | 2025-12-01 | 2025-09-17 | Day
+E1056 | Nisha Kurian | OT | OT Technician | 2026-04-05 | 2025-09-14 | 2025-08-28 | 2026-01-25 | Rotating`,
+q4: `EmpID | Name | Dept | Role | Fire | BLS | IC | POSH | Shift
+E2001 | Aparna Raj | ICU | Staff Nurse | 2025-06-15 | 2024-05-10 | 2025-05-01 | 2025-04-20 | Rotating
+E2002 | Bineesh Kumar | Emergency | Duty Doctor | 2025-05-01 | 2024-08-02 | 2025-04-15 | 2025-03-11 | Night
+E2003 | Chandini Sasi | Ward 4 | Staff Nurse | 2025-04-20 | 2024-10-30 | 2025-06-02 | 2025-05-19 | Day
+E2004 | Deepak Menon | Housekeeping | Supervisor | 2025-03-10 | - | 2025-03-25 | 2025-02-14 | Day
+E2005 | Elsamma Joseph | OT | OT Technician | 2025-07-01 | 2024-06-18 | 2025-05-10 | 2025-06-08 | Rotating
+E2006 | Farhan Ali | Security | Guard | 2025-02-05 | - | - | 2025-01-30 | Night
+E2007 | Geetha Warrier | ICU | Staff Nurse | 2025-05-28 | 2024-11-11 | 2025-06-20 | 2025-05-02 | Rotating
+E2008 | Hari Prasad | Emergency | Staff Nurse | 2025-06-30 | 2024-07-09 | 2025-05-15 | 2025-04-28 | Night
+E2009 | Indu Gopal | Ward 2 | Staff Nurse | 2025-04-09 | 2024-09-05 | 2025-03-30 | 2025-06-15 | Day
+E2010 | Jibin Thomas | Dietary | Cook | 2025-03-16 | - | 2025-04-20 | 2025-02-11 | Day
+E2011 | Kavya Suresh | Pharmacy | Pharmacist | 2025-07-20 | 2024-06-10 | 2025-05-05 | 2025-06-30 | Day
+E2012 | Libin Varghese | ICU | Staff Nurse | 2025-05-01 | 2024-08-15 | 2025-03-28 | 2025-07-02 | Rotating
+E2013 | Meenakshi Pillai | Ward 4 | Staff Nurse | 2025-06-22 | 2024-10-19 | 2025-06-10 | 2025-05-05 | Day
+E2014 | Nithin Abraham | Maintenance | Technician | 2025-03-14 | - | 2025-04-01 | 2025-03-17 | Day
+E2015 | Omana Kurian | OT | OT Technician | 2025-04-05 | 2024-09-14 | 2025-04-28 | 2025-05-25 | Rotating`,
+};
+
+function parseDate(s) { return s === '-' ? null : new Date(s); }
+function daysUntilDue(dateStr, validity) {
+  const d = parseDate(dateStr);
+  if (!d) return { status: 'none' };
+  const due = new Date(d.getTime() + validity * 86400000);
+  const diff = Math.round((due - TODAY) / 86400000);
+  if (diff < 0) return { status: 'overdue', diff, due };
+  if (diff <= 30) return { status: 'due30', diff, due };
+  return { status: 'ok', diff, due };
+}
+
+function parseLog(text) {
+  const lines = text.trim().split('\n').filter(l => l.includes('|'));
+  lines.shift();
+  return lines.map(l => {
+    const c = l.split('|').map(s => s.trim());
+    return { id: c[0], name: c[1], dept: c[2], role: c[3], fire: c[4], bls: c[5], ic: c[6], posh: c[7], shift: c[8] };
+  });
+}
+
+const COURSES = [['fire', 'Fire safety'], ['bls', 'BLS'], ['ic', 'Infection control'], ['posh', 'POSH']];
+
+function renderAll() {
+  const rows = parseLog(document.getElementById('log').value);
+  let overdue = 0, due30 = 0;
+  const byDeptCourse = {};
+  const enriched = rows.map(r => {
+    const statuses = {};
+    COURSES.forEach(([key]) => {
+      const s = daysUntilDue(r[key], VALIDITY[key]);
+      statuses[key] = s;
+      if (s.status === 'overdue') overdue++;
+      if (s.status === 'due30') due30++;
+      if (s.status === 'overdue' || s.status === 'due30') {
+        byDeptCourse[r.dept] = byDeptCourse[r.dept] || {};
+        byDeptCourse[r.dept][key] = (byDeptCourse[r.dept][key] || 0) + 1;
+      }
+    });
+    return { ...r, statuses };
+  });
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Staff on register</div><div class="value">${rows.length}</div></div>
+    <div class="kpi"><div class="label">Overdue certifications</div><div class="value">${overdue}</div></div>
+    <div class="kpi"><div class="label">Due within 30 days</div><div class="value">${due30}</div></div>
+    <div class="kpi"><div class="label">Depts with overdue staff</div><div class="value">${Object.keys(byDeptCourse).length}</div></div>
+  `;
+
+  const tag = s => s.status === 'overdue' ? `<span class="tag bad">${Math.abs(s.diff)}d overdue</span>`
+    : s.status === 'due30' ? `<span class="tag warn">due in ${s.diff}d</span>`
+    : s.status === 'none' ? `<span class="tag">n/a</span>`
+    : `<span class="tag ok">ok</span>`;
+
+  document.getElementById('tableWrap').innerHTML = `<table>
+    <thead><tr><th>Emp</th><th>Dept</th><th>Fire</th><th>BLS</th><th>IC</th><th>POSH</th></tr></thead>
+    <tbody>${enriched.map(r => `<tr>
+      <td>${Hub.esc(r.name)}<br><span class="small">${Hub.esc(r.id)} · ${Hub.esc(r.role)}</span></td>
+      <td>${Hub.esc(r.dept)}</td>
+      <td>${tag(r.statuses.fire)}</td>
+      <td>${tag(r.statuses.bls)}</td>
+      <td>${tag(r.statuses.ic)}</td>
+      <td>${tag(r.statuses.posh)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('log').value = SCENARIOS[key];
+  renderAll();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('log').addEventListener('input', renderAll);
+loadScenario('q3');
+
+const DEMO = {
+q3: `## Batch schedule (capacity 20/batch, shift-friendly)
+
+| Batch | Date | Time | Course(s) | Capacity used |
+|---|---|---|---|---|
+| Batch A | 6 Oct 2026 | 09:00–13:00 | Infection control + POSH (day shift) | 8 |
+| Batch B | 8 Oct 2026 | 14:00–18:00 | Fire safety (afternoon, for rotating/night staff) | 9 |
+| Batch C | 13 Oct 2026 | 09:00–13:00 | BLS refresher (2-yr cycle) | 5 |
+
+## Who goes in which batch
+
+**Batch A (IC + POSH, day shift):** Manoj Pillai (Housekeeping — POSH overdue), Suresh Kumar (Security — POSH overdue), Jose Mathew (Dietary — POSH overdue), Tomy Abraham (Maintenance — POSH due soon), plus IC-due staff from ICU/Ward as capacity allows.
+
+**Batch B (Fire safety, afternoon slot for rotating/night crews):** Ravi Krishnan (Emergency, Night), Suresh Kumar (Security, Night), Jose Mathew (Dietary), Manoj Pillai (Housekeeping), Tomy Abraham (Maintenance), and Meera Varghese (ICU, Rotating) — timed to overlap shift handover so night staff don't lose a full day off.
+
+**Batch C (BLS, 2-year cycle):** Ravi Krishnan and Meera Varghese (both 2024 BLS dates, furthest overdue), plus 3 more staff approaching the 2-year mark.
+
+## Reminder message to managers
+
+*Subject: Mandatory training renewals due — action needed by 15 Oct 2026*
+
+Dear [Manager], the attached list shows staff in your department whose Fire Safety, BLS, Infection Control or POSH certification is overdue or due within 30 days. Please release the named staff for their scheduled batch (see attached schedule) and confirm attendance to Training & Academics by [date]. Staff who miss their slot without prior notice will be auto-enrolled in the next available batch. — Training & Academics
+
+## Fire safety quiz (5 questions, MCQ)
+
+1. What is the first action on discovering a fire in a patient ward?
+   a) Extinguish it yourself immediately b) **Raise the alarm and alert the nearest staff/security** c) Call the fire department only d) Evacuate visitors first
+2. Which fire extinguisher type is used for electrical fires?
+   a) Water b) Foam c) **CO2** d) Wet chemical
+3. Under the hospital's fire response protocol (RACE), what does the "R" stand for?
+   a) Report b) **Rescue** c) Restrict d) Return
+4. Patients on a ventilator during a fire evacuation should be:
+   a) Left until last b) **Moved with portable battery-backed equipment by trained staff first** c) Evacuated without equipment d) Not moved under any circumstance
+5. How often must fire safety refresher training be completed per hospital policy?
+   a) Every 6 months b) **Every 1 year** c) Every 2 years d) Only once at joining
+
+**Answer key:** 1-b, 2-c, 3-b, 4-b, 5-b`,
+q4: `## Batch schedule (capacity 20/batch, shift-friendly)
+
+| Batch | Date | Time | Course(s) | Capacity used |
+|---|---|---|---|---|
+| Batch A | 1 Oct 2026 | 09:00–13:00 | Fire safety (all overdue, day shift) | 11 |
+| Batch B | 1 Oct 2026 | 14:00–18:00 | Fire safety (overdue, rotating/night) | 4 |
+| Batch C | 3 Oct 2026 | 09:00–13:00 | Infection control + POSH | 15 |
+| Batch D | 7 Oct 2026 | 09:00–13:00 | BLS refresher (all overdue, 2-yr cycle) | 15 |
+
+Given the scale of the backlog (nearly every staff member overdue on at least 2 courses), recommend running Batches A–D across one week rather than spreading over the month, to close the compliance gap before the next NABH surveillance visit.
+
+## Who goes in which batch
+
+**Batch A/B (Fire safety):** All 15 staff are overdue — split by shift: day-shift staff (Chandini, Deepak, Elsamma-adjust, Geetha, Indu, Jibin, Kavya, Meenakshi, Nithin, Omana) in Batch A; night/rotating staff (Bineesh, Farhan, Hari, Libin) in Batch B.
+
+**Batch C (IC + POSH):** All 15 staff overdue on both — run as a combined half-day session since content overlaps in the induction module.
+
+**Batch D (BLS):** All 15 staff overdue (dates from mid-2024) — highest priority given clinical risk; split into two 45-minute practical slots of 7-8 staff each to keep hands-on mannequin time adequate.
+
+## Reminder message to managers
+
+*Subject: URGENT — mandatory certifications overdue across all departments*
+
+Dear [Manager], our records show every staff member in your team has at least one overdue mandatory certification (Fire Safety, BLS, Infection Control or POSH), some by over a year. This must be closed before the next NABH surveillance visit. Please release all named staff for the batch schedule below without exception; escalate any scheduling conflict to Training & Academics directly. — Training & Academics
+
+## Fire safety quiz (5 questions, MCQ)
+
+1. Where is the nearest fire assembly point typically indicated?
+   a) On the ID card b) **On the evacuation route signage posted on every floor** c) Only in the fire officer's office d) It is announced only during an actual fire
+2. What is the correct use of a fire extinguisher (PASS method) — what does the second "S" stand for?
+   a) Stop b) Signal c) **Sweep** d) Secure
+3. In a hospital, which area typically has the highest fire-load risk?
+   a) Reception b) **Kitchen/dietary and OT areas** c) Corridors d) Parking
+4. During a fire drill, staff should:
+   a) Ignore it if busy with patients b) **Follow the drill as if it were real, per department SOP** c) Only participate if off-duty d) Wait for written orders each time
+5. How often must fire safety refresher training be completed per hospital policy?
+   a) Every 6 months b) **Every 1 year** c) Every 2 years d) Only once at joining
+
+**Answer key:** 1-b, 2-c, 3-b, 4-b, 5-b`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const log = document.getElementById('log').value;
+  const prompt = `You are assisting the Training & Academics team at VPS Lakeshore Hospital, Kochi with mandatory staff certification renewals (validity: Fire safety 1 yr, BLS 2 yrs, Infection control 1 yr, POSH 1 yr). Today's date: 27 Sep 2026.
+
+Staff training register:
+${log}
+
+Provide: (1) a batch schedule (dates, capacity 20/batch, shift-friendly slots covering day/night/rotating staff), (2) which staff go in which batch and why, (3) a reminder message to department managers, and (4) a 5-question multiple-choice fire safety quiz with an answer key.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital Training & Academics coordinator at a 350-bed Kerala hospital, responsible for NABH-mandated staff certifications.',
+    prompt, demo: DEMO[key], manualMinutes: 120,
+  });
+});
+</script>
+</body>
+</html>

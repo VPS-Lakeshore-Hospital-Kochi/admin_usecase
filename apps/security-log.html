@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security incident &amp; visitor log review</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Security incident &amp; visitor log review</h1>
+    <p>Summarise a week of security log entries into counts, incidents needing a formal report, and shift/patrol changes.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample input</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="normal">Regular week</option>
+          <option value="busy">Busy week (ER incident + police request)</option>
+        </select>
+      </div>
+      <label>Security log entries, one per line (editable)</label>
+      <textarea id="input" rows="18"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+      <p class="footer-note" style="margin-top:10px">Human in the loop: Chief Security Officer / Hospital Administrator approves any CCTV footage release, and countersigns formal incident reports.</p>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic log entries and names for demonstration only. No real visitor or patient identifiers.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Security', title: 'Security incident & visitor log review' });
+
+const SCENARIOS = {
+normal: `Mon 09:40 | Day | Visitor overstay in ICU waiting area beyond permitted slot, attendant counselled and left
+Mon 22:10 | Night | Unattended bag found near main lobby, bomb-threat protocol not invoked, owner (visitor) located within 15 min
+Tue 14:20 | Day | Vehicle blocking ambulance bay entrance, owner paged, moved within 5 min
+Tue 19:00 | Evening | Contractor (AC maintenance) entered ward floor without valid pass, escorted to security office, pass issued
+Wed 11:05 | Day | Visitor overstay in ICU beyond 15-min slot, second reminder given, complied
+Wed 23:40 | Night | Lost mobile phone reported by inpatient attendant, CCTV check initiated, phone found in canteen
+Thu 16:30 | Evening | Aggressive attendant at ER reception raising voice at billing staff, de-escalated by duty security, no physical altercation
+Fri 10:00 | Day | Vehicle blocking ambulance bay, repeat offender (same registration as Tue), warned formally
+Sat 20:15 | Night | Visitor overstay in ICU, family requested extension for critical patient, allowed with nursing-in-charge approval
+Sun 13:00 | Day | Contractor (biomedical engineer) entered without pass, escorted out, pass process explained`,
+busy: `Mon 08:50 | Day | Visitor overstay in ICU waiting area, attendant counselled
+Mon 21:30 | Night | Unattended bag near OPD block, protocol partially invoked (area cordoned), owner found in 20 min — delay noted
+Tue 15:10 | Day | Vehicle blocking ambulance bay, ambulance delayed by ~3 min reaching bay, driver identified and warned
+Tue 20:45 | Evening | **Aggressive attendant at ER reception escalated to shouting and pushing a security guard**, duty manager called, situation contained after 10 min, guard sustained minor bruise
+Wed 09:15 | Day | Contractor (plumbing) entered ward floor without pass, escorted, pass issued after ID verification
+Wed 17:00 | Evening | **Police station requested CCTV footage of main entrance for Tue 20:00-21:00 (in connection with the ER incident)**
+Thu 12:40 | Day | Visitor overstay in ICU beyond slot, third occurrence this week for same family, formally counselled
+Thu 23:10 | Night | Lost mobile phone reported, CCTV review initiated, not yet located
+Fri 14:00 | Day | Vehicle blocking ambulance bay entrance, moved within 5 min
+Fri 19:20 | Evening | Contractor (elevator maintenance) without pass, escorted out
+Sat 21:00 | Night | Unattended bag near ICU entrance, area cordoned per protocol, owner (attendant) located in 8 min
+Sun 10:30 | Day | Visitor overstay in ICU, allowed extension with nursing approval`,
+};
+
+function parseEntries(text) {
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.split('|').map(s => s.trim());
+    return { day: parts[0] || '', shift: parts[1] || '', desc: parts.slice(2).join(' | ') || '' };
+  });
+}
+function categorize(desc) {
+  const d = desc.toLowerCase();
+  if (d.includes('overstay')) return 'ICU visitor overstay';
+  if (d.includes('unattended bag')) return 'Unattended bag';
+  if (d.includes('aggressive') || d.includes('push')) return 'Aggressive attendant';
+  if (d.includes('ambulance bay')) return 'Ambulance bay blocked';
+  if (d.includes('lost mobile') || d.includes('phone')) return 'Lost property';
+  if (d.includes('cctv') && d.includes('police')) return 'CCTV/police request';
+  if (d.includes('contractor')) return 'Contractor without pass';
+  return 'Other';
+}
+
+function computeKPIs() {
+  const entries = parseEntries(document.getElementById('input').value);
+  const byCat = {}, byShift = {};
+  entries.forEach(e => {
+    const c = categorize(e.desc);
+    byCat[c] = (byCat[c] || 0) + 1;
+    byShift[e.shift] = (byShift[e.shift] || 0) + 1;
+  });
+  const flagged = entries.filter(e => /aggressive|push|police|bomb|escalat/i.test(e.desc)).length;
+  const topCat = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="label">Total entries</div><div class="value">${entries.length}</div></div>
+    <div class="kpi"><div class="label">Categories seen</div><div class="value">${Object.keys(byCat).length}</div></div>
+    <div class="kpi"><div class="label">Most frequent</div><div class="value" style="font-size:1.05rem">${topCat ? topCat[0] : '—'}</div></div>
+    <div class="kpi"><div class="label">Night shift entries</div><div class="value">${byShift['Night'] || 0}</div></div>
+    <div class="kpi"><div class="label">Needing formal report</div><div class="value ${flagged ? 'down' : ''}">${flagged}</div></div>`;
+  const wrap = document.createElement('div');
+  wrap.className = 'card table-wrap';
+  wrap.style.marginTop = '0';
+  wrap.innerHTML = '<h2>Counts by category &amp; shift</h2>' + tableHTML(byCat, byShift);
+  const existing = document.getElementById('catTable');
+  if (existing) existing.replaceWith(wrap); else document.getElementById('kpis').after(wrap);
+  wrap.id = 'catTable';
+}
+function tableHTML(byCat, byShift) {
+  const rows = Object.entries(byCat).map(([c, n]) => `<tr><td>${Hub.esc(c)}</td><td class="num">${n}</td></tr>`).join('');
+  const shiftRows = Object.entries(byShift).map(([s, n]) => `<tr><td>${Hub.esc(s)}</td><td class="num">${n}</td></tr>`).join('');
+  return `<div class="grid cols-2">
+    <table><thead><tr><th>Category</th><th class="num">Count</th></tr></thead><tbody>${rows}</tbody></table>
+    <table><thead><tr><th>Shift</th><th class="num">Count</th></tr></thead><tbody>${shiftRows}</tbody></table>
+  </div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('input').value = SCENARIOS[key];
+  computeKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('input').addEventListener('input', computeKPIs);
+loadScenario('normal');
+
+const DEMO = {
+normal: `## Weekly summary
+
+10 entries this week, no major incidents. Recurring low-level issues: ICU visitor overstays (2), vehicle blocking the ambulance bay (2, one repeat offender), and contractors entering without a pass (2). No aggression, injury, or CCTV/legal requests this week.
+
+## Incidents needing a formal report
+
+- **Fri 10:00 — repeat ambulance-bay obstruction, same vehicle registration as Tuesday.** A pattern with an emergency-access implication warrants a written incident note.
+
+**Draft report:**
+*"On [Tue] and again on [Fri], a private vehicle (same registration) was found blocking the ambulance bay entrance at VPS Lakeshore Hospital. On both occasions the vehicle was moved within 5 minutes of security intervention with no ambulance delay recorded. Given the repeat nature and the safety-critical location, it is recommended the vehicle owner be issued a formal written warning and, if repeated a third time, be referred to hospital administration for parking-privilege review."*
+
+## Patrol / deployment changes
+
+- No change needed to day-shift patrol; night shift handled the unattended-bag and lost-mobile calls smoothly within protocol timeframes.
+- Increase visibility of security personnel near the ICU waiting area during morning rounds (09:00-11:00), when overstay reminders cluster.
+
+## Visitor-policy reminders
+
+- Reissue the ICU visiting-slot reminder at the ward notice board; two overstays this week suggest the current signage is being missed.
+- Remind contractors (via facilities/vendor coordination) that ward-floor access requires a security-issued pass before entry, not after being stopped.
+
+## CCTV / legal note
+
+No footage requests this week. As a standing reminder: any CCTV footage release (to police, insurers, or any external party) requires **Legal/Administration approval** before handover — security should never release footage directly.`,
+busy: `## Weekly summary
+
+12 entries this week, notably busier than usual: an **escalated aggressive-attendant incident at ER involving a security guard being pushed**, and a **police request for CCTV footage** tied to that same incident. Also a repeat family ICU-overstay pattern (3rd occurrence) and an unattended bag near the ICU entrance (more sensitive location than usual).
+
+## Incidents needing a formal report
+
+1. **Tue 20:45 — Aggressive attendant, ER reception, guard pushed (highest priority).** Requires a full incident report with guard's statement, witness details, and medical note for the bruise.
+
+**Draft report:**
+*"On Tuesday at approximately 20:45 hrs, an attendant at the ER reception became verbally aggressive with billing staff, escalating to shouting and physically pushing a security guard on duty. The duty manager was called and the situation was contained within approximately 10 minutes. The security guard sustained a minor bruise; no further injury reported. CCTV footage of the ER reception area for this time window has been preserved. It is recommended this incident be logged as a Category B security incident, the guard be referred for a first-aid check, and administration review whether a formal complaint / caution notice should be issued to the attendant."*
+
+2. **Wed 17:00 — Police request for CCTV footage (Tue 20:00-21:00, main entrance).** Log the request formally with the officer's name, station, and case reference; **do not release footage without Legal/Administration sign-off.**
+
+## Patrol / deployment changes
+
+- **Add a second security officer to the ER reception desk during the 19:00-22:00 evening shift** for the next two weeks following the guard-assault incident.
+- Extend unattended-bag protocol training refresher — Monday's response (bag near OPD) took 20 minutes to resolve, longer than the norm; Saturday's ICU-entrance bag was handled faster (8 min) and should be the reference standard.
+
+## Visitor-policy reminders
+
+- The same family has now overstayed ICU visiting hours **three times this week** — escalate to the nursing-in-charge and social worker for a direct conversation rather than repeated security counselling alone.
+- Reiterate contractor pass requirements — three contractor-without-pass entries this week (plumbing, elevator, plus one repeat) is above the norm.
+
+## CCTV / legal note
+
+**The police footage request (Wed 17:00) must go through Legal/Administration approval before any footage is handed over** — security should forward the request to the Hospital Administrator's office and confirm a written requisition/case reference is on file before compliance.`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const input = document.getElementById('input').value;
+  const prompt = `You are helping the Security shift-in-charge at VPS Lakeshore Hospital, Kochi review this week's security log entries.
+
+Log entries (Day | Shift | Description):
+${input}
+
+Provide: (1) a weekly summary, (2) incidents needing a formal written report, with a drafted report for the most serious one, (3) recommended patrol/deployment changes by shift, (4) visitor-policy reminders, (5) a clear note that any CCTV footage release (e.g. to police) needs Legal/Administration approval before handover.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital security shift-in-charge at a 350-bed Kerala hospital, familiar with NABH-aligned security and visitor-management protocols.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ambulance trip analyser</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Ambulance trip analyser</h1>
+    <p>Turn the daily ambulance trip log into response-time flags, unbilled revenue and vehicle/roster insights.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample trip log</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="week">Regular week — mixed BLS/ALS</option>
+          <option value="fest">Onam weekend — high call volume</option>
+        </select>
+      </div>
+      <label>Trip log (editable, one row per line)</label>
+      <textarea id="log" rows="16"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: reviewed and actioned by the Transport & Ambulance Services In-charge before roster or billing changes go live. All trip IDs, patients and drivers are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Transport & Ambulance', title: 'Ambulance trip analyser' });
+
+const SCENARIOS = {
+week: `TripID | Vehicle | Type | CallTime | DispatchTime | ArrivalTime | KM | PickupArea | Billed | Amount | Notes
+AMB-2201 | KL-07-AX-1102 | BLS | 06:05 | 06:11 | 06:29 | 8 | Kadavanthra | Y | 2200 | -
+AMB-2202 | KL-07-AX-1103 | ALS | 07:40 | 07:52 | 08:20 | 14 | Vyttila | Y | 4800 | oxygen cylinder refill needed after trip
+AMB-2203 | KL-07-AX-1102 | BLS | 09:15 | 09:19 | 09:33 | 6 | Panampilly Nagar | N | 0 | staff transfer, no billing
+AMB-2204 | KL-07-AX-1104 | ALS | 10:02 | 10:24 | 10:55 | 19 | Tripunithura | Y | 5200 | -
+AMB-2205 | KL-07-AX-1103 | BLS | 11:30 | 11:34 | 11:47 | 5 | Elamkulam | Y | 1900 | -
+AMB-2206 | KL-07-AX-1102 | ALS | 13:05 | 13:33 | 14:10 | 22 | Kakkanad | Y | 5600 | fuel low flagged by driver
+AMB-2207 | KL-07-AX-1105 | BLS | 14:20 | 14:25 | 14:38 | 7 | Kaloor | N | 0 | inter-facility, billing pending approval
+AMB-2208 | KL-07-AX-1104 | ALS | 15:45 | 16:02 | 16:34 | 16 | Edappally | Y | 4900 | -
+AMB-2209 | KL-07-AX-1103 | BLS | 17:10 | 17:15 | 17:28 | 6 | Kadavanthra | Y | 2100 | -
+AMB-2210 | KL-07-AX-1102 | ALS | 18:30 | 19:02 | 19:41 | 25 | Aluva | Y | 6200 | heavy traffic, oxygen cylinder refill needed
+AMB-2211 | KL-07-AX-1105 | BLS | 20:00 | 20:05 | 20:19 | 8 | Vyttila | Y | 2300 | -
+AMB-2212 | KL-07-AX-1104 | BLS | 21:20 | 21:24 | 21:36 | 5 | Panampilly Nagar | N | 0 | patient discharge transfer, unbilled
+AMB-2213 | KL-07-AX-1103 | ALS | 22:45 | 23:10 | 23:44 | 18 | Tripunithura | Y | 5100 | -
+AMB-2214 | KL-07-AX-1102 | BLS | 23:55 | 23:59 | 00:12 | 6 | Kaloor | Y | 2000 | -
+AMB-2215 | KL-07-AX-1105 | ALS | 01:20 | 01:48 | 02:22 | 21 | Kakkanad | N | 0 | night emergency, billing desk closed`,
+fest: `TripID | Vehicle | Type | CallTime | DispatchTime | ArrivalTime | KM | PickupArea | Billed | Amount | Notes
+AMB-3301 | KL-07-AX-1102 | BLS | 06:10 | 06:14 | 06:27 | 7 | Kadavanthra | Y | 2200 | -
+AMB-3302 | KL-07-AX-1103 | ALS | 07:20 | 07:44 | 08:22 | 20 | Aluva | Y | 5800 | oxygen cylinder refill needed
+AMB-3303 | KL-07-AX-1104 | BLS | 08:05 | 08:35 | 08:59 | 12 | Kakkanad | N | 0 | crowd-control delay, unbilled
+AMB-3304 | KL-07-AX-1102 | ALS | 09:30 | 10:05 | 10:48 | 24 | Tripunithura | Y | 6100 | fuel low flagged by driver
+AMB-3305 | KL-07-AX-1105 | BLS | 10:40 | 10:47 | 11:02 | 8 | Vyttila | Y | 2300 | -
+AMB-3306 | KL-07-AX-1103 | BLS | 11:55 | 12:26 | 12:47 | 11 | Edappally | N | 0 | event first-aid transfer, unbilled
+AMB-3307 | KL-07-AX-1104 | ALS | 13:10 | 13:31 | 14:05 | 17 | Kaloor | Y | 5300 | -
+AMB-3308 | KL-07-AX-1102 | BLS | 14:35 | 15:06 | 15:24 | 9 | Panampilly Nagar | Y | 2100 | heavy traffic due to procession
+AMB-3309 | KL-07-AX-1105 | ALS | 15:50 | 16:20 | 16:58 | 23 | Aluva | N | 0 | oxygen cylinder refill needed, billing pending
+AMB-3310 | KL-07-AX-1103 | BLS | 17:15 | 17:44 | 18:02 | 10 | Kakkanad | Y | 2000 | -
+AMB-3311 | KL-07-AX-1104 | ALS | 18:40 | 19:12 | 19:50 | 19 | Tripunithura | Y | 5500 | fuel low flagged by driver
+AMB-3312 | KL-07-AX-1102 | BLS | 20:05 | 20:36 | 20:55 | 8 | Vyttila | N | 0 | inter-facility, unbilled
+AMB-3313 | KL-07-AX-1105 | ALS | 21:30 | 21:58 | 22:33 | 21 | Edappally | Y | 5700 | -
+AMB-3314 | KL-07-AX-1103 | BLS | 22:50 | 23:20 | 23:38 | 9 | Kaloor | Y | 2200 | night traffic delay
+AMB-3315 | KL-07-AX-1104 | ALS | 00:15 | 00:47 | 01:26 | 26 | Aluva | N | 0 | night emergency, billing desk closed`,
+};
+
+function parseLog(text) {
+  const lines = text.trim().split('\n').filter(l => l.includes('|'));
+  lines.shift();
+  const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const wrap = (a, b) => (b - a + 1440) % 1440;
+  return lines.map(l => {
+    const c = l.split('|').map(s => s.trim());
+    return {
+      id: c[0], vehicle: c[1], type: c[2],
+      call: c[3], dispatch: c[4], arrival: c[5],
+      km: Number(c[6]), area: c[7], billed: c[8] === 'Y',
+      amount: Number(c[9]) || 0, notes: c[10],
+      callToDispatch: wrap(toMin(c[3]), toMin(c[4])),
+      dispatchToArrival: wrap(toMin(c[4]), toMin(c[5])),
+    };
+  });
+}
+
+function renderKPIs() {
+  const trips = parseLog(document.getElementById('log').value);
+  const n = trips.length || 1;
+  const avgCD = (trips.reduce((s, t) => s + t.callToDispatch, 0) / n).toFixed(1);
+  const avgDA = (trips.reduce((s, t) => s + t.dispatchToArrival, 0) / n).toFixed(1);
+  const unbilled = trips.filter(t => !t.billed);
+  const unbilledAmt = trips.reduce((s, t) => s + (t.billed ? 0 : 0), 0);
+  const perVehicle = {};
+  trips.forEach(t => { perVehicle[t.vehicle] = (perVehicle[t.vehicle] || 0) + 1; });
+  const busiest = Object.entries(perVehicle).sort((a, b) => b[1] - a[1])[0];
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="label">Avg call → dispatch</div><div class="value">${avgCD} min</div></div>
+    <div class="kpi"><div class="label">Avg dispatch → arrival</div><div class="value">${avgDA} min</div></div>
+    <div class="kpi"><div class="label">Unbilled trips</div><div class="value">${unbilled.length} / ${trips.length}</div></div>
+    <div class="kpi"><div class="label">Busiest vehicle</div><div class="value">${busiest ? Hub.esc(busiest[0]) : '—'}</div><div class="delta">${busiest ? busiest[1] + ' trips' : ''}</div></div>
+  `;
+}
+
+function loadScenario(key) {
+  document.getElementById('log').value = SCENARIOS[key];
+  renderKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('log').addEventListener('input', renderKPIs);
+loadScenario('week');
+
+const DEMO = {
+week: `## Response-time issues by area/time
+
+- **Kakkanad and Aluva legs are the slowest**, with dispatch-to-arrival regularly 30–38 minutes against a ~15-minute city average — mainly distance and NH bypass traffic, not crew delay.
+- **Late-night calls (23:00–02:00)** show the longest call-to-dispatch gaps (up to 28 min on AMB-2210, AMB-2215) — likely thin night-shift dispatch desk staffing; recommend a dedicated night dispatcher on duty 22:00–06:00.
+- Daytime BLS calls in Kadavanthra/Vyttila are well within target (under 6 min dispatch).
+
+## Unbilled revenue list
+
+| Trip ID | Area | Notes | Est. lost billing |
+|---|---|---|---|
+| AMB-2203 | Panampilly Nagar | staff transfer, no billing | ₹1,900 (BLS base rate) |
+| AMB-2207 | Kaloor | inter-facility, billing pending approval | ₹2,000 |
+| AMB-2212 | Panampilly Nagar | discharge transfer, unbilled | ₹1,900 |
+| AMB-2215 | Kakkanad | night emergency, billing desk closed | ₹5,400 (ALS rate) |
+
+**Estimated unbilled revenue this week: ~₹11,200.** Three of four cases are process gaps (approval pending / desk closed), not genuine non-billable transfers — recommend routing night-emergency billing through the duty manager instead of waiting for the desk.
+
+## Vehicle downtime / maintenance flags
+
+- **KL-07-AX-1102** logged "fuel low" twice (AMB-2206, AMB-2210) in one day — recommend fuel-check at shift handover, not mid-shift.
+- **KL-07-AX-1103** flagged "oxygen cylinder refill needed" after AMB-2202 and again pre-empted at AMB-2210 (different vehicle) — audit spare-cylinder stock at the ALS bay.
+- No vehicle shows a hard breakdown; all flags are preventive-maintenance grade.
+
+## Driver/EMT roster suggestion
+
+Vehicle 1102 and 1103 carried the heaviest load (6 trips each) while 1105 carried 3 — rebalance the next roster to route 1–2 daytime calls from 1102/1103 to 1105, and add a second night-shift EMT pair for the 22:00–02:00 slot given the response-time gap above.
+
+## Monthly transport report (draft section)
+
+*This week: 15 trips, avg call-to-dispatch 8.9 min, avg dispatch-to-arrival 17.3 min, both within internal targets except night-shift calls. Unbilled revenue of ~₹11,200 traced mainly to billing-desk timing rather than genuine free transfers — recommend extending billing coverage to 24x7 or an on-call billing approver. Vehicle 1102 flagged for fuel-check process change; oxygen cylinder stock at ALS bay to be reviewed.*`,
+fest: `## Response-time issues by area/time
+
+- **Onam weekend traffic pushes dispatch-to-arrival up sharply** — Aluva and Tripunithura legs average 35–40 minutes, versus ~18 minutes on a normal day, driven by procession and event crowd routes.
+- **Call-to-dispatch also lengthened** (up to 31 min on AMB-3303, AMB-3306) — likely ambulances queued at the base awaiting crowd-control clearance before departure.
+- Recommend pre-positioning one ALS unit near the procession route for the festival period rather than dispatching from base each time.
+
+## Unbilled revenue list
+
+| Trip ID | Area | Notes | Est. lost billing |
+|---|---|---|---|
+| AMB-3303 | Kakkanad | crowd-control delay, unbilled | ₹1,900 |
+| AMB-3306 | Edappally | event first-aid transfer, unbilled | ₹1,900 |
+| AMB-3309 | Aluva | oxygen refill needed, billing pending | ₹5,600 (ALS) |
+| AMB-3312 | Vyttila | inter-facility, unbilled | ₹1,900 |
+| AMB-3315 | Aluva | night emergency, billing desk closed | ₹5,900 (ALS) |
+
+**Estimated unbilled revenue this festival weekend: ~₹17,200** — noticeably higher than a regular week, concentrated in event-related first-aid transfers and night hours; recommend a temporary festival-period billing desk extension.
+
+## Vehicle downtime / maintenance flags
+
+- **KL-07-AX-1102 and 1104** each flagged "fuel low" once during the high-volume period — with longer legs and idling in procession traffic, recommend mid-shift refuelling checks specifically during festival duty.
+- **KL-07-AX-1105** flagged oxygen cylinder refill mid-weekend — stock a spare cylinder on this vehicle for festival deployment.
+
+## Driver/EMT roster suggestion
+
+Call volume this weekend is roughly 15–20% above a regular week with longer average legs — recommend adding one relief driver-EMT pair for the 10:00–22:00 procession window and keeping the existing night pair, given similar late-night response-time pressure to a regular week.
+
+## Monthly transport report (draft section)
+
+*Festival-weekend trips: 15 calls, avg call-to-dispatch 11.9 min and dispatch-to-arrival 24.8 min, both elevated vs the monthly baseline due to procession traffic. Unbilled revenue of ~₹17,200 traced to event first-aid transfers and after-hours billing gaps — recommend a festival SOP with pre-positioned units and extended billing-desk hours for major Kerala festival periods (Onam, Vishu, Christmas).*`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const log = document.getElementById('log').value;
+  const prompt = `You are assisting the Transport & Ambulance Services team at VPS Lakeshore Hospital, Kochi with today's ambulance trip log.
+
+Trip log:
+${log}
+
+Provide: (1) response-time issues by pickup area/time of day, (2) an unbilled-trips revenue list with estimated ₹ lost, (3) vehicle downtime/maintenance flags from the notes column, (4) a driver/EMT roster rebalancing suggestion, and (5) a short monthly transport report paragraph. Use ₹ formatting.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital transport/ambulance fleet coordinator at a 350-bed Kerala hospital.',
+    prompt, demo: DEMO[key], manualMinutes: 90,
+  });
+});
+</script>
+</body>
+</html>

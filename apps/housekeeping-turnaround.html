@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room turnaround planner</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Room turnaround planner</h1>
+    <p>Match today's expected discharges and housekeeping crew capacity against waiting ER/OT/elective admissions, by 2-hour slot.</p>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample input</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="normal">Tuesday — routine discharge load</option>
+          <option value="heavy">Monday post-weekend — heavy discharge + isolation cases</option>
+        </select>
+      </div>
+      <label>Discharges, crew roster &amp; waiting admissions (editable)</label>
+      <textarea id="input" rows="18"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+      <p class="footer-note" style="margin-top:10px">Human in the loop: Bed Management Officer confirms every bed allotment before the ward is informed.</p>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Synthetic ward, bed and staff data for demonstration only. No real patient identifiers.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'Housekeeping & F&B', title: 'Room turnaround planner' });
+
+const SCENARIOS = {
+normal: `EXPECTED DISCHARGES TODAY
+Bed | Ward | Expected discharge time | Room type | Isolation
+304B | Surgical A | 10:30 | General AC | N
+211A | Medicine | 11:00 | General AC | N
+415C | Ortho | 12:00 | General non-AC | N
+118A | ICU step-down | 13:00 | HDU | N
+502A | Surgical B | 14:30 | Private | N
+227B | Medicine | 15:00 | General AC | N
+
+HOUSEKEEPING CREW ROSTER
+Shift 06:00-14:00: 5 housekeeping staff (Ward A/B: Rani, Sunitha; Ward C/D: Beena, Manoj; Float: Ajesh)
+Shift 14:00-22:00: 4 housekeeping staff (Latha, Shibu, Deepa, Anoop)
+
+WAITING ADMISSIONS
+Source | Room type needed | Waiting since
+ER | General AC | 09:40
+Elective (Dr. Nair, ortho list) | General non-AC | 08:00 (booked 12:30 admission)
+OT recovery (lap chole) | General AC | 11:15
+ER | HDU | 10:50`,
+heavy: `EXPECTED DISCHARGES TODAY (Monday, post-weekend)
+Bed | Ward | Expected discharge time | Room type | Isolation
+101A | Medicine | 09:00 | General AC | Y (contact precautions, C. diff)
+104B | Medicine | 09:30 | General AC | N
+210C | Surgical A | 10:00 | General non-AC | N
+118A | ICU step-down | 10:30 | HDU | N
+305B | Ortho | 11:00 | General AC | N
+309A | Surgical B | 11:30 | Private | N
+412C | Medicine | 12:30 | General AC | Y (MRSA precautions)
+501A | Surgical A | 13:00 | General AC | N
+
+HOUSEKEEPING CREW ROSTER
+Shift 06:00-14:00: 4 housekeeping staff (Ward A: Rani; Ward B: Sunitha; Ward C: Beena; Float: Manoj) — 1 short, Ajesh on leave
+Shift 14:00-22:00: 4 housekeeping staff (Latha, Shibu, Deepa, Anoop)
+
+WAITING ADMISSIONS
+Source | Room type needed | Waiting since
+ER | General AC | 08:15
+ER | General AC | 09:20
+OT recovery (appendicectomy) | General AC | 10:05
+Elective (Dr. Varkey, medicine) | General AC | booked 12:00
+ICU step-down transfer | HDU | 09:50`,
+};
+
+function parseAll(text) {
+  const discharges = [], waiting = [];
+  const lines = text.split('\n');
+  let section = '';
+  for (const raw of lines) {
+    const l = raw.trim();
+    if (/^EXPECTED DISCHARGES/i.test(l)) { section = 'd'; continue; }
+    if (/^HOUSEKEEPING CREW/i.test(l)) { section = 'c'; continue; }
+    if (/^WAITING ADMISSIONS/i.test(l)) { section = 'w'; continue; }
+    if (!l || /^Bed \|/i.test(l) || /^Source \|/i.test(l)) continue;
+    if (section === 'd') {
+      const p = l.split('|').map(s => s.trim());
+      if (p.length >= 5) discharges.push({ bed: p[0], ward: p[1], time: p[2], type: p[3], iso: /y/i.test(p[4]) });
+    } else if (section === 'w') {
+      const p = l.split('|').map(s => s.trim());
+      if (p.length >= 3) waiting.push({ src: p[0], type: p[1], since: p[2] });
+    }
+  }
+  const crewMatch = [...text.matchAll(/(\d+)\s+housekeeping staff/gi)];
+  const crewCount = crewMatch.reduce((a, m) => a + Number(m[1]), 0) || 5;
+  return { discharges, waiting, crewCount };
+}
+
+function slotOf(t) {
+  const m = t.match(/(\d{1,2}):(\d{2})/);
+  if (!m) return '—';
+  const h = Number(m[1]);
+  const s = Math.floor(h / 2) * 2;
+  return `${String(s).padStart(2,'0')}:00-${String(s+2).padStart(2,'0')}:00`;
+}
+
+function computeKPIs() {
+  const { discharges, waiting, crewCount } = parseAll(document.getElementById('input').value);
+  const totalCleanMin = discharges.reduce((a, d) => a + (d.iso ? 90 : 45), 0);
+  const capacityMinPerShift = crewCount * 8 * 60 * 0.6; // ~60% of shift on active cleaning
+  const isoCount = discharges.filter(d => d.iso).length;
+  const bySlot = {};
+  discharges.forEach(d => { const s = slotOf(d.time); bySlot[s] = (bySlot[s] || 0) + 1; });
+  const busiest = Object.entries(bySlot).sort((a,b) => b[1]-a[1])[0];
+  const kpis = document.getElementById('kpis');
+  kpis.innerHTML = `
+    <div class="kpi"><div class="label">Rooms to turn</div><div class="value">${discharges.length}</div></div>
+    <div class="kpi"><div class="label">Isolation terminal cleans</div><div class="value">${isoCount}</div></div>
+    <div class="kpi"><div class="label">Total clean time needed</div><div class="value">${totalCleanMin} min</div></div>
+    <div class="kpi"><div class="label">Crew capacity (this shift)</div><div class="value">~${Math.round(capacityMinPerShift)} min</div>
+      <div class="delta ${totalCleanMin > capacityMinPerShift ? 'down' : 'up'}">${totalCleanMin > capacityMinPerShift ? 'Over capacity' : 'Within capacity'}</div></div>
+    <div class="kpi"><div class="label">Waiting admissions</div><div class="value">${waiting.length}</div></div>
+    <div class="kpi"><div class="label">Busiest slot</div><div class="value" style="font-size:1.1rem">${busiest ? busiest[0] : '—'}</div></div>`;
+}
+
+function loadScenario(key) {
+  document.getElementById('input').value = SCENARIOS[key];
+  computeKPIs();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+document.getElementById('input').addEventListener('input', computeKPIs);
+loadScenario('normal');
+
+const DEMO = {
+normal: `## Cleaning sequence by crew (06:00-14:00 shift)
+
+| Time | Housekeeper | Bed | Ward | Clean type | Duration |
+|---|---|---|---|---|---|
+| 10:30 | Sunitha | 304B | Surgical A | Standard | 45 min |
+| 11:00 | Beena | 211A | Medicine | Standard | 45 min |
+| 12:00 | Manoj | 415C | Ortho | Standard | 45 min |
+| 13:00 | Ajesh | 118A | ICU step-down | Standard | 45 min |
+| 14:30 | Latha (next shift) | 502A | Surgical B | Standard | 45 min |
+| 15:00 | Shibu (next shift) | 227B | Medicine | Standard | 45 min |
+
+## Bed allotment — waiting admissions
+
+- **ER (waiting since 09:40, General AC)** → **Bed 304B**, ready ~11:15. This is the longest-waiting ER case; prioritise over the elective.
+- **OT recovery, lap chole (waiting since 11:15, General AC)** → **Bed 227B**, ready ~15:45, or reassign to 502A (Private, ready ~15:15) if recovery bay is under pressure before then.
+- **Elective ortho (booked 12:30, General non-AC)** → **Bed 415C**, ready ~12:45 — a 15-min slip against the booked time; inform Dr. Nair's coordinator.
+- **ER (HDU, waiting since 10:50)** → **Bed 118A**, ready ~13:45.
+
+## Linen / supplies to pre-stage
+
+Stage 6 standard linen sets, 6 admission kits and general-ward consumables at the Ward A/B and C/D housekeeping stores by 10:00 so no crew member walks to central stores mid-shift.
+
+## Bottleneck warning
+
+No isolation cleans today, so 45-min standard turnaround applies throughout — crew capacity (~5 staff × ~4.8 hrs active cleaning) comfortably covers 6 rooms. Watch the 227B slot (15:00): it is the last discharge and falls near shift handover — confirm the 14:00-22:00 crew is briefed before 13:45.
+
+## Message to bed management
+
+*"6 rooms turning over today, no isolation cleans. ER case waiting since 09:40 gets 304B by ~11:15; ER HDU case gets 118A by ~13:45. Ortho elective (Dr. Nair) will run ~15 min behind booked time into 415C. OT recovery case can go to 502A early if 227B timing is tight."*`,
+heavy: `## Cleaning sequence by crew (06:00-14:00 shift, 4 staff — 1 short)
+
+| Time | Housekeeper | Bed | Ward | Clean type | Duration |
+|---|---|---|---|---|---|
+| 09:00 | Rani | 101A | Medicine | **Isolation terminal (C. diff)** | 90 min |
+| 09:30 | Sunitha | 104B | Medicine | Standard | 45 min |
+| 10:00 | Beena | 210C | Surgical A | Standard | 45 min |
+| 10:30 | Manoj | 118A | ICU step-down | Standard | 45 min |
+| 11:00 | Sunitha (2nd) | 305B | Ortho | Standard | 45 min |
+| 11:30 | Beena (2nd) | 309A | Surgical B | Standard | 45 min |
+| 12:30 | Rani (after 101A) | 412C | Medicine | **Isolation terminal (MRSA)** | 90 min, finishes ~12:00 |
+| 13:00 | Manoj (2nd) | 501A | Surgical A | Standard | 45 min |
+
+## Bed allotment — waiting admissions
+
+- **ER (waiting since 08:15)** → **Bed 104B**, ready ~10:15 — longest-waiting case, allot first.
+- **ER (waiting since 09:20)** → **Bed 210C**, ready ~10:45.
+- **OT recovery, appendicectomy (waiting since 10:05)** → **Bed 305B**, ready ~11:45.
+- **Elective (Dr. Varkey, booked 12:00)** → **Bed 501A**, ready ~13:45 — will run ~1h45m late; notify Dr. Varkey's team now, not at noon.
+- **ICU step-down transfer (waiting since 09:50)** → **Bed 118A**, ready ~11:15.
+
+## Linen / supplies to pre-stage
+
+Isolation cleans (101A, 412C) need full PPE sets, chlorine-based disinfectant, and **double-bagged linen** staged before 09:00 — do not let Rani search for isolation supplies mid-clean, it is the single biggest time-sink today.
+
+## Bottleneck warning
+
+**Crew is 1 short (Ajesh on leave) with 2 isolation terminal cleans (90 min each) on the same shift.** Total clean-time demand (2×90 + 6×45 = 450 min) exceeds the ~4-person capacity comfortably — expect the 12:00-13:00 window to bottleneck, directly delaying the Dr. Varkey elective admission. **Recommend pulling one float staff from the 14:00 shift 2 hours early**, or accepting the elective delay and informing the ward now.
+
+## Message to bed management
+
+*"Crew short today (Ajesh on leave) with 2 isolation terminal cleans. ER cases get 104B (~10:15) and 210C (~10:45) first. Dr. Varkey's 12:00 elective will slip to ~13:45 into 501A — please inform the patient/family now. Requesting one extra housekeeping hand from 12:00-14:00 if available."*`,
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const input = document.getElementById('input').value;
+  const prompt = `You are helping the Housekeeping & F&B duty supervisor at VPS Lakeshore Hospital, Kochi plan room turnarounds for today's shift.
+
+Input data:
+${input}
+
+Provide: (1) a cleaning sequence by crew member with bed/ward/duration (isolation terminal clean = 90 min, standard = 45 min), (2) which waiting admission gets which bed and expected ready time, (3) linen/supplies to pre-stage, (4) bottleneck warnings if crew capacity is tight, (5) a short message to bed management summarising the plan.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced hospital housekeeping operations supervisor at a 350-bed Kerala hospital, expert in room turnaround planning and infection-control terminal cleaning norms.',
+    prompt, demo: DEMO[key], manualMinutes: 45,
+  });
+});
+</script>
+</body>
+</html>

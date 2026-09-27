@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT helpdesk triage &amp; answers</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>IT helpdesk triage &amp; answers</h1>
+    <p>Turn a messy pile of tickets, emails and WhatsApp messages into a prioritised, categorised queue with ready replies for routine issues.</p>
+  </section>
+
+  <div id="kpis" class="kpis"></div>
+
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Sample queue</h2>
+      <div class="row">
+        <label style="margin:0" for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="morning">Monday morning backlog (12 tickets)</option>
+          <option value="afternoon">Post-lunch mixed queue (12 tickets)</option>
+        </select>
+      </div>
+      <label>Raw tickets / emails / WhatsApp messages (editable)</label>
+      <textarea id="tickets" rows="14"></textarea>
+      <label>Known-fixes KB (editable)</label>
+      <textarea id="kb" rows="6"></textarea>
+      <div class="row" style="margin-top:12px">
+        <button class="primary" id="runBtn">Run with Claude</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Claude output</h2>
+      <div class="claude-out" id="out"></div>
+    </div>
+  </div>
+
+  <p class="footer-note">Human in the loop: the IT Helpdesk Lead reviews priority and ready replies before they are sent, and confirms any security-incident escalation. Synthetic data only — all names, IDs and messages are fictional.</p>
+</main>
+
+<script src="../shared/claude.js"></script>
+<script>
+Hub.mountHeader({ dept: 'IT & Data Governance', title: 'IT helpdesk triage & answers' });
+
+const KB = `1. HIS login locked after 5 wrong attempts -> unlock in HIS Admin console, reset temp password, force change at next login.
+2. Printer offline -> check power/USB/network cable, restart print spooler service, reinstall driver if queue still stuck.
+3. Wi-Fi weak/drops in wards -> check AP status on controller, reboot nearest AP, log ward + bed number for coverage survey.
+4. New joiner email/account -> raise AD account request with HR confirmation, assign default mailbox + shared drive group.
+5. Password reset (self-service locked) -> verify identity via employee ID + department head confirmation, reset via AD, advise MFA re-enrol.
+6. PACS image not loading -> check network path to PACS server, clear local viewer cache, verify modality worklist sync.`;
+
+const SCENARIOS = {
+morning: {
+  label: 'Monday morning backlog (12 tickets)',
+  tickets: `1. [Ticket] Dr. Nair (Cardiology): "HIS login locked, tried 6 times, need it NOW for OPD."
+2. [WhatsApp] Security desk: "Printer at pharmacy counter 2 not printing labels since morning."
+3. [Email] Radiology tech Biju: "PACS image not loading for CT room 1, patient waiting."
+4. [Ticket] HR - Anjali: "New joiner Ms. Fathima joining Monday in Billing, needs email + HIS access."
+5. [WhatsApp] Ward 5 nurse station: "Wi-Fi very slow, vitals app keeps disconnecting."
+6. [Ticket] Lab supervisor: "Label printer in Haematology lab jammed, sample backlog building."
+7. [Email] Front office - Reshma: "Forgot my HIS password, self-service reset not working."
+8. [Email, subject: Invoice attached - urgent] "Please find attached invoice INV-88213.zip for immediate payment processing." (from external-looking address, unknown vendor)
+9. [Ticket] OT Nurse: "Anaesthesia monitor PC not connecting to network in OT-3."
+10. [WhatsApp] Billing desk: "HIS running very slow at all counters since 9am."
+11. [Ticket] Dietician office: "Need new joiner Mr. Arun's laptop set up, starts tomorrow."
+12. [Email] Physio dept: "Printer in physiotherapy OP not working, need discharge instructions printed."`,
+},
+afternoon: {
+  label: 'Post-lunch mixed queue (12 tickets)',
+  tickets: `1. [Ticket] ICU charge nurse: "HIS login locked for two staff nurses during shift change."
+2. [WhatsApp] Pharmacy counter 1: "Label printer stuck mid-print, queue of 8 prescriptions waiting."
+3. [Email] Radiology: "PACS not loading MRI images since 1pm, second complaint today."
+4. [Ticket] HR: "New joiner Mr. Vishnu (Security) starts Wednesday, needs basic email only, no HIS."
+5. [WhatsApp] Ward 5: "Wi-Fi dropped again, nurses using personal hotspot to chart."
+6. [Ticket] Microbiology lab: "Label printer showing 'offline' error, urgent for culture samples."
+7. [Email] OPD reception: "Forgot HIS password, need reset before 3pm clinic."
+8. [Email, subject: Invoice attached] "Kindly process attached invoice_final.zip urgently, avoid late fee." (sender domain does not match any known vendor)
+9. [Ticket] Billing supervisor: "HIS extremely slow at counters 3 and 4 only."
+10. [WhatsApp] Front desk: "Printer for visitor passes not working since 2pm."
+11. [Ticket] New consultant onboarding: "Dr. Meera Pillai (Dermatology) needs HIS + email access before tomorrow's OPD."
+12. [Email] Housekeeping supervisor: "Wi-Fi in basement store room not connecting on new tablet."`,
+},
+};
+
+const CATS = ['HIS/login','Printer/label','PACS/imaging','New joiner/access','Wi-Fi/network','Security/phishing','Other'];
+function guessCategory(line) {
+  const l = line.toLowerCase();
+  if (l.includes('invoice') || l.includes('.zip') || l.includes('urgent') && l.includes('payment')) return 'Security/phishing';
+  if (l.includes('his') || l.includes('login') || l.includes('password')) return 'HIS/login';
+  if (l.includes('printer') || l.includes('label')) return 'Printer/label';
+  if (l.includes('pacs') || l.includes('image') || l.includes('mri') || l.includes('ct room')) return 'PACS/imaging';
+  if (l.includes('new joiner') || l.includes('joining') || l.includes('onboarding') || l.includes('starts')) return 'New joiner/access';
+  if (l.includes('wi-fi') || l.includes('wifi') || l.includes('network') || l.includes('hotspot')) return 'Wi-Fi/network';
+  return 'Other';
+}
+
+function renderKpis() {
+  const lines = document.getElementById('tickets').value.split('\n').map(s => s.trim()).filter(s => /^\d+\./.test(s));
+  const counts = {};
+  CATS.forEach(c => counts[c] = 0);
+  lines.forEach(l => counts[guessCategory(l)]++);
+  const box = document.getElementById('kpis');
+  box.innerHTML = `
+    <div class="kpi"><div class="label">Total tickets</div><div class="value">${lines.length}</div></div>
+    <div class="kpi"><div class="label">HIS/login</div><div class="value">${counts['HIS/login']}</div></div>
+    <div class="kpi"><div class="label">Printer/label</div><div class="value">${counts['Printer/label']}</div></div>
+    <div class="kpi"><div class="label">Wi-Fi/network</div><div class="value">${counts['Wi-Fi/network']}</div></div>
+    <div class="kpi"><div class="label">Possible phishing</div><div class="value" style="color:${counts['Security/phishing'] ? 'var(--bad)' : 'var(--navy)'}">${counts['Security/phishing']}</div></div>`;
+}
+document.getElementById('tickets').addEventListener('input', renderKpis);
+
+function loadScenario(key) {
+  const s = SCENARIOS[key];
+  document.getElementById('tickets').value = s.tickets;
+  document.getElementById('kb').value = KB;
+  renderKpis();
+}
+document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
+loadScenario('morning');
+
+const DEMO = {
+morning: `## Triage table
+
+| # | Ticket | Category | Priority | Reason | System | Suggested owner |
+|---|---|---|---|---|---|---|
+| 1 | Dr. Nair HIS locked | HIS/login | **P1** | Clinician blocked from OPD charting right now | HIS | L1 - unlock via AD/HIS console |
+| 8 | "Invoice attached" email | Security/phishing | **P1** | Zipped invoice from unrecognised sender - classic phishing pattern | Email | **Escalate to IT Security immediately, do not open attachment** |
+| 3 | PACS image not loading, CT room 1 | PACS/imaging | P1 | Patient waiting, imaging workflow stalled | PACS | L2 - PACS/network team |
+| 9 | Anaesthesia monitor PC no network, OT-3 | Wi-Fi/network | P1 | OT in progress, patient-monitoring dependency | Network | L2 - network team, treat as OT-critical |
+| 10 | HIS slow at all billing counters | HIS/login | P2 | Multiple counters affected, revenue impact building | HIS/Server | L2 - check HIS app server load |
+| 6 | Lab label printer jammed | Printer/label | P2 | Sample backlog risk in Haematology | Printer | L1 - clear jam, reprint queue |
+| 2 | Pharmacy counter printer down | Printer/label | P3 | Single counter, workaround (manual label) possible | Printer | L1 |
+| 5 | Ward 5 Wi-Fi slow | Wi-Fi/network | P3 | Affects charting speed, not patient safety yet | Network | L1 - reboot nearest AP |
+| 12 | Physio printer not working | Printer/label | P3 | Discharge instructions delayed, not urgent | Printer | L1 |
+| 4 | New joiner Ms. Fathima (Billing) | New joiner/access | P3 | Needed by Monday, has lead time | AD/HIS | L1 - provisioning per KB item 4 |
+| 11 | New joiner Mr. Arun laptop | New joiner/access | P4 | Starts tomorrow, standard lead time | Desktop | L1 |
+| 7 | Reshma forgot HIS password | HIS/login | P4 | Self-service failure, routine reset | HIS | L1 - reset per KB item 5 |
+
+## Ready replies (routine, from KB)
+
+**#1 Dr. Nair:** "Your HIS account has been unlocked and a temporary password sent to your registered mobile/email. You will be asked to set a new password at next login. Please try again and call the helpdesk (ext. 2100) if it recurs."
+
+**#7 Reshma:** "Your identity has been verified with your department head. Password has been reset via AD; please re-enrol MFA on first login."
+
+**#4 / #11 New joiners:** "Access request received. AD account, mailbox and role-based HIS access will be provisioned one working day before the joining date, subject to HR confirmation on file."
+
+## Security incident flag
+
+**#8 "Invoice attached" email is flagged as a suspected phishing/malware attempt** - zipped attachment, unfamiliar sender domain, urgency language ("immediate payment"). **Do not open the attachment.** Escalate to IT Security for header analysis and a hospital-wide advisory if the sender pattern repeats. Do not reply or forward to Finance until cleared.
+
+**Recommendation:** Action P1 items first (tickets 1, 3, 8, 9) within 30 minutes; P2 within 2 hours; P3/P4 by end of day per SLA.`,
+
+afternoon: `## Triage table
+
+| # | Ticket | Category | Priority | Reason | System | Suggested owner |
+|---|---|---|---|---|---|---|
+| 8 | "Invoice attached" email | Security/phishing | **P1** | Zip attachment, mismatched sender domain - suspected phishing | Email | **Escalate to IT Security immediately** |
+| 3 | PACS not loading MRI, 2nd complaint today | PACS/imaging | P1 | Recurrent failure, imaging backlog risk | PACS | L2 - escalate as recurring incident |
+| 1 | ICU nurses HIS locked at shift change | HIS/login | P1 | Two ICU staff blocked mid-shift-handover | HIS | L1 - unlock both, priority queue |
+| 9 | HIS slow at billing counters 3-4 only | HIS/login | P2 | Localised, suggests workstation/network segment issue | HIS/Network | L2 - check switch/segment for counters 3-4 |
+| 6 | Microbiology label printer offline, urgent | Printer/label | P2 | Culture-sample labelling time-sensitive | Printer | L1 - restart spooler/driver |
+| 7 | OPD reception forgot password, needed by 3pm | HIS/login | P2 | Hard deadline before clinic start | HIS | L1 - reset per KB item 5 |
+| 11 | Dr. Meera Pillai needs access before tomorrow OPD | New joiner/access | P2 | Consultant onboarding with tight deadline | AD/HIS | L1 - expedite provisioning |
+| 2 | Pharmacy label printer stuck mid-print | Printer/label | P3 | 8 prescriptions queued, workaround possible | Printer | L1 |
+| 5 | Ward 5 Wi-Fi dropped, nurses on hotspot | Wi-Fi/network | P3 | Repeat issue, workaround in use, data-security concern re: personal hotspot | Network | L2 - recurring AP fault, log for survey |
+| 10 | Visitor-pass printer not working | Printer/label | P4 | Non-clinical, low impact | Printer | L1 |
+| 4 | New joiner Mr. Vishnu, email only | New joiner/access | P4 | Standard lead time, no HIS needed | Email | L1 |
+| 12 | Housekeeping Wi-Fi issue, basement | Wi-Fi/network | P4 | Non-clinical area, new device | Network | L1 |
+
+## Ready replies (routine, from KB)
+
+**#1 ICU nurses:** "Both accounts unlocked; temporary passwords sent. Please change password at next login. Flagging to L1 as priority given ICU shift handover."
+
+**#7 OPD reception:** "Identity verified with department head; password reset via AD. Please complete before 3pm and re-enrol MFA."
+
+**#11 Dr. Meera Pillai:** "Access request expedited given tomorrow's OPD start; HIS + email will be provisioned today, pending HR confirmation already on file."
+
+## Security incident flag
+
+**#8 is flagged as a suspected phishing attempt** - zipped invoice, sender domain does not match any known vendor, urgency framing around late fees. **Do not open; escalate to IT Security** for header/domain check and possible hospital-wide alert if similar emails are seen at other desks.
+
+**Recommendation:** Clear P1s (1, 3, 8) in the next 30 minutes; P2s before end of afternoon shift; monitor Ward 5 Wi-Fi as a recurring fault needing a proper AP survey, not just repeated reboots.`
+};
+
+document.getElementById('runBtn').addEventListener('click', () => {
+  const key = document.getElementById('scenario').value;
+  const tickets = document.getElementById('tickets').value;
+  const kb = document.getElementById('kb').value;
+  const prompt = `You are the IT helpdesk triage assistant for VPS Lakeshore Hospital, Kochi, a ~350-bed NABH-accredited hospital.
+
+Raw incoming tickets/emails/WhatsApp messages:
+${tickets}
+
+Known-fixes KB:
+${kb}
+
+For each ticket produce a table: ticket -> category -> priority (P1-P4) with a one-line reason -> affected system -> suggested owner (L1/L2/team). Draft ready replies for routine issues using the KB where it applies. Separately and clearly flag any message that looks like a phishing/security incident (e.g. unexpected zipped invoice attachments, mismatched sender domains) and state it should be escalated to IT Security, not actioned as a normal ticket.`;
+  Hub.run({
+    out: '#out', button: '#runBtn',
+    system: 'You are an experienced IT helpdesk shift lead at a large Kerala hospital, skilled at rapid ticket triage and security awareness.',
+    prompt, demo: DEMO[key], manualMinutes: 20,
+  });
+});
+</script>
+</body>
+</html>
