@@ -1,0 +1,9 @@
+{
+  "months": ["Apr", "May", "Jun", "Jul", "Aug", "Sep"],
+  "trend": [42, 47, 51, 49, 56, 61],
+  "items": [
+    { "id": "Q-101", "name": "Sample request A", "dept": "Cardiology", "amount": 245000, "status": "New" },
+    { "id": "Q-102", "name": "Sample request B", "dept": "Ortho", "amount": 132000, "status": "New" },
+    { "id": "Q-103", "name": "Sample request C", "dept": "Oncology", "amount": 410000, "status": "New" }
+  ]
+}
