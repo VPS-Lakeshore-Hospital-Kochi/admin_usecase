@@ -250,7 +250,7 @@ function negotiationDemo(a, s) {
 **Current AMC:** ₹${Hub.inr(a.amcAnnual)}/yr
 
 ### Performance over the last 12 months
-- Actual uptime **${round1(s.uptimePct)}%** against the contracted **${a.slaUptimePct}%** SLA${breach ? ` — a shortfall of **${gap} points**, which breaches the SLA and supports a service-credit or price adjustment request.` : ' — within SLA; renewal can proceed on service performance grounds, with room to negotiate on price given the asset's usage level.`}
+- Actual uptime **${round1(s.uptimePct)}%** against the contracted **${a.slaUptimePct}%** SLA${breach ? ` — a shortfall of **${gap} points**, which breaches the SLA and supports a service-credit or price adjustment request.` : ` — within SLA; renewal can proceed on service performance grounds, with room to negotiate on price given the asset's usage level.`}
 - ${round1(s.totalDowntime)} hours of downtime recorded (Breakdown ${round1(s.reasons.Breakdown)}h · PM ${round1(s.reasons.PM)}h · Awaiting part ${round1(s.reasons['Awaiting part'])}h).
 - ${ticketsFor(a.id).filter(t => t.status === 'Open').length} ticket(s) still open at the time of this review.
 - Utilisation over the last 3 months: ${round1(s.util3 * 100)}%; revenue per AMC rupee: ${round1(s.revPerAmc * 10) / 10}x.

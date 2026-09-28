@@ -171,10 +171,12 @@ function requestDetail(r) {
       demo: () => demoReview(r, p),
     });
     if (!text) return;
+    const stepsEl = el.querySelector('#steps'), rvEl = el.querySelector('#rv');
+    if (!stepsEl || !rvEl || !document.body.contains(el)) return; // user may have switched tabs while Claude was writing
     Hub.kit.log(SLUG, 'Claude review drafted', r.id);
     st.set(s2 => ({ reviews: { ...(s2.reviews || {}), [r.id]: { status: 'draft', text } } }));
-    Hub.kit.steps(el.querySelector('#steps'), STEP_LABELS, STEP_IDX['Reviewed']);
-    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: `Capex review — ${r.id}` }, text, st, docTitle: `Capex review — ${r.description}`, onDecision: () => requestDetail(r) });
+    Hub.kit.steps(stepsEl, STEP_LABELS, STEP_IDX['Reviewed']);
+    Hub.kit.review(rvEl, { slug: SLUG, item: { id: r.id, title: `Capex review — ${r.id}` }, text, st, docTitle: `Capex review — ${r.description}`, onDecision: () => requestDetail(r) });
   };
 }
 
@@ -293,9 +295,11 @@ function portfolio(el) {
       demo: () => demoEcNote(env, recommended, holdBack),
     });
     if (!text) return;
+    const ecRvEl = el.querySelector('#ecRv');
+    if (!ecRvEl || !document.body.contains(el)) return; // user may have switched tabs while Claude was writing
     Hub.kit.log(SLUG, 'EC capex note drafted');
     st.set({ ecNote: { text } });
-    Hub.kit.review(el.querySelector('#ecRv'), { slug: SLUG, item: { id: 'ec-note', title: 'EC capex note — FY 2026-27' }, text, st, docTitle: 'EC capex note — FY 2026-27', onDecision: () => portfolio(el) });
+    Hub.kit.review(ecRvEl, { slug: SLUG, item: { id: 'ec-note', title: 'EC capex note — FY 2026-27' }, text, st, docTitle: 'EC capex note — FY 2026-27', onDecision: () => portfolio(el) });
   };
 }
 
