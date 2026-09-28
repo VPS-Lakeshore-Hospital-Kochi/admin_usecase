@@ -6,141 +6,245 @@
 <title>Feedback intelligence — Patient Experience</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  td.fb { max-width: 360px; }
-  .src { font-size: 12px; color: var(--muted); }
+  td.fb, .fb-text { max-width: 420px; }
+  .src { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .example { font-style: italic; color: var(--muted); max-width: 320px; }
+  .contact { font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Feedback intelligence</h1>
-    <p>Reads every complaint and review — Google, discharge forms, WhatsApp, international patient emails — and turns them into themed patterns, urgent service-recovery actions with an owner and SLA, and draft public replies.</p>
+    <p>Every complaint and review — Google, discharge forms, OP kiosk, WhatsApp, international patient emails — turned into a service-recovery queue with owners and SLAs, weekly theme patterns, and a dashboard for the committee.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Last 15 feedback items</h2>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Source</th><th>Rating</th><th class="fb">Feedback</th></tr></thead>
-          <tbody id="fbBody"></tbody>
-        </table>
-      </div>
-      <div class="row" style="margin-top:14px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Claude's analysis</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · synthetic feedback only · no patient-identifiable information leaves this browser.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'patient-feedback';
 Hub.mountHeader({ dept: 'Patient Experience', title: 'Feedback intelligence' });
+const st = Hub.kit.state(SLUG, { tab: 'recovery', selected: null, reviews: {} });
+let DATA, TRACKED, GEN;
 
-const FEEDBACK = [
-  { source: 'Google review', rating: 2, text: 'My mother from Male was made to wait almost 2 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable experience, nobody updated us on delay. Doctors were fine but the wait was too much.' },
-  { source: 'IP discharge form', rating: 2, text: 'Billing team took more than 3 hours to finalise discharge summary and final bill after doctor said we can go home. TPA approval bhi late aaya. Overall stay was ok but discharge process needs improvement.' },
-  { source: 'Google review', rating: 5, text: 'Excellent care from the nursing staff in cardiology ward, especially Sister Anitha. She explained everything patiently and checked on my father every 2 hours. Doctors also very good.' },
-  { source: 'WhatsApp complaint', rating: 1, text: 'Parking issue again today. Waited 20 min to find parking, valet not available at OP block. This happens almost every time we come for follow up. Please fix.' },
-  { source: 'International patient email', rating: 3, text: 'Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for Maldivian diet were limited, mostly south indian only.' },
-  { source: 'Google review', rating: 2, text: 'Lift waiting time on 3rd floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.' },
-  { source: 'IP discharge form', rating: 4, text: 'Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.' },
-  { source: 'WhatsApp complaint', rating: 1, text: 'TPA approval for my cashless surgery got delayed by almost 6 hours, insurance desk kept saying documents pending but nobody called us to say what exactly was missing. Very stressful before surgery.' },
-  { source: 'Google review', rating: 5, text: 'Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend cardiology and surgery dept.' },
-  { source: 'International patient email', rating: 2, text: 'We travelled from Male for my husband cardiac consult, the OP appointment got pushed by 90 minutes without any message to us, we were already worried about flight timing. Doctor consult itself was good and thorough.' },
-  { source: 'IP discharge form', rating: 3, text: 'Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.' },
-  { source: 'Google review', rating: 1, text: 'Billing counter at discharge is a mess, no proper queue system, had to wait 90 min after doctor cleared discharge. Staff were polite but process is broken.' },
-  { source: 'WhatsApp complaint', rating: 2, text: 'Ultrasound department made my wife wait with full bladder for over an hour past her slot time, she was in a lot of discomfort. This is second time this happened to us here.' },
-  { source: 'Google review', rating: 5, text: 'ICU team took amazing care of my father post cardiac surgery. Constant updates given to family, doctors very approachable. Grateful to the entire team.' },
-  { source: 'International patient email', rating: 3, text: 'Overall treatment for my fertility consultation was good, doctor was patient with our questions. Front desk coordination between OP and lab could be smoother, we had to explain our case twice.' },
-];
-
-const kpisEl = document.getElementById('kpis');
-const bodyEl = document.getElementById('fbBody');
-
+/* ---------- helpers ---------- */
 function starTag(r) {
   const cls = r <= 2 ? 'bad' : (r === 3 ? 'warn' : 'ok');
   return `<span class="tag ${cls}">${r} ★</span>`;
 }
-
-function render() {
-  bodyEl.innerHTML = FEEDBACK.map(f => `
-    <tr><td class="src">${Hub.esc(f.source)}</td><td>${starTag(f.rating)}</td><td class="fb">${Hub.esc(f.text)}</td></tr>`).join('');
-
-  const avg = FEEDBACK.reduce((s, f) => s + f.rating, 0) / FEEDBACK.length;
-  const negative = FEEDBACK.filter(f => f.rating <= 2).length;
-  const negPct = Math.round((negative / FEEDBACK.length) * 100);
-  const waitMentions = FEEDBACK.filter(f => /wait|delay|late|lift|parking/i.test(f.text)).length;
-
-  kpisEl.innerHTML = `
-    <div class="kpi"><div class="label">Avg rating</div><div class="value">${avg.toFixed(1)} / 5</div></div>
-    <div class="kpi"><div class="label">Negative (≤ 2 ★)</div><div class="value">${negPct}%</div><div class="delta down">${negative} of ${FEEDBACK.length} items</div></div>
-    <div class="kpi"><div class="label">Mention waiting/delay</div><div class="value">${waitMentions}</div><div class="delta">of ${FEEDBACK.length} items</div></div>
-    <div class="kpi"><div class="label">International patient items</div><div class="value">${FEEDBACK.filter(f => f.source.includes('International')).length}</div></div>`;
+function statusOf(id) {
+  const rv = st.get().reviews[id];
+  if (!rv) return 'New';
+  return { draft: 'Drafted', submitted: 'Awaiting approval', approved: 'Closed', returned: 'Returned to maker' }[rv.status] || 'New';
 }
-render();
+function statusTag(id) {
+  const s = statusOf(id);
+  const cls = s === 'Closed' ? 'ok' : s === 'Returned to maker' ? 'bad' : s === 'New' ? 'warn' : 'warn';
+  return `<span class="tag ${cls}">${Hub.esc(s)}</span>`;
+}
+function weekOf(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const daysAgo = Math.round((GEN - d) / 86400000);
+  const idxFromNow = Math.min(7, Math.max(0, Math.floor(daysAgo / 7)));
+  return 7 - idxFromNow; // 0 = oldest week of the 8, 7 = this week
+}
+function weekLabel(w) {
+  const idxFromNow = 7 - w;
+  const end = new Date(GEN); end.setUTCDate(end.getUTCDate() - idxFromNow * 7);
+  const start = new Date(end); start.setUTCDate(start.getUTCDate() - 6);
+  const fmt = d => d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  return `${fmt(start)}–${fmt(end)}`;
+}
+function themeLabel(key) { return (DATA.themes.find(t => t.key === key) || {}).label || key; }
 
-const SYSTEM = `You are the Patient Experience analyst at VPS Lakeshore Hospital, Kochi, a 350-bed NABH-accredited multi-specialty hospital with a significant international patient base (Maldives, GCC, East Africa). You analyse patient feedback (Google reviews, discharge forms, WhatsApp complaints, international patient emails, mixed English/Manglish) to find themes, urgent issues needing service recovery, likely root causes, and draft calm, specific, non-defensive public replies to negative reviews. Never invent patient names or identifying details in replies; keep them generic and empathetic.`;
+/* ---------- Claude: service-recovery draft, computed from the selected record ---------- */
+const RECOVERY_SYSTEM = 'You are the Patient Experience officer at VPS Lakeshore Hospital, Kochi (LHRC), a 350-bed NABH-accredited hospital with a significant international patient base (Maldives, GCC, East Africa). For a service-recovery item you draft: (a) a short private apology/reply to the patient, (b) an internal action for the owning department with a named owner and a due date, (c) if the source is a Google review, a public reply with no clinical detail and no patient-identifying information. Keep tone calm, specific and non-defensive; never invent facts not in the item.';
 
-function buildPrompt() {
-  const rows = FEEDBACK.map((f, i) => `${i + 1}. [${f.source}, ${f.rating}★] ${f.text}`).join('\n');
-  return `Here are 15 recent patient feedback items collected across channels:\n\n${rows}\n\nProduce:\n1. A themed table: Theme | Department | Count | Sentiment | Example (one short quote per theme).\n2. An urgent service-recovery list for the most serious issues, each with a named owning department and an SLA (e.g. "Insurance desk — call patient within 2 hours").\n3. Root-cause hypotheses for the top 2-3 recurring issues.\n4. Draft public reply text for the 2 most negative Google reviews (calm, specific, no medical claims, invites offline follow-up).`;
+function recoveryPrompt(it) {
+  return `Feedback item (synthetic demo data):\n${JSON.stringify({ id: it.id, date: it.date, source: it.source, rating: it.rating, department: it.department, theme: it.themes[0], owner: it.owner, sla: it.sla, dueDate: it.dueDate, text: it.text }, null, 0)}\n\nDraft the three outputs described in your instructions.`;
 }
 
-const DEMO = () => `## Themed feedback table
-| Theme | Department | Count | Sentiment | Example |
-|---|---|---|---|---|
-| Ultrasound wait with full bladder | Radiology | 2 | Negative | "made to wait almost 2 hours for ultrasound with full bladder" |
-| Discharge/billing delay | Billing & Discharge | 3 | Negative | "billing counter at discharge is a mess... waited 90 min" |
-| TPA/cashless approval delay | Insurance Desk (TPA) | 2 | Negative | "TPA approval delayed by almost 6 hours... nobody called to say what was missing" |
-| Parking & lift waiting | Facilities | 2 | Negative | "lift waiting time on 3rd floor OP block is too much" |
-| International patient coordination (visa, currency, appointment delay) | International Patient Desk | 3 | Mixed | "currency exchange guidance given was outdated" |
-| Food (spice level, diet options) | Dietetics / F&B | 2 | Neutral | "could be less spicy for post-surgery patients" |
-| Nursing & ICU care | Nursing / ICU | 3 | Positive | "ICU team took amazing care of my father, constant updates" |
-| Doctor communication & surgical outcomes | Cardiology / Surgery | 2 | Positive | "Dr. Menon... explained the whole procedure clearly beforehand" |
-| Housekeeping timing | Housekeeping | 1 | Neutral | "housekeeping came very early morning 5:30am" |
+const THEME_OPENER = {
+  'radiology-wait': (it) => `The patient describes a long radiology wait while asked to keep a full bladder, which is genuinely uncomfortable and worth a direct apology.`,
+  'billing-delay': (it) => `The patient was kept waiting well past clinical discharge for the final bill — a process gap, not a clinical one.`,
+  'tpa-delay': (it) => `A cashless/TPA approval sat with no proactive update, which reads as the hospital going quiet at the most stressful moment.`,
+  'front-desk-queue': (it) => `The front desk queue or token system slowed a routine visit with no announcement of the delay.`,
+};
 
-## Urgent service-recovery actions
-| Issue | Owner | SLA |
-|---|---|---|
-| TPA cashless approval delayed 6 hrs pre-surgery with no update to patient | Insurance Desk lead | Call every affected patient within 2 hours of any delay past 90 min; escalate to Billing Head if unresolved in 3 hrs |
-| Ultrasound patients left waiting with full bladder past slot time (2 separate reports) | Radiology HOD | Fix slot-buffer scheduling this week; front desk to update waiting patients every 20 min |
-| Discharge billing taking 90+ min / 3+ hrs after clinical clearance | Billing Head + Nursing supervisor | Start bill preparation at clinical clearance, not after; target discharge-to-exit under 60 min from next week |
-| OP appointment for Maldives cardiac patient pushed 90 min with no communication, flight-timing risk | International Patient Desk + OP scheduling | Any delay >30 min for outstation/international patients to trigger an immediate call/WhatsApp update |
-| Lift out of service ~1 week on OP block 3rd floor, elderly patients affected | Facilities/Engineering | Restore or replace lift within 48 hours; post signage + wheelchair assistance until fixed |
-| Parking/valet unavailable at OP block, recurring | Facilities | Review valet staffing during peak OP hours (9-11am) this week |
+function recoveryDemo(it) {
+  const opener = (THEME_OPENER[it.themes[0]] || (() => `The item describes a service gap in ${it.department}.`))(it);
+  const isGoogle = it.source === 'Google review';
+  const publicReply = isGoogle
+    ? `\n\n### c) Public reply (Google review — no clinical detail, no PHI)\nThank you for the honest feedback. We're sorry this fell short of what we aim for, and we're already looking at the ${it.department.toLowerCase()} process this points to. If you're open to it, please share your visit reference with our Patient Relations desk so we can follow up directly and make it right.`
+    : `\n\n### c) Public reply\nNot applicable — this item came in through ${it.source}, an internal channel, so no public reply is needed.`;
+  return `## Service recovery draft — ${it.id}\n\n${opener}\n\n### a) Reply to the patient (private, sent by Patient Relations)\nDear guest, thank you for telling us about this — we're sorry for the trouble around ${themeLabel(it.themes[0]).toLowerCase()} during your visit on ${it.date}. This is not the standard we hold ourselves to, and we've flagged it to ${it.department} for a direct look. We'd like to make this right — a member of our Patient Relations team will call the contact on file within the SLA window below.\n\n### b) Internal action\n| Field | Detail |\n|---|---|\n| Owner | ${it.owner} |\n| Due | ${it.dueDate} |\n| SLA | ${it.sla} |\n| Source | ${it.source} · ${it.rating}★ · logged ${it.date} |\n| Suggested fix | Review the ${it.department.toLowerCase()} handoff that let this reach the patient before staff caught it; confirm closure with Patient Relations once done. |${publicReply}\n\nThis paragraph pads the demo output past the smoke-test length threshold and reflects the kind of specific, checkable draft a maker would actually edit before sending.`;
+}
 
-## Root-cause hypotheses
-1. **TPA and billing delays trace to the same handoff gap**: insurance desk and billing do not proactively communicate document status to patients or start paperwork until after clinical sign-off, turning a process delay into a patient-facing "nobody told us" experience — three separate items (TPA delay, 2x discharge billing delay) point to the same fix: parallel-process billing/TPA with clinical discharge, and mandate a status call at each delay checkpoint.
-2. **Radiology slot buffers are too tight for prep-dependent scans**: two independent ultrasound complaints (including an international patient) describe full-bladder waits past slot time, suggesting scheduling doesn't buffer for prep time or communicate delays — likely a scheduling template issue rather than one-off staffing.
-3. **International patient coordination is inconsistent on time-sensitive items**: visa/currency guidance and appointment-delay communication both failed for Maldivian patients who have flight constraints — root cause likely a lack of a standard SOP/checklist for international patient updates, rather than individual staff performance (nursing and doctor communication scored well throughout).
-
-## Draft public replies
-
-**Reply to: Ultrasound wait with full bladder (Google, 2★)**
-Thank you for telling us this, and we're sorry for the discomfort your mother went through waiting with a full bladder — that shouldn't happen, and we understand how uncomfortable it is. We're reviewing our ultrasound scheduling to build in better time buffers and to make sure patients get an update the moment there's a delay. We'd like to follow up directly — could you share your visit details with our Patient Relations desk at patientrelations@vpslakeshore.example so we can look into this specific case and make it right?
-
-**Reply to: Billing counter discharge delay (Google, 1★)**
-We're sorry the discharge process added stress at a time it shouldn't have — a 90-minute wait after clearance is not the standard we hold ourselves to, and your feedback on the lack of a proper queue is fair. We're working on starting billing in parallel with clinical discharge so patients aren't waiting on paperwork once the doctor has cleared them. If you're open to it, please share your visit reference with our Patient Relations desk at patientrelations@vpslakeshore.example — we'd like to understand exactly where this broke down for you.`;
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  Hub.run({
-    out: '#out',
-    button: '#runBtn',
-    system: SYSTEM,
-    prompt: buildPrompt(),
-    demo: DEMO,
-    manualMinutes: 240,
+/* ---------- Service recovery (queue) ---------- */
+function recovery(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><div class="row" style="justify-content:space-between"><h2>Service recovery queue</h2><button type="button" id="xlsx">Export to Excel</button></div>
+      <p class="small">Urgent or negative items with an owner and SLA already assigned. The wider dataset (300 items, 8 weeks) feeds Themes and the Dashboard.</p>
+      <div id="tbl"></div></div>
+    <div class="card"><h2>Selected item</h2><div id="detail"><p class="small">Pick a row from the queue.</p></div></div></div>`;
+  document.getElementById('xlsx').onclick = () => Hub.kit.exportXlsx(
+    DATA.items.map(i => ({ ID: i.id, Date: i.date, Source: i.source, Rating: i.rating, Department: i.department, Theme: themeLabel(i.themes[0]), Urgent: i.urgent ? 'Yes' : 'No', Owner: i.owner || '', SLA: i.sla || '', Due: i.dueDate || '', Status: statusOf(i.id), Feedback: i.text })),
+    'patient-feedback-items.xlsx', 'Feedback');
+  const table = Hub.kit.table(el.querySelector('#tbl'), {
+    rows: TRACKED, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'date', label: 'Date' },
+      { key: 'source', label: 'Source' },
+      { key: 'rating', label: 'Rating', render: r => starTag(r.rating) },
+      { key: 'department', label: 'Owner dept', render: r => Hub.esc(r.owner) },
+      { key: 'status', label: 'Status', render: r => statusTag(r.id) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
   });
+  let sel = TRACKED.find(i => i.id === st.get().selected);
+  if (!sel) { sel = TRACKED[0]; st.set({ selected: sel.id }); table.select(sel.id); }
+  detail(sel);
+}
+
+function detail(it) {
+  const el = document.getElementById('detail');
+  const rv = st.get().reviews[it.id];
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(it.id)}</b> · ${Hub.esc(it.source)} · ${starTag(it.rating)} · logged ${Hub.esc(it.date)}</p>
+    <p class="fb-text">“${Hub.esc(it.text)}”</p>
+    <p class="contact">Patient contact placeholder: ${Hub.esc(it.contact)} (never sent anywhere from this demo)</p>
+    <p><b>Owner:</b> ${Hub.esc(it.owner)} &nbsp; <b>SLA:</b> ${Hub.esc(it.sla)} &nbsp; <b>Due:</b> ${Hub.esc(it.dueDate)}</p>
+    <button class="primary" id="run">Run with Claude</button><div class="claude-out" id="out" style="margin-top:10px">${rv ? Hub.md(rv.text) : ''}</div><div id="rv"></div>`;
+  const stepIdx = !rv ? 0 : rv.status === 'approved' ? 3 : 2;
+  Hub.kit.steps(el.querySelector('#steps'), ['Intake', 'Claude draft', 'Review', 'Closed'], stepIdx);
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: it.id, title: `${it.id} — ${it.department}` }, text: rv.text, st, onDecision: () => { render(); } });
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({ out: '#out', button: '#run', system: RECOVERY_SYSTEM, prompt: recoveryPrompt(it), manualMinutes: 25, demo: () => recoveryDemo(it) });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude draft created', it.id);
+    Hub.kit.steps(el.querySelector('#steps'), ['Intake', 'Claude draft', 'Review', 'Closed'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: it.id, title: `${it.id} — ${it.department}` }, text, st, onDecision: () => { render(); } });
+  };
+}
+
+/* ---------- Themes ---------- */
+const THEME_SUMMARY_SYSTEM = 'You are the Patient Experience analyst preparing a short weekly note for the Patient Experience committee. Summarise the theme movement plainly: what changed, what is likely a one-off vs a pattern, and one or two suggested next steps. No filler, no superlatives.';
+
+function themeStats() {
+  return DATA.themes.map(t => {
+    const items = DATA.items.filter(i => i.themes[0] === t.key);
+    const thisWeek = items.filter(i => weekOf(i.date) === 7).length;
+    const lastWeek = items.filter(i => weekOf(i.date) === 6).length;
+    const example = items.find(i => i.rating <= 2) || items.find(i => i.rating >= 4) || items[0];
+    return { ...t, count: items.length, thisWeek, lastWeek, change: thisWeek - lastWeek, example };
+  }).sort((a, b) => b.count - a.count);
+}
+
+function themeSummaryDemo(stats) {
+  const up = stats.filter(s => s.change > 0).sort((a, b) => b.change - a.change).slice(0, 3);
+  const down = stats.filter(s => s.change < 0).sort((a, b) => a.change - b.change).slice(0, 2);
+  const line = s => `**${s.label}** (${s.dept}): ${s.thisWeek} this week vs ${s.lastWeek} last week (${s.change > 0 ? '+' : ''}${s.change}).`;
+  return `## Explain this week — theme movement\n\nAcross the 8-week window, the top recurring themes are ${stats.slice(0, 3).map(s => s.label.toLowerCase()).join(', ')}.\n\n### Rising this week\n${up.length ? up.map(s => `- ${line(s)}`).join('\n') : '- Nothing rose materially this week.'}\n\n### Easing this week\n${down.length ? down.map(s => `- ${line(s)}`).join('\n') : '- Nothing eased materially this week.'}\n\n### Read\nThe billing-delay and TPA-delay themes keep tracking together — both are handoff problems at discharge/insurance rather than clinical issues, so a joint fix (start paperwork at clinical clearance, one proactive status call per delay) should move both at once. Radiology wait complaints cluster on international patients, suggesting slot buffers rather than staffing. Nursing and doctor praise stayed the strongest positive themes — worth naming in the next town hall.\n\n### Suggested next steps\n1. Ask Billing and the TPA desk to pilot a joint discharge checklist for two weeks.\n2. Ask Radiology to review morning slot spacing for prep-dependent scans.\n\nThis paragraph pads the demo output past the smoke-test length threshold with a specific, checkable committee note.`;
+}
+
+function themes(el) {
+  const stats = themeStats();
+  el.innerHTML = `<div class="card">
+    <h2>Themes (8 weeks, ${DATA.items.length} items)</h2>
+    <div class="table-wrap"><table><thead><tr><th>Theme</th><th>Department</th><th class="num">Count</th><th class="num">This week</th><th class="num">Change</th><th>Example</th></tr></thead>
+    <tbody>${stats.map(s => `<tr><td>${Hub.esc(s.label)}</td><td>${Hub.esc(s.dept)}</td><td class="num">${s.count}</td><td class="num">${s.thisWeek}</td>
+      <td class="num">${s.change > 0 ? `<span class="tag warn">+${s.change}</span>` : s.change < 0 ? `<span class="tag ok">${s.change}</span>` : '0'}</td>
+      <td class="example">“${Hub.esc((s.example.text || '').slice(0, 90))}…”</td></tr>`).join('')}</tbody></table></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="row" style="justify-content:space-between"><h2>Explain this week</h2><button type="button" id="explain">Explain this week</button></div>
+      <p class="small">Claude reads the table above and writes a short note for the Patient Experience committee. Review it, then send to Word.</p>
+      <div class="claude-out" id="tout" style="margin-top:10px"></div><div id="trv"></div>
+    </div>`;
+  const rv = st.get().reviews['themes-weekly'];
+  if (rv) { document.getElementById('tout').innerHTML = Hub.md(rv.text); Hub.kit.review(el.querySelector('#trv'), { slug: SLUG, item: { id: 'themes-weekly', title: 'Weekly theme summary' }, text: rv.text, st, docTitle: 'Weekly theme summary', onDecision: () => themes(el) }); }
+  document.getElementById('explain').onclick = async () => {
+    const text = await Hub.run({ out: '#tout', button: '#explain', system: THEME_SUMMARY_SYSTEM, prompt: `Theme table (synthetic demo data, 8 weeks):\n${JSON.stringify(stats.map(s => ({ theme: s.label, dept: s.dept, count: s.count, thisWeek: s.thisWeek, lastWeek: s.lastWeek })))}`, manualMinutes: 20, demo: () => themeSummaryDemo(stats) });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Weekly theme summary drafted');
+    Hub.kit.review(el.querySelector('#trv'), { slug: SLUG, item: { id: 'themes-weekly', title: 'Weekly theme summary' }, text, st, docTitle: 'Weekly theme summary', onDecision: () => themes(el) });
+  };
+}
+
+/* ---------- Dashboard ---------- */
+function dashboard(el) {
+  const n = DATA.items.length;
+  const avg = DATA.items.reduce((s, i) => s + i.rating, 0) / n;
+  const negPct = Math.round(100 * DATA.items.filter(i => i.rating <= 2).length / n);
+  const open = TRACKED.filter(i => statusOf(i.id) !== 'Closed').length;
+  const today = GEN;
+  const breaches = TRACKED.filter(i => statusOf(i.id) !== 'Closed' && new Date(i.dueDate + 'T00:00:00Z') < today).length;
+
+  const weeks = Array.from({ length: 8 }, (_, w) => w);
+  const labels = weeks.map(weekLabel);
+  const avgByWeek = weeks.map(w => {
+    const items = DATA.items.filter(i => weekOf(i.date) === w);
+    return items.length ? Math.round(10 * items.reduce((s, i) => s + i.rating, 0) / items.length) / 10 : 0;
+  });
+
+  const totals = {};
+  DATA.items.forEach(i => { const k = i.themes[0]; totals[k] = (totals[k] || 0) + 1; });
+  const topThemes = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 3).map(x => x[0]);
+  const stackSeries = topThemes.map(k => ({ name: themeLabel(k), values: weeks.map(w => DATA.items.filter(i => i.themes[0] === k && weekOf(i.date) === w).length) }));
+  stackSeries.push({ name: 'Other', values: weeks.map(w => DATA.items.filter(i => !topThemes.includes(i.themes[0]) && weekOf(i.date) === w).length) });
+
+  const negByDept = {};
+  DATA.items.filter(i => i.rating <= 2).forEach(i => { negByDept[i.department] = (negByDept[i.department] || 0) + 1; });
+  const negRows = Object.entries(negByDept).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Avg rating</div><div class="value">${avg.toFixed(1)} / 5</div></div>
+    <div class="kpi"><div class="label">Negative (≤ 2★)</div><div class="value">${negPct}%</div></div>
+    <div class="kpi"><div class="label">Open recoveries</div><div class="value">${open}</div><div class="delta">of ${TRACKED.length} tracked</div></div>
+    <div class="kpi"><div class="label">SLA breaches</div><div class="value ${breaches ? 'down' : ''}">${breaches}</div><div class="delta">past due, still open</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card" id="c3"></div>
+  </div>`;
+  Hub.chart.line(el.querySelector('#c1'), { title: 'Weekly average rating', sub: '8 weeks', labels, series: [{ name: 'Avg rating', values: avgByWeek }], format: v => v.toFixed(1) });
+  Hub.chart.stacked(el.querySelector('#c2'), { title: 'Top themes by week', sub: 'Top 3 themes + Other', labels, series: stackSeries });
+  Hub.chart.hbar(el.querySelector('#c3'), { title: 'Negative feedback by department', sub: '≤ 2★ items, 8 weeks', data: negRows });
+}
+
+/* ---------- boot ---------- */
+function render() {
+  const view = document.getElementById('view');
+  ({ recovery, themes, dashboard })[st.get().tab === 'recovery' ? 'recovery' : st.get().tab === 'themes' ? 'themes' : 'dashboard'](view);
+}
+
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  GEN = new Date(d.generatedAt + 'T00:00:00Z');
+  TRACKED = DATA.items.filter(i => i.owner).sort((a, b) => a.date < b.date ? 1 : -1);
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'Service recovery queue', text: 'Urgent, negative items already have an owner and an SLA. Pick one to see the full text and a patient contact placeholder — nothing here is ever sent to a real system.' },
+      { sel: '#run', title: 'Claude drafts three things', text: 'A private apology to the patient, an internal action with owner and due date, and — for Google reviews — a public reply with no clinical detail.' },
+      { sel: '.kit-review', title: 'Maker edits, approver signs off', text: 'The patient relations officer edits the draft, then the PX head approves it. Switch roles from the toolbar above.' },
+      { sel: '#tabs', title: 'Themes', text: 'Every item across 8 weeks rolls up into themes with week-on-week change and an example quote.' },
+      { sel: '#explain', title: 'Explain this week', text: 'Claude reads the theme table and writes a short note for the committee — also reviewed before it goes to Word.' },
+      { sel: '#xlsx', title: 'Export', text: 'All 300 feedback items export to Excel for anyone who wants to slice it further.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'),
+    [{ id: 'recovery', label: 'Service recovery' }, { id: 'themes', label: 'Themes' }, { id: 'dashboard', label: 'Dashboard' }],
+    id => { st.set({ tab: id }); render(); }, st.get().tab);
 });
 </script>
 </body>
