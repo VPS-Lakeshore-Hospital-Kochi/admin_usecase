@@ -14,7 +14,8 @@ const server = createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream' });
     res.end(body);
   } catch { res.writeHead(404); res.end(); }
-}).listen(8765);
+}).listen(Number(process.env.PORT) || 8765);
+const BASE = `http://localhost:${Number(process.env.PORT) || 8765}`;
 
 const APPS = (await readdir(join(ROOT, 'apps'))).filter(f => f.endsWith('.html')).map(f => f.replace(/\.html$/, ''));
 // ONLY=slug[,slug] limits the run to those prototypes (hub and governance are skipped)
@@ -29,7 +30,7 @@ for (const [path, width] of PAGES) {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.on('response', r => { if (r.status() >= 400 && r.url().startsWith('http://localhost') && !r.url().endsWith('favicon.ico')) errors.push(`${r.status()} ${r.url()}`); });
-  await page.goto(`http://localhost:8765/${path}`);
+  await page.goto(`${BASE}/${path}`);
   let note = '';
   if (path === 'index.html') {
     const hrefs = await page.$$eval('a.tile', as => as.map(a => a.getAttribute('href')));
