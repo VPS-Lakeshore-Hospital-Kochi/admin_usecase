@@ -5,172 +5,366 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Denial &amp; short-payment analyser</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .rc-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .rc-row:last-child { border-bottom: none; }
+  .recov-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .recov-row input { max-width: 160px; }
+  .small-muted { font-size: 12px; color: var(--muted); }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Denial &amp; short-payment analyser</h1>
-    <p>Cluster reasons behind settled-claim deductions, quantify preventable revenue leakage, and draft an appeal for the top case.</p>
+    <p>Settled cashless claims across 7 payers/TPAs over the last three months — appeal the recoverable deductions, understand the root causes, and track what's been won back.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample settled claims batch</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="month">Settled claims — August 2026 batch (12 claims)</option>
-          <option value="cardiac">Settled claims — Cardiology-heavy batch (12 claims)</option>
-        </select>
-      </div>
-      <label>Claims table (editable — TPA | Claimed ₹ | Approved ₹ | Deduction reason)</label>
-      <textarea id="claims" rows="16"></textarea>
-      <div class="table-wrap"><table id="claimsTable"><thead><tr><th>TPA</th><th class="num">Claimed</th><th class="num">Approved</th><th class="num">Deduction</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Synthetic claims data for demonstration only. TPA names and figures are illustrative.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic claims for demonstration only — no real patients, payers act as named for illustration. Nothing here is submitted to any TPA or insurer; "Submitted" only marks the appeal ready to send.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'denial-analyser';
 Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Denial & short-payment analyser' });
+const st = Hub.kit.state(SLUG, { tab: 'appeals', selected: null, reviews: {}, recovered: {}, notesReview: null });
+let DATA, byId;
 
-const SCENARIOS = {
-  month: { claims: `Star Health | 3,90,500 | 3,58,000 | Room rent proportionate deduction (private room above entitlement)
-Medi Assist | 2,77,000 | 2,55,000 | Stent sub-limit cap applied
-MediBuddy | 1,43,000 | 1,43,000 | Fully approved, no deduction
-Star Health | 2,10,000 | 1,82,000 | Non-payable consumables (gloves, kits) not itemised
-Paramount TPA | 4,60,000 | 3,95,000 | Tariff mismatch vs empanelment rate card
-Medi Assist | 1,95,000 | 1,68,000 | Documents missing — discharge summary not attached
-Vidal Health | 3,20,000 | 2,60,000 | Room rent proportionate deduction + non-payables
-Star Health | 88,000 | 88,000 | Fully approved, no deduction
-Paramount TPA | 5,40,000 | 4,70,000 | Package inclusion billed separately (disallowed)
-MediBuddy | 2,05,000 | 1,74,000 | Non-payable consumables not itemised
-Medi Assist | 3,70,000 | 3,05,000 | Tariff mismatch vs empanelment rate card
-Vidal Health | 1,60,000 | 1,35,000 | Documents missing — investigation reports not attached` },
-  cardiac: { claims: `Medi Assist | 2,85,000 | 2,30,000 | Stent sub-limit cap applied
-Star Health | 3,95,000 | 3,40,000 | Room rent proportionate deduction (private room above entitlement)
-Paramount TPA | 6,10,000 | 5,05,000 | Tariff mismatch — cath lab package rate
-Vidal Health | 2,40,000 | 2,40,000 | Fully approved, no deduction
-Medi Assist | 4,20,000 | 3,35,000 | Stent sub-limit cap applied + non-payables
-Star Health | 1,80,000 | 1,55,000 | Non-payable consumables (guide wires, sheaths) not itemised
-Paramount TPA | 5,50,000 | 4,60,000 | Tariff mismatch — cath lab package rate
-MediBuddy | 3,10,000 | 3,10,000 | Fully approved, no deduction
-Vidal Health | 2,95,000 | 2,42,000 | Documents missing — cath lab procedure notes not attached
-Medi Assist | 3,60,000 | 2,88,000 | Stent sub-limit cap applied
-Star Health | 2,20,000 | 1,90,000 | Room rent proportionate deduction
-Paramount TPA | 4,80,000 | 4,05,000 | Tariff mismatch — cath lab package rate` },
-};
+/* ---------- helpers ---------- */
+function windowTag(days) {
+  if (days < 0) return '<span class="tag bad">Expired</span>';
+  if (days <= 7) return `<span class="tag bad">${days}d left</span>`;
+  if (days <= 15) return `<span class="tag warn">${days}d left</span>`;
+  return `<span class="tag ok">${days}d left</span>`;
+}
+function statusTag(s) {
+  const cls = { 'Recovered': 'ok', 'Submitted': 'ok', 'Rejected': 'bad', 'Drafted': 'warn', 'Not started': 'warn' }[s] || 'warn';
+  return `<span class="tag ${cls}">${Hub.esc(s)}</span>`;
+}
+function effectiveStatus(c) {
+  const rv = (st.get().reviews[c.id] || {}).status;
+  if (rv === 'approved') return 'Submitted';
+  return recStatus(c.id) || c.appealStatus;
+}
+function recStatus(id) { return (st.get().recovered[id] || {}).status; }
+function recoveredAmt(c) {
+  const r = st.get().recovered[c.id];
+  return r && r.amount != null ? r.amount : c.recovered;
+}
+function appealQueueRows() {
+  return DATA.claims.filter(c => c.deduction > 5000 && c.appealWindowDays >= 0 && effectiveStatus(c) !== 'Recovered' && effectiveStatus(c) !== 'Rejected')
+    .sort((a, b) => b.deduction - a.deduction);
+}
 
-function parseClaims(text) {
-  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
-    const [tpa, claimed, approved, reason] = l.split('|').map(s => s.trim());
-    return { tpa, claimed: parseInt(claimed.replace(/,/g, ''), 10), approved: parseInt(approved.replace(/,/g, ''), 10), reason };
+/* ---------- appeal letter draft ---------- */
+function appealPrompt(c) {
+  return JSON.stringify({
+    claim: c.id, payer: c.payer, dept: c.dept, procedure: c.procedure, roomCategory: c.roomCategory,
+    dischargeDate: c.dischargeDate, claimed: c.claimed, approved: c.approved, deduction: c.deduction,
+    reasonCategory: c.reasonCategory, reasonText: c.reasonText, appealWindowDays: c.appealWindowDays,
+  }, null, 1);
+}
+function appealDemo(c) {
+  const clauseHint = {
+    'Non-payable consumables': 'the itemised OT consumables register and the IRDAI non-payables schedule, showing these items were used intra-operatively and billed at actual cost',
+    'Room-rent proportionate deduction': 'the room-category eligibility clause in the policy schedule and the admission register confirming room allotment was on availability, not by patient choice',
+    'Tariff mismatch vs rate card': 'Clause on empanelment tariff (rate card effective from the current agreement date) — attaching the signed rate card and this bill\'s per-line comparison',
+    'Package inclusion billed separately': 'the package-inclusion list in the empanelment agreement and the treating surgeon\'s note establishing this item as a distinct, additional procedure outside the standard package scope',
+    'Documents missing': 'the specific missing document, now attached, along with a covering note confirming submission timelines',
+    'PED / waiting-period dispute': 'the continuity/portability certificate from the prior insurer establishing unbroken coverage, and the policy schedule\'s waiting-period clause',
+    'Sub-limit cap': 'the policy schedule\'s sub-limit table for this procedure/implant category, cross-checked against the amount claimed',
+  }[c.reasonCategory] || 'the relevant policy clause and supporting documents';
+  const ask = c.reasonCategory === 'Tariff mismatch vs rate card'
+    ? 're-adjudicate this line at the current empanelled tariff and settle the balance'
+    : c.reasonCategory === 'Documents missing'
+    ? 're-open the claim now that the missing document is attached and settle the withheld amount'
+    : 're-adjudicate the deducted line and release the balance amount to the hospital';
+  return `## Appeal file — ${c.id}
+
+**Payer:** ${c.payer} · **Department:** ${c.dept} · **Procedure:** ${c.procedure}
+**Discharge date:** ${c.dischargeDate} · **Room:** ${c.roomCategory}
+**Claimed:** ₹${c.claimed.toLocaleString('en-IN')} · **Approved:** ₹${c.approved.toLocaleString('en-IN')} · **Deducted:** ₹${c.deduction.toLocaleString('en-IN')}
+**Deduction reason on file:** ${c.reasonText}
+**Appeal window:** ${c.appealWindowDays} day(s) remaining
+
+### Clause / documents to cite
+Attach ${clauseHint}.
+
+### The ask
+Request the payer ${ask}. State the recoverable amount clearly: **₹${c.deduction.toLocaleString('en-IN')}**.
+
+### Drafted appeal letter
+
+*Dear Claims Manager, ${c.payer},*
+
+*We are writing to appeal the deduction of ₹${c.deduction.toLocaleString('en-IN')} on claim ${c.id} (${c.procedure}, discharged ${c.dischargeDate}), settled at ₹${c.approved.toLocaleString('en-IN')} against a claimed amount of ₹${c.claimed.toLocaleString('en-IN')}.*
+
+*The deduction was applied on grounds of "${c.reasonText}." On review of our records, we believe this line should be reconsidered with reference to ${clauseHint}, copies of which are enclosed with this appeal.*
+
+*We request that the claim be re-adjudicated and the deducted amount of ₹${c.deduction.toLocaleString('en-IN')} released at the earliest, and would welcome the opportunity to discuss this further if any additional information is required. We have ${c.appealWindowDays} day(s) remaining within the appeal window and would appreciate a response within 15 working days.*
+
+*Yours faithfully,*
+*Revenue Cycle Management, VPS Lakeshore Hospital, Kochi*
+
+### Recommendation
+${c.reasonCategory === 'Tariff mismatch vs rate card' || c.reasonCategory === 'Sub-limit cap' || c.reasonCategory === 'PED / waiting-period dispute'
+  ? 'This reason is largely contractual — pursue the appeal, but also flag the underlying rate/sub-limit/PED clause to the TPA relationship owner for a policy-level fix, since claim-by-claim appeals will not resolve the pattern.'
+  : 'This deduction is process-preventable — pursue the appeal and route the root cause to billing/clinical teams so it does not recur (see Root causes tab).'}`;
+}
+
+/* ---------- Appeals tab ---------- */
+function appeals(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Appeal queue</h2>
+      <p class="small">Claims with a deduction over ₹5,000 and an open appeal window, sorted by recoverable amount.</p>
+      <div class="row" style="margin-bottom:8px"><button type="button" id="expQ">Export claims to Excel</button></div>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected claim</h2><div id="detail"><p class="small">Pick a claim from the queue.</p></div></div>
+  </div>`;
+  const rows = appealQueueRows();
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'Claim' },
+      { key: 'payer', label: 'Payer' },
+      { key: 'procedure', label: 'Procedure', render: r => `<span class="small">${Hub.esc(r.procedure)}</span>` },
+      { key: 'deduction', label: 'Recoverable ₹', num: true, format: v => Hub.inr(v) },
+      { key: 'appealWindowDays', label: 'Window', render: r => windowTag(r.appealWindowDays) },
+      { key: 'status', label: 'Status', render: r => statusTag(effectiveStatus(r)) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
   });
-}
-function render(text) {
-  const rows = parseClaims(text);
-  const tbody = document.querySelector('#claimsTable tbody');
-  tbody.innerHTML = rows.map(r => `<tr><td>${Hub.esc(r.tpa)}</td><td class="num">${Hub.inr(r.claimed)}</td><td class="num">${Hub.inr(r.approved)}</td><td class="num">${Hub.inr(r.claimed - r.approved)}</td><td>${Hub.esc(r.reason)}</td></tr>`).join('');
-
-  const totalClaimed = rows.reduce((a, r) => a + r.claimed, 0);
-  const totalApproved = rows.reduce((a, r) => a + r.approved, 0);
-  const totalDeduction = totalClaimed - totalApproved;
-  const byTPA = {};
-  rows.forEach(r => { byTPA[r.tpa] = (byTPA[r.tpa] || 0) + (r.claimed - r.approved); });
-  const topTPA = Object.entries(byTPA).sort((a, b) => b[1] - a[1])[0];
-  const box = document.getElementById('kpis');
-  box.innerHTML = [
-    ['Total deducted', Hub.inr(totalDeduction)],
-    ['Deduction %', ((totalDeduction / totalClaimed) * 100).toFixed(1) + '%'],
-    ['Highest-deduction TPA', topTPA ? topTPA[0] : '—'],
-    ['Claims count', rows.length],
-  ].map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+  el.querySelector('#expQ').onclick = () => Hub.kit.exportXlsx(DATA.claims.map(c => ({
+    Claim: c.id, 'Discharge date': c.dischargeDate, Payer: c.payer, Dept: c.dept, Procedure: c.procedure,
+    'Claimed ₹': c.claimed, 'Approved ₹': c.approved, 'Deduction ₹': c.deduction, 'Reason category': c.reasonCategory,
+    'Deduction reason': c.reasonText, Preventable: c.preventable, 'Appeal window (days)': c.appealWindowDays,
+    'Appeal status': effectiveStatus(c), 'Recovered ₹': recoveredAmt(c),
+  })), 'settled-claims.xlsx', 'Claims');
+  const sel = rows.find(c => c.id === st.get().selected) || rows[0];
+  if (sel) { st.set({ selected: sel.id }); detail(sel); } else document.getElementById('detail').innerHTML = '<p class="small">No claims currently need appeal — all clear or windows closed.</p>';
 }
 
-function loadScenario(key) {
-  document.getElementById('claims').value = SCENARIOS[key].claims;
-  render(SCENARIOS[key].claims);
+function detail(c) {
+  const el = document.getElementById('detail');
+  const rv = st.get().reviews[c.id];
+  const stepIdx = rv ? (rv.status === 'approved' ? 3 : 2) : 0;
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(c.id)}</b> · ${Hub.esc(c.procedure)} · ${Hub.esc(c.dept)}<br>
+    <span class="small">${Hub.esc(c.payer)} · discharged ${Hub.esc(c.dischargeDate)} · ${Hub.esc(c.roomCategory)} · ${windowTag(c.appealWindowDays)}</span></p>
+    <div class="table-wrap"><table><thead><tr><th></th><th class="num">Amount</th></tr></thead><tbody>
+      <tr><td>Claimed</td><td class="num">${Hub.inr(c.claimed)}</td></tr>
+      <tr><td>Approved</td><td class="num">${Hub.inr(c.approved)}</td></tr>
+      <tr><td><b>Deduction (recoverable)</b></td><td class="num"><b>${Hub.inr(c.deduction)}</b></td></tr>
+    </tbody></table></div>
+    <p class="small" style="margin-top:8px"><b>Deduction line:</b> ${Hub.esc(c.reasonText)}<br>Category: ${Hub.esc(c.reasonCategory)} · Preventable at source: ${c.preventable}</p>
+    <div class="row" style="margin-top:12px"><button class="primary" id="run">Run with Claude</button></div>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv"></div>
+    <div id="recovBox"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Flagged', 'Claude draft', 'Review', 'Approved'], stepIdx);
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: c.id, title: `Appeal — ${c.id}` }, text: rv.text, st, docTitle: `Appeal letter ${c.id}`, onDecision: () => { detail(c); } });
+  drawRecovery(c);
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 35,
+      system: 'You are a hospital revenue-cycle analyst drafting a TPA/insurer appeal for a short-settled cashless claim. Cite the specific clause, rate card or documents to attach, and state the recoverable ask clearly.',
+      prompt: appealPrompt(c), demo: () => appealDemo(c),
+    });
+    if (!text) return;
+    const steps = el.querySelector('#steps'), rv2 = el.querySelector('#rv');
+    if (!steps || !rv2 || !document.body.contains(el)) return; // user switched tabs while Claude was writing
+    Hub.kit.log(SLUG, 'Claude drafted appeal letter', c.id);
+    Hub.kit.steps(steps, ['Flagged', 'Claude draft', 'Review', 'Approved'], 2);
+    Hub.kit.review(rv2, { slug: SLUG, item: { id: c.id, title: `Appeal — ${c.id}` }, text, st, docTitle: `Appeal letter ${c.id}`, onDecision: () => { detail(c); } });
+  };
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('claims').addEventListener('input', e => render(e.target.value));
-loadScenario('month');
 
-const DEMO = {
-month: `## Reason clustering across the 12 claims
+function drawRecovery(c) {
+  const box = document.getElementById('recovBox');
+  if (!box) return;
+  const rec = st.get().recovered[c.id];
+  const amt = rec && rec.amount != null ? rec.amount : c.recovered;
+  box.innerHTML = `<h3 style="margin-bottom:4px">Recovery outcome</h3>
+    <p class="small-muted">Once the TPA responds, record what actually came back — this feeds the dashboard's recovery rate.</p>
+    <div class="recov-row">
+      <input type="number" id="recAmt" min="0" step="100" value="${amt || ''}" placeholder="Recovered ₹">
+      <button type="button" id="recSave">Save recovered amount</button>
+      ${amt ? `<span class="small">Currently ${Hub.inr(amt)}</span>` : ''}
+    </div>`;
+  box.querySelector('#recSave').onclick = () => {
+    const v = Number(box.querySelector('#recAmt').value) || 0;
+    const status = v <= 0 ? undefined : (v >= c.deduction * 0.98 ? 'Recovered' : 'Recovered');
+    st.set(s => ({ recovered: { ...(s.recovered || {}), [c.id]: { amount: v, status: v > 0 ? 'Recovered' : (s.recovered && s.recovered[c.id] && s.recovered[c.id].status) } } }));
+    Hub.kit.log(SLUG, 'Recorded recovered amount', `${c.id} — ${Hub.inr(v)}`);
+    drawRecovery(c);
+  };
+}
 
-| Cluster | Claims | Total deduction | Share |
-|---|---|---|---|
-| Room-rent proportionate deduction | 2 | ₹1,13,000 | 24% |
-| Tariff mismatch vs rate card | 2 | ₹1,25,000 | 27% |
-| Non-payable consumables not itemised | 2 | ₹63,000 | 14% |
-| Package inclusion billed separately | 1 | ₹70,000 | 15% |
-| Documents missing | 2 | ₹82,000 | 18% |
-| Stent sub-limit cap | 1 | ₹22,000 | 5% |
-
-## Preventable ₹ estimate
-Of the ~₹4,75,000 total deduction, an estimated **₹2,17,000 (≈46%)** is preventable through better front-end process: itemising consumables (₹63,000), attaching complete documents before submission (₹82,000), and correctly excluding package-inclusion items at billing stage (₹70,000, partially preventable — ~₹0 of it, since package rules are contractual; reclassify this as "contractual, not preventable"). Revised preventable estimate: **₹1,47,000** — driven by documentation and itemisation gaps that are within RCM's direct control.
-
-## Highest-deduction TPA
-**Paramount TPA** accounts for the largest single-TPA deduction (₹1,25,000 across 2 claims), both attributed to tariff-mismatch against the empanelment rate card — worth a rate-card reconciliation meeting with Paramount.
-
-## Drafted appeal letter — top case (Paramount TPA, Claim ₹5,40,000 → ₹4,70,000)
-
-*"We are writing to appeal the deduction of ₹70,000 on the above claim, applied on grounds of 'package inclusion billed separately.' On review of our empanelment package terms, [specific package item] is billed as a separate line only when [clinical justification, e.g. performed as a distinct procedure beyond the standard package scope]. We request re-adjudication of this line with reference to Clause [X] of the empanelment agreement and are attaching the itemised OT register and treating physician's note confirming the additional procedure was clinically necessitated and outside the standard package definition. We would appreciate a review within 15 working days."*
-
-## Recommendation
-Prioritise a rate-card reconciliation call with Paramount TPA (largest recoverable amount) and mandate a pre-submission itemisation checklist for consumables/non-payables to close the ₹1,47,000 preventable gap going forward.`,
-
-cardiac: `## Reason clustering across the 12 claims
-
-| Cluster | Claims | Total deduction | Share |
-|---|---|---|---|
-| Tariff mismatch — cath lab package rate | 3 | ₹1,70,000 | 34% |
-| Stent sub-limit cap | 3 | ₹1,12,000 | 22% |
-| Room-rent proportionate deduction | 2 | ₹85,000 | 17% |
-| Non-payable consumables not itemised | 1 | ₹25,000 | 5% |
-| Documents missing | 1 | ₹53,000 | 11% |
-| (Fully approved, no deduction) | 2 | ₹0 | 0% |
-
-## Preventable ₹ estimate
-Total deduction across the batch is ~₹4,95,000. Of this, **stent sub-limit caps (₹1,12,000)** are largely contractual and not preventable at the billing stage — they need a policy-level conversation with corporate clients about sub-limit adequacy, not a documentation fix. **Non-payable itemisation (₹25,000)** and **missing documents (₹53,000)** — totalling **₹78,000** — are directly preventable through a cardiology-specific pre-submission checklist (cath lab procedure notes, itemised consumables list).
-
-## Highest-deduction TPA
-**Paramount TPA** again leads with ₹1,70,000 deducted across 3 claims, all tariff-mismatch on the cath lab package rate — this is a recurring, systemic issue worth escalating as a rate-card renegotiation item rather than fighting claim-by-claim.
-
-## Drafted appeal letter — top case (Paramount TPA, Claim ₹6,10,000 → ₹5,05,000)
-
-*"We are writing to appeal the deduction of ₹1,05,000 applied on grounds of 'tariff mismatch — cath lab package rate.' Our records show the empanelled cath lab package rate for this procedure type was last revised in [month/year] at ₹[X], which the settlement does not appear to reflect. We request a rate-card reconciliation against the current empanelment agreement (copy attached) and re-adjudication of this claim at the applicable contracted rate. We would welcome a joint rate-card review meeting to prevent recurrence across future cath lab claims with your TPA."*
-
-## Recommendation
-Given tariff mismatch is now a **recurring pattern with Paramount TPA specifically** (3 of 12 claims, ₹1.70 lakh), escalate this as a contract-level rate-card reconciliation rather than individual appeals, while fixing the smaller but fully preventable documentation and itemisation gaps (₹78,000) through a cardiology pre-submission checklist.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const claims = document.getElementById('claims').value;
-  render(claims);
-  const prompt = `You are analysing a batch of 12 settled insurance/TPA claims for VPS Lakeshore Hospital, Kochi to identify denial and short-payment patterns.
-
-Claims (TPA | Claimed ₹ | Approved ₹ | Deduction reason):
-${claims}
-
-Provide: (1) reason clustering with total deduction and share per cluster, (2) an estimate of preventable ₹ (distinguish contractual/unavoidable deductions from process-fixable ones), (3) the TPA with the highest total deduction and why, (4) a drafted appeal letter for the single highest-deduction claim. Use ₹ formatting.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are a revenue-cycle management analyst at a 350-bed Kerala hospital, expert in TPA claim denials, appeals and rate-card negotiation.',
-    prompt, demo: DEMO[key], manualMinutes: 150,
+/* ---------- Root causes tab ---------- */
+function reasonSummary() {
+  const map = {};
+  DATA.claims.forEach(c => {
+    if (!map[c.reasonCategory]) map[c.reasonCategory] = { cat: c.reasonCategory, count: 0, total: 0, preventableTotal: 0, deptCount: {} };
+    const m = map[c.reasonCategory];
+    m.count++; m.total += c.deduction;
+    if (c.preventable === 'Y') m.preventableTotal += c.deduction;
+    m.deptCount[c.dept] = (m.deptCount[c.dept] || 0) + 1;
   });
+  return Object.values(map).filter(m => m.cat !== 'Fully approved').map(m => ({
+    ...m, topDept: Object.entries(m.deptCount).sort((a, b) => b[1] - a[1])[0][0],
+  })).sort((a, b) => b.total - a.total);
+}
+
+function rootPrompt() {
+  return JSON.stringify(reasonSummary().map(r => ({ category: r.cat, claims: r.count, totalDeduction: r.total, preventableDeduction: r.preventableTotal, topDept: r.topDept })));
+}
+function rootDemo() {
+  const rows = reasonSummary();
+  const totalDeduction = rows.reduce((a, r) => a + r.total, 0);
+  const totalPreventable = rows.reduce((a, r) => a + r.preventableTotal, 0);
+  const top3 = rows.slice(0, 3);
+  return `## Monthly prevention note — deduction root causes
+
+Across the last three months, settled claims lost **${Hub.inr(totalDeduction)}** to deductions, of which **${Hub.inr(totalPreventable)}** (${Math.round(100 * totalPreventable / totalDeduction)}%) is assessed as preventable at source — meaning billing or clinical documentation practice, not TPA contract terms, is the primary driver.
+
+### Top three categories to fix this month
+
+${top3.map((r, i) => `${i + 1}. **${r.cat}** — ${r.count} claims, ${Hub.inr(r.total)} deducted (${Hub.inr(r.preventableTotal)} preventable), concentrated in **${r.topDept}**.`).join('\n')}
+
+### What to fix at source
+
+- **Non-payable consumables:** itemise every consumable used intra-operatively on the final bill before submission — a standing pre-submission checklist per procedure type will close most of this gap. Owner: billing team, per shift.
+- **Room-rent proportionate deduction:** counsel the patient/attendant on room-category entitlement at admission, not at discharge — a one-line note in the admission form referencing the policy's room eligibility avoids most of these cuts. Owner: admission desk.
+- **Documents missing:** lock a submission checklist (discharge summary, investigation reports, implant invoice) as a hard gate before the claim leaves billing — no claim goes out with an unticked box. Owner: TPA desk supervisor.
+- **Package inclusion billed separately:** train billing staff on the current empanelment package-inclusion list per payer so items are billed correctly the first time, avoiding the deduction and the appeal cycle entirely. Owner: billing team lead, refreshed each time a payer updates its package list.
+- **Tariff mismatch, sub-limit cap, PED/waiting-period:** these are largely contractual, not process gaps — route them to the TPA relationship owner for rate-card reconciliation and policy-level conversations with corporate clients, rather than a billing fix.
+
+### For billing teams
+Add the four preventable categories above to the daily pre-submission checklist. A claim that clears the checklist should have near-zero non-payable, room-rent or documentation deductions.
+
+### For clinical teams
+Room-category counselling at admission and complete, timely discharge summaries are the two clinical-side actions that most directly reduce deductions — both are within existing workflow, not additional documentation burden.
+
+*Prepared for the monthly RCM review — ${Hub.inr(totalPreventable)} of preventable leakage identified this quarter, concentrated in ${top3[0].topDept} and ${top3[1] ? top3[1].topDept : 'other departments'}.*`;
+}
+
+function rootCauses(el) {
+  const rows = reasonSummary();
+  const done = st.get().notesReview;
+  el.innerHTML = `<div class="card">
+      <h2>Reason categories — last 3 months</h2>
+      <div id="rcTbl"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Monthly prevention note</h2>
+      <p class="small">Claude drafts what billing and clinical teams should fix at source, using the reason-category breakdown above.</p>
+      <div id="steps2"></div>
+      <button class="primary" id="run2" ${done ? 'style="display:none"' : ''}>Draft with Claude</button>
+      <div class="claude-out" id="out2" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+      <div id="rv2"></div>
+    </div>`;
+  Hub.kit.table(el.querySelector('#rcTbl'), {
+    rows, rowKey: 'cat',
+    columns: [
+      { key: 'cat', label: 'Reason category' },
+      { key: 'count', label: 'Claims', num: true },
+      { key: 'total', label: 'Deduction ₹', num: true, format: v => Hub.inr(v) },
+      { key: 'preventableTotal', label: 'Preventable ₹', num: true, format: v => Hub.inr(v) },
+      { key: 'topDept', label: 'Top department' },
+    ],
+  });
+  Hub.kit.steps(el.querySelector('#steps2'), ['Categorised', 'Claude draft', 'Review', 'Approved'], done ? (done.status === 'approved' ? 3 : 2) : 0);
+  if (done) Hub.kit.review(el.querySelector('#rv2'), { slug: SLUG, item: { id: 'root-notes', title: 'Monthly prevention note' }, text: done.text, st: notesSt(), docTitle: 'Deduction prevention note', onDecision: () => rootCauses(el) });
+  el.querySelector('#run2').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out2', button: '#run2', manualMinutes: 60,
+      system: 'You are a hospital revenue-cycle analyst writing the monthly deduction-prevention note for billing and clinical teams at a 350-bed Kochi hospital. Distinguish process-preventable deductions from contractual ones, and name the specific fix and the owning team.',
+      prompt: rootPrompt(), demo: rootDemo,
+    });
+    if (!text) return;
+    const steps2 = el.querySelector('#steps2'), rv2 = el.querySelector('#rv2'), runBtn2 = el.querySelector('#run2');
+    if (!steps2 || !rv2) return; // user switched tabs while Claude was writing
+    Hub.kit.log(SLUG, 'Claude drafted prevention note', 'Root causes');
+    notesSt().set({ notesReview: { status: 'draft', text } });
+    Hub.kit.steps(steps2, ['Categorised', 'Claude draft', 'Review', 'Approved'], 2);
+    if (runBtn2) runBtn2.style.display = 'none';
+    Hub.kit.review(rv2, { slug: SLUG, item: { id: 'root-notes', title: 'Monthly prevention note' }, text, st: notesSt(), docTitle: 'Deduction prevention note', onDecision: () => rootCauses(el) });
+  };
+}
+function notesSt() {
+  return {
+    get: () => ({ reviews: { 'root-notes': st.get().notesReview } }),
+    set(patch) {
+      const cur = { reviews: { 'root-notes': st.get().notesReview } };
+      const next = Object.assign(cur, typeof patch === 'function' ? patch(cur) : patch);
+      st.set({ notesReview: next.reviews ? next.reviews['root-notes'] : st.get().notesReview });
+      return next;
+    },
+  };
+}
+
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const claims = DATA.claims;
+  const totalDeducted = claims.reduce((a, c) => a + c.deduction, 0);
+  const preventable = claims.filter(c => c.preventable === 'Y').reduce((a, c) => a + c.deduction, 0);
+  const open = claims.filter(c => c.deduction > 5000 && effectiveStatus(c) !== 'Recovered' && effectiveStatus(c) !== 'Rejected' && c.appealWindowDays >= 0).length;
+  const totalRecovered = claims.reduce((a, c) => a + recoveredAmt(c), 0);
+  const recoveredPct = totalDeducted ? Math.round(100 * totalRecovered / totalDeducted) : 0;
+
+  const rows = reasonSummary();
+  const top3 = rows.slice(0, 3);
+  const otherTotal = rows.slice(3).reduce((a, r) => a + r.total, 0);
+  const stackSeries = top3.map(r => ({
+    name: r.cat, values: DATA.months.map(m => claims.filter(c => c.month === m && c.reasonCategory === r.cat).reduce((a, c) => a + c.deduction, 0)),
+  }));
+  if (rows.length > 3) stackSeries.push({ name: 'Other', values: DATA.months.map(m => claims.filter(c => c.month === m && !top3.some(t => t.cat === c.reasonCategory) && c.reasonCategory !== 'Fully approved').reduce((a, c) => a + c.deduction, 0)) });
+
+  const byPayer = {};
+  claims.forEach(c => { if (!byPayer[c.payer]) byPayer[c.payer] = { claimed: 0, deduction: 0 }; byPayer[c.payer].claimed += c.claimed; byPayer[c.payer].deduction += c.deduction; });
+  const payerData = Object.entries(byPayer).map(([label, v]) => ({ label, value: v.claimed ? Math.round(1000 * v.deduction / v.claimed) / 10 : 0 })).sort((a, b) => b.value - a.value);
+
+  const recTrend = DATA.months.map(m => claims.filter(c => c.month === m).reduce((a, c) => a + recoveredAmt(c), 0));
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Deducted this quarter</div><div class="value">${Hub.inr(totalDeducted)}</div></div>
+    <div class="kpi"><div class="label">Preventable ₹</div><div class="value">${Hub.inr(preventable)}</div></div>
+    <div class="kpi"><div class="label">Appeals open</div><div class="value">${open}</div></div>
+    <div class="kpi"><div class="label">Recovered ₹ (%)</div><div class="value">${Hub.inr(totalRecovered)}</div><div class="delta up">${recoveredPct}% of deducted</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="card" id="c3" style="margin-top:16px"></div>`;
+  Hub.chart.stacked(el.querySelector('#c1'), { title: 'Deduction ₹ by reason, by month', sub: 'Top 3 categories + Other', labels: DATA.months, series: stackSeries });
+  Hub.chart.hbar(el.querySelector('#c2'), { title: 'Deduction % by payer', format: v => v.toFixed(1) + '%', data: payerData });
+  Hub.chart.line(el.querySelector('#c3'), { title: 'Recovery trend', sub: '₹ recovered per month', labels: DATA.months, series: [{ name: 'Recovered', values: recTrend }] });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  byId = Object.fromEntries(DATA.claims.map(c => [c.id, c]));
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The appeal queue', text: 'Every settled claim with a deduction over ₹5,000 and an open appeal window, sorted by how much is recoverable.' },
+      { sel: '#run', title: 'Claude drafts the appeal', text: 'Claude cites the clause, rate card or documents to attach and states the recoverable ask, computed from the selected claim.' },
+      { sel: '#rv', title: 'Maker edits, approver approves', text: 'Edit the draft as maker, then switch role to Approver in the toolbar to approve — this only marks it "Submitted" in the demo.' },
+      { sel: '#recovBox', title: 'Record recovery', text: 'Once the TPA actually pays, log the recovered amount here — it feeds straight into the dashboard.' },
+      { sel: '#tabs', title: 'Root causes', text: 'Reason categories across all 180 claims, with a Claude-drafted prevention note for billing and clinical teams.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Deducted and preventable ₹, open appeals, recovery rate, and the reason/payer/month breakdowns.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'appeals', label: 'Appeals' }, { id: 'root', label: 'Root causes' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ appeals, root: rootCauses, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>
