@@ -266,8 +266,8 @@ function runExtract(el, idx) {
     prompt: `Here are meeting notes from VPS Lakeshore Hospital:\n\n${notes}\n\nExtract an action tracker (Action, Owner, Due date, Linked KPI) and draft a follow-up email from Sameeraj Rao to the attendees.`,
     demo: extractDemo(idx, rows),
   }).then(text => {
-    if (!text) return;
     const prev = el.querySelector('#extractPreview');
+    if (!text || !prev) return; // user may have switched tabs while Claude was writing
     prev.innerHTML = '<p class="preview-note">Preview — rows Claude would add to the tracker once approved:</p><div id="prevTbl"></div>';
     Hub.kit.table(prev.querySelector('#prevTbl'), { rows, columns: [{ key: 'action', label: 'Action' }, { key: 'owner', label: 'Owner' }, { key: 'due', label: 'Due' }, { key: 'kpi', label: 'Linked KPI' }] });
     const item = { id: 'extract-' + idx, title: `Extracted actions — ${DATA.meetingNotes[idx].title}` };
