@@ -1,0 +1,3236 @@
+{
+ "generatedAt": "2026-09-28",
+ "today": "2026-09-28",
+ "erNumber": "Emergency line: 0484-2701-234, staffed 24x7. For any chest pain, breathlessness, stroke symptoms, severe bleeding or accident, call this number or come directly to the Emergency entrance — do not wait for an OPD appointment.",
+ "opd": [
+  {
+   "dept": "Cardiology",
+   "timings": "Mon–Sat 9:00 AM–1:00 PM & 4:00–7:00 PM"
+  },
+  {
+   "dept": "Orthopaedics",
+   "timings": "Mon–Sat 9:00 AM–12:30 PM & 4:30–7:00 PM"
+  },
+  {
+   "dept": "Gastroenterology",
+   "timings": "Mon–Sat 10:00 AM–1:00 PM"
+  },
+  {
+   "dept": "Nephrology",
+   "timings": "Mon, Wed, Fri 10:00 AM–1:00 PM"
+  },
+  {
+   "dept": "Neurology",
+   "timings": "Mon–Sat 9:30 AM–12:30 PM"
+  },
+  {
+   "dept": "General Medicine",
+   "timings": "Mon–Sat 8:00 AM–7:00 PM (walk-in)"
+  },
+  {
+   "dept": "ENT",
+   "timings": "Mon–Sat 10:00 AM–1:00 PM & 5:00–7:00 PM"
+  },
+  {
+   "dept": "Gynaecology",
+   "timings": "Mon–Sat 9:00 AM–1:00 PM"
+  },
+  {
+   "dept": "Urology",
+   "timings": "Tue, Thu, Sat 10:00 AM–1:00 PM"
+  },
+  {
+   "dept": "Paediatrics",
+   "timings": "Mon–Sat 9:00 AM–1:00 PM & 4:00–6:30 PM"
+  },
+  {
+   "dept": "Dermatology",
+   "timings": "Mon–Sat 11:00 AM–2:00 PM"
+  },
+  {
+   "dept": "Pulmonology",
+   "timings": "Mon, Wed, Fri 4:00–7:00 PM"
+  },
+  {
+   "dept": "Endocrinology",
+   "timings": "Tue, Thu, Sat 9:00 AM–12:00 PM"
+  }
+ ],
+ "doctors": [
+  {
+   "id": "DR-01",
+   "name": "Dr. Anjali Nair",
+   "dept": "Cardiology",
+   "days": "Wed/Fri/Sat",
+   "timings": "10:00–1:00",
+   "interest": "second opinions"
+  },
+  {
+   "id": "DR-02",
+   "name": "Dr. Priya Varghese",
+   "dept": "Orthopaedics",
+   "days": "Tue/Thu/Sat",
+   "timings": "10:00–1:00",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-03",
+   "name": "Dr. Anil Menon",
+   "dept": "Gastroenterology",
+   "days": "Wed/Fri/Sat",
+   "timings": "4:00–7:00",
+   "interest": "second opinions"
+  },
+  {
+   "id": "DR-04",
+   "name": "Dr. Sunil Pillai",
+   "dept": "Nephrology",
+   "days": "Mon/Wed/Fri",
+   "timings": "4:00–7:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-05",
+   "name": "Dr. Reshma Thomas",
+   "dept": "Neurology",
+   "days": "Mon/Tue/Thu",
+   "timings": "5:00–7:30",
+   "interest": "general OPD"
+  },
+  {
+   "id": "DR-06",
+   "name": "Dr. Vijay Kurup",
+   "dept": "General Medicine",
+   "days": "Wed/Fri/Sat",
+   "timings": "4:00–7:00",
+   "interest": "general OPD"
+  },
+  {
+   "id": "DR-07",
+   "name": "Dr. Susan Koshy",
+   "dept": "ENT",
+   "days": "Tue/Thu/Sat",
+   "timings": "10:00–1:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-08",
+   "name": "Dr. Rahul Varkey",
+   "dept": "Gynaecology",
+   "days": "Wed/Fri/Sat",
+   "timings": "5:00–7:30",
+   "interest": "preventive checks"
+  },
+  {
+   "id": "DR-09",
+   "name": "Dr. Deepa Rasheed",
+   "dept": "Urology",
+   "days": "Mon–Sat",
+   "timings": "4:00–7:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-10",
+   "name": "Dr. Manoj Panicker",
+   "dept": "Paediatrics",
+   "days": "Tue/Thu/Sat",
+   "timings": "5:00–7:30",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-11",
+   "name": "Dr. Lakshmi Iyer",
+   "dept": "Dermatology",
+   "days": "Mon–Sat",
+   "timings": "9:30–1:00",
+   "interest": "second opinions"
+  },
+  {
+   "id": "DR-12",
+   "name": "Dr. George Mathew",
+   "dept": "Pulmonology",
+   "days": "Tue/Thu/Sat",
+   "timings": "10:00–1:00",
+   "interest": "interventional cases"
+  },
+  {
+   "id": "DR-13",
+   "name": "Dr. Fathima Beevi",
+   "dept": "Endocrinology",
+   "days": "Mon–Sat",
+   "timings": "10:00–1:00",
+   "interest": "interventional cases"
+  },
+  {
+   "id": "DR-14",
+   "name": "Dr. Arun Chandy",
+   "dept": "Cardiology",
+   "days": "Mon–Sat",
+   "timings": "10:00–1:00",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-15",
+   "name": "Dr. Meera Krishnan",
+   "dept": "Orthopaedics",
+   "days": "Mon/Tue/Thu",
+   "timings": "10:00–1:00",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-16",
+   "name": "Dr. Sajan Jacob",
+   "dept": "Gastroenterology",
+   "days": "Mon–Sat",
+   "timings": "10:00–1:00",
+   "interest": "preventive checks"
+  },
+  {
+   "id": "DR-17",
+   "name": "Dr. Bindu Raghavan",
+   "dept": "Nephrology",
+   "days": "Mon–Sat",
+   "timings": "5:00–7:30",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-18",
+   "name": "Dr. Naveen Balan",
+   "dept": "Neurology",
+   "days": "Wed/Fri/Sat",
+   "timings": "9:30–1:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-19",
+   "name": "Dr. Teena Sebastian",
+   "dept": "General Medicine",
+   "days": "Mon/Wed/Fri",
+   "timings": "9:30–1:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-20",
+   "name": "Dr. Ratheesh Kumar",
+   "dept": "ENT",
+   "days": "Mon/Tue/Thu",
+   "timings": "5:00–7:30",
+   "interest": "second opinions"
+  },
+  {
+   "id": "DR-21",
+   "name": "Dr. Nisha Abraham",
+   "dept": "Gynaecology",
+   "days": "Mon/Tue/Thu",
+   "timings": "9:30–1:00",
+   "interest": "follow-up reviews"
+  },
+  {
+   "id": "DR-22",
+   "name": "Dr. Arjun Pillai",
+   "dept": "Urology",
+   "days": "Mon–Sat",
+   "timings": "5:00–7:30",
+   "interest": "preventive checks"
+  },
+  {
+   "id": "DR-23",
+   "name": "Dr. Shalini Warrier",
+   "dept": "Paediatrics",
+   "days": "Wed/Fri/Sat",
+   "timings": "9:00–12:30",
+   "interest": "diabetic care"
+  },
+  {
+   "id": "DR-24",
+   "name": "Dr. Joseph Alex",
+   "dept": "Dermatology",
+   "days": "Mon/Wed/Fri",
+   "timings": "9:00–12:30",
+   "interest": "preventive checks"
+  },
+  {
+   "id": "DR-25",
+   "name": "Dr. Kavya Suresh",
+   "dept": "Pulmonology",
+   "days": "Mon–Sat",
+   "timings": "10:00–1:00",
+   "interest": "second opinions"
+  }
+ ],
+ "prep": {
+  "usg": {
+   "title": "USG (ultrasound) abdomen preparation",
+   "source": "Radiology prep sheet, v4",
+   "text": "6-hour fasting required before the scan; drink 4–5 glasses of water starting 1 hour before the appointment and do not urinate, so the bladder is full for the scan. No fasting needed for a pregnancy (obstetric) USG."
+  },
+  "ct": {
+   "title": "CT scan preparation",
+   "source": "Radiology prep sheet, v4",
+   "text": "4-hour fasting required only if contrast dye is used; plain CT (no contrast) needs no fasting. Inform the desk in advance if the patient is allergic to iodine or contrast dye, or has kidney disease."
+  },
+  "mri": {
+   "title": "MRI preparation",
+   "source": "Radiology prep sheet, v4",
+   "text": "No fasting needed for most MRI scans (4-hour fasting only for MRCP/abdomen with contrast). Remove all metal objects, jewellery and hearing aids; inform the desk of any implants, pacemaker or history of metal fragments before the scan."
+  },
+  "endoscopy": {
+   "title": "Upper GI endoscopy preparation",
+   "source": "Gastroenterology prep sheet, v3",
+   "text": "8-hour fasting required (no food or water). Blood thinners should be stopped 3 days prior, only on the treating doctor's written advice — never stop medication on the patient's own decision. Arrange someone to accompany the patient home if sedation is used."
+  },
+  "tmt": {
+   "title": "TMT (treadmill stress test) preparation",
+   "source": "Cardiology prep sheet, v2",
+   "text": "Light breakfast is fine 2 hours before the test; avoid caffeine and smoking for 4 hours prior. Wear comfortable clothes and walking shoes; bring the referring doctor's prescription and any recent ECG."
+  }
+ },
+ "packages": [
+  {
+   "id": "PKG-01",
+   "name": "Basic health check",
+   "priceInr": 2500,
+   "includes": "CBC, blood sugar, lipid profile, urine routine, ECG, consultation",
+   "prep": "usg"
+  },
+  {
+   "id": "PKG-02",
+   "name": "Executive health check",
+   "priceInr": 6500,
+   "includes": "Basic panel + USG abdomen, chest X-ray, thyroid profile, liver & kidney function, consultation",
+   "prep": "usg"
+  },
+  {
+   "id": "PKG-03",
+   "name": "Senior citizen package",
+   "priceInr": 5500,
+   "includes": "Basic panel + bone density screen, vitamin D & B12, ECG, ophthalmology check, consultation",
+   "prep": null
+  },
+  {
+   "id": "PKG-04",
+   "name": "Cardiac advanced package",
+   "priceInr": 9500,
+   "includes": "Lipid profile, ECG, 2D echo, TMT, cardiology consultation",
+   "prep": "tmt"
+  },
+  {
+   "id": "PKG-05",
+   "name": "Women's wellness package",
+   "priceInr": 7200,
+   "includes": "Basic panel + mammogram, pap smear, pelvic USG, gynaecology consultation",
+   "prep": "usg"
+  },
+  {
+   "id": "PKG-06",
+   "name": "Diabetic care package",
+   "priceInr": 4200,
+   "includes": "HbA1c, fasting & PP sugar, kidney function, eye screening, dietician consult",
+   "prep": null
+  }
+ ],
+ "tpaList": [
+  "Suraksha TPA",
+  "MedAssure TPA Services",
+  "CareLink Health TPA",
+  "Sanjeevani TPA",
+  "TrustHealth TPA",
+  "Wellcare Insurance TPA",
+  "Thejas Mediclaim TPA",
+  "Periyar Claims TPA",
+  "Monsoon Health Assurance TPA",
+  "Kerala Mediclaim TPA",
+  "Kayal Health TPA",
+  "Vidyut Health TPA",
+  "Backwater Assist TPA",
+  "Vembanad Care TPA",
+  "Kochi Claims Desk TPA",
+  "Nova Health TPA"
+ ],
+ "general": {
+  "opdReg": {
+   "title": "OPD registration timings",
+   "source": "Front office SOP",
+   "text": "OPD registration Mon–Sat 8:00 AM–7:00 PM, Sunday 9:00 AM–1:00 PM. Emergency department is open 24x7, every day including Sundays and holidays."
+  },
+  "parking": {
+   "title": "Parking",
+   "source": "Facilities notice board",
+   "text": "Basement parking plus an open lot near the main gate; first 30 minutes free, ₹20/hour after that. Valet parking is available at the main entrance for a flat ₹50."
+  },
+  "visiting": {
+   "title": "Visiting hours",
+   "source": "Nursing station notice",
+   "text": "General wards: 11:00 AM–12:30 PM and 5:00–6:30 PM, maximum two visitors at a time. ICU: 12:30–1:00 PM and 6:00–6:30 PM only, one visitor, on the treating doctor's clearance."
+  },
+  "reports": {
+   "title": "Report turnaround time",
+   "source": "Lab & radiology SOP",
+   "text": "Routine lab reports: 4–6 hours, available on the patient portal and app. Specialised/send-out tests: next working day. X-ray/USG/CT/MRI reports: within 24 hours; urgent scans are reported same-day on request."
+  },
+  "billing": {
+   "title": "Billing desk hours & process",
+   "source": "Billing SOP",
+   "text": "Billing counters: Mon–Sat 8:00 AM–8:00 PM, Sunday 9:00 AM–2:00 PM. Cashless (TPA) claims: pre-authorisation typically takes 2–4 hours after documents are submitted; final discharge bill is ready within 2 hours of doctor's discharge order."
+  },
+  "directions": {
+   "title": "Directions to the hospital",
+   "source": "Front office SOP",
+   "text": "VPS Lakeshore Hospital, NH Bypass, Maradu, Kochi — nearest landmark is the Maradu bridge, 400m from the NH Bypass junction. From Kochi airport: approx. 45 minutes via NH66. From Ernakulam Junction railway station: approx. 25 minutes."
+  },
+  "erNumber": {
+   "title": "Emergency (ER) number",
+   "source": "Front office SOP",
+   "text": "Emergency line: 0484-2701-234, staffed 24x7. For any chest pain, breathlessness, stroke symptoms, severe bleeding or accident, call this number or come directly to the Emergency entrance — do not wait for an OPD appointment."
+  }
+ },
+ "slots": [
+  {
+   "date": "2026-09-28",
+   "dept": "Cardiology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:00",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dept": "Orthopaedics",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "11:00",
+     "available": 4
+    },
+    {
+     "time": "4:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 3
+    },
+    {
+     "time": "9:30",
+     "available": 4
+    }
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dept": "Gastroenterology",
+   "times": [
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dept": "General Medicine",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 4
+    },
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "4:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 4
+    },
+    {
+     "time": "9:30",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dept": "Gynaecology",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 2
+    },
+    {
+     "time": "11:00",
+     "available": 4
+    },
+    {
+     "time": "4:00",
+     "available": 1
+    },
+    {
+     "time": "5:00",
+     "available": 4
+    },
+    {
+     "time": "9:00",
+     "available": 3
+    },
+    {
+     "time": "9:30",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-28",
+   "dept": "Paediatrics",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "11:00",
+     "available": 4
+    },
+    {
+     "time": "4:00",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "Cardiology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 4
+    },
+    {
+     "time": "11:00",
+     "available": 1
+    },
+    {
+     "time": "4:30",
+     "available": 3
+    },
+    {
+     "time": "9:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "Orthopaedics",
+   "times": [
+    {
+     "time": "4:00",
+     "available": 1
+    },
+    {
+     "time": "4:30",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 4
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "Gastroenterology",
+   "times": [
+    {
+     "time": "4:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 4
+    },
+    {
+     "time": "9:00",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "General Medicine",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "Gynaecology",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 1
+    },
+    {
+     "time": "4:00",
+     "available": 4
+    },
+    {
+     "time": "4:30",
+     "available": 1
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 3
+    },
+    {
+     "time": "9:30",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-09-29",
+   "dept": "Paediatrics",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 1
+    },
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "Cardiology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 2
+    },
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "4:30",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "Orthopaedics",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 2
+    },
+    {
+     "time": "11:00",
+     "available": 3
+    },
+    {
+     "time": "4:00",
+     "available": 1
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "Gastroenterology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 4
+    },
+    {
+     "time": "10:30",
+     "available": 1
+    },
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "General Medicine",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 4
+    },
+    {
+     "time": "11:00",
+     "available": 3
+    },
+    {
+     "time": "4:30",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 4
+    },
+    {
+     "time": "9:30",
+     "available": 4
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "Gynaecology",
+   "times": [
+    {
+     "time": "11:00",
+     "available": 4
+    },
+    {
+     "time": "4:00",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-09-30",
+   "dept": "Paediatrics",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "Cardiology",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 1
+    },
+    {
+     "time": "11:00",
+     "available": 3
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "Orthopaedics",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "Gastroenterology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 1
+    },
+    {
+     "time": "4:00",
+     "available": 1
+    },
+    {
+     "time": "4:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "General Medicine",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 2
+    },
+    {
+     "time": "10:30",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "Gynaecology",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 3
+    },
+    {
+     "time": "4:00",
+     "available": 4
+    },
+    {
+     "time": "5:00",
+     "available": 1
+    },
+    {
+     "time": "9:00",
+     "available": 3
+    },
+    {
+     "time": "9:30",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-10-01",
+   "dept": "Paediatrics",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 1
+    },
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "Cardiology",
+   "times": [
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "9:00",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 3
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "Orthopaedics",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 4
+    },
+    {
+     "time": "4:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "Gastroenterology",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 3
+    },
+    {
+     "time": "11:00",
+     "available": 2
+    },
+    {
+     "time": "4:30",
+     "available": 1
+    },
+    {
+     "time": "9:30",
+     "available": 4
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "General Medicine",
+   "times": [
+    {
+     "time": "10:00",
+     "available": 1
+    },
+    {
+     "time": "10:30",
+     "available": 2
+    },
+    {
+     "time": "11:00",
+     "available": 1
+    },
+    {
+     "time": "4:30",
+     "available": 1
+    },
+    {
+     "time": "9:00",
+     "available": 4
+    },
+    {
+     "time": "9:30",
+     "available": 1
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "Gynaecology",
+   "times": [
+    {
+     "time": "10:30",
+     "available": 1
+    },
+    {
+     "time": "11:00",
+     "available": 3
+    },
+    {
+     "time": "4:30",
+     "available": 3
+    },
+    {
+     "time": "5:00",
+     "available": 3
+    },
+    {
+     "time": "9:00",
+     "available": 4
+    }
+   ]
+  },
+  {
+   "date": "2026-10-02",
+   "dept": "Paediatrics",
+   "times": [
+    {
+     "time": "4:00",
+     "available": 1
+    },
+    {
+     "time": "4:30",
+     "available": 2
+    },
+    {
+     "time": "9:30",
+     "available": 1
+    }
+   ]
+  }
+ ],
+ "kbEntries": [
+  {
+   "id": "KB-01",
+   "category": "OPD timings",
+   "title": "Cardiology",
+   "detail": "Mon–Sat 9:00 AM–1:00 PM & 4:00–7:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-02",
+   "category": "OPD timings",
+   "title": "Orthopaedics",
+   "detail": "Mon–Sat 9:00 AM–12:30 PM & 4:30–7:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-03",
+   "category": "OPD timings",
+   "title": "Gastroenterology",
+   "detail": "Mon–Sat 10:00 AM–1:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-04",
+   "category": "OPD timings",
+   "title": "Nephrology",
+   "detail": "Mon, Wed, Fri 10:00 AM–1:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-05",
+   "category": "OPD timings",
+   "title": "Neurology",
+   "detail": "Mon–Sat 9:30 AM–12:30 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-06",
+   "category": "OPD timings",
+   "title": "General Medicine",
+   "detail": "Mon–Sat 8:00 AM–7:00 PM (walk-in)",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-07",
+   "category": "OPD timings",
+   "title": "ENT",
+   "detail": "Mon–Sat 10:00 AM–1:00 PM & 5:00–7:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-08",
+   "category": "OPD timings",
+   "title": "Gynaecology",
+   "detail": "Mon–Sat 9:00 AM–1:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-09",
+   "category": "OPD timings",
+   "title": "Urology",
+   "detail": "Tue, Thu, Sat 10:00 AM–1:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-10",
+   "category": "OPD timings",
+   "title": "Paediatrics",
+   "detail": "Mon–Sat 9:00 AM–1:00 PM & 4:00–6:30 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-11",
+   "category": "OPD timings",
+   "title": "Dermatology",
+   "detail": "Mon–Sat 11:00 AM–2:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-12",
+   "category": "OPD timings",
+   "title": "Pulmonology",
+   "detail": "Mon, Wed, Fri 4:00–7:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-13",
+   "category": "OPD timings",
+   "title": "Endocrinology",
+   "detail": "Tue, Thu, Sat 9:00 AM–12:00 PM",
+   "source": "OPD schedule board"
+  },
+  {
+   "id": "KB-14",
+   "category": "Doctor schedule",
+   "title": "Dr. Anjali Nair — Cardiology",
+   "detail": "Wed/Fri/Sat, 10:00–1:00 · focus: second opinions",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-15",
+   "category": "Doctor schedule",
+   "title": "Dr. Priya Varghese — Orthopaedics",
+   "detail": "Tue/Thu/Sat, 10:00–1:00 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-16",
+   "category": "Doctor schedule",
+   "title": "Dr. Anil Menon — Gastroenterology",
+   "detail": "Wed/Fri/Sat, 4:00–7:00 · focus: second opinions",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-17",
+   "category": "Doctor schedule",
+   "title": "Dr. Sunil Pillai — Nephrology",
+   "detail": "Mon/Wed/Fri, 4:00–7:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-18",
+   "category": "Doctor schedule",
+   "title": "Dr. Reshma Thomas — Neurology",
+   "detail": "Mon/Tue/Thu, 5:00–7:30 · focus: general OPD",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-19",
+   "category": "Doctor schedule",
+   "title": "Dr. Vijay Kurup — General Medicine",
+   "detail": "Wed/Fri/Sat, 4:00–7:00 · focus: general OPD",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-20",
+   "category": "Doctor schedule",
+   "title": "Dr. Susan Koshy — ENT",
+   "detail": "Tue/Thu/Sat, 10:00–1:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-21",
+   "category": "Doctor schedule",
+   "title": "Dr. Rahul Varkey — Gynaecology",
+   "detail": "Wed/Fri/Sat, 5:00–7:30 · focus: preventive checks",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-22",
+   "category": "Doctor schedule",
+   "title": "Dr. Deepa Rasheed — Urology",
+   "detail": "Mon–Sat, 4:00–7:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-23",
+   "category": "Doctor schedule",
+   "title": "Dr. Manoj Panicker — Paediatrics",
+   "detail": "Tue/Thu/Sat, 5:00–7:30 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-24",
+   "category": "Doctor schedule",
+   "title": "Dr. Lakshmi Iyer — Dermatology",
+   "detail": "Mon–Sat, 9:30–1:00 · focus: second opinions",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-25",
+   "category": "Doctor schedule",
+   "title": "Dr. George Mathew — Pulmonology",
+   "detail": "Tue/Thu/Sat, 10:00–1:00 · focus: interventional cases",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-26",
+   "category": "Doctor schedule",
+   "title": "Dr. Fathima Beevi — Endocrinology",
+   "detail": "Mon–Sat, 10:00–1:00 · focus: interventional cases",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-27",
+   "category": "Doctor schedule",
+   "title": "Dr. Arun Chandy — Cardiology",
+   "detail": "Mon–Sat, 10:00–1:00 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-28",
+   "category": "Doctor schedule",
+   "title": "Dr. Meera Krishnan — Orthopaedics",
+   "detail": "Mon/Tue/Thu, 10:00–1:00 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-29",
+   "category": "Doctor schedule",
+   "title": "Dr. Sajan Jacob — Gastroenterology",
+   "detail": "Mon–Sat, 10:00–1:00 · focus: preventive checks",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-30",
+   "category": "Doctor schedule",
+   "title": "Dr. Bindu Raghavan — Nephrology",
+   "detail": "Mon–Sat, 5:00–7:30 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-31",
+   "category": "Doctor schedule",
+   "title": "Dr. Naveen Balan — Neurology",
+   "detail": "Wed/Fri/Sat, 9:30–1:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-32",
+   "category": "Doctor schedule",
+   "title": "Dr. Teena Sebastian — General Medicine",
+   "detail": "Mon/Wed/Fri, 9:30–1:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-33",
+   "category": "Doctor schedule",
+   "title": "Dr. Ratheesh Kumar — ENT",
+   "detail": "Mon/Tue/Thu, 5:00–7:30 · focus: second opinions",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-34",
+   "category": "Doctor schedule",
+   "title": "Dr. Nisha Abraham — Gynaecology",
+   "detail": "Mon/Tue/Thu, 9:30–1:00 · focus: follow-up reviews",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-35",
+   "category": "Doctor schedule",
+   "title": "Dr. Arjun Pillai — Urology",
+   "detail": "Mon–Sat, 5:00–7:30 · focus: preventive checks",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-36",
+   "category": "Doctor schedule",
+   "title": "Dr. Shalini Warrier — Paediatrics",
+   "detail": "Wed/Fri/Sat, 9:00–12:30 · focus: diabetic care",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-37",
+   "category": "Doctor schedule",
+   "title": "Dr. Joseph Alex — Dermatology",
+   "detail": "Mon/Wed/Fri, 9:00–12:30 · focus: preventive checks",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-38",
+   "category": "Doctor schedule",
+   "title": "Dr. Kavya Suresh — Pulmonology",
+   "detail": "Mon–Sat, 10:00–1:00 · focus: second opinions",
+   "source": "Consultant roster"
+  },
+  {
+   "id": "KB-39",
+   "category": "Procedure prep",
+   "title": "USG (ultrasound) abdomen preparation",
+   "detail": "6-hour fasting required before the scan; drink 4–5 glasses of water starting 1 hour before the appointment and do not urinate, so the bladder is full for the scan. No fasting needed for a pregnancy (obstetric) USG.",
+   "source": "Radiology prep sheet, v4"
+  },
+  {
+   "id": "KB-40",
+   "category": "Procedure prep",
+   "title": "CT scan preparation",
+   "detail": "4-hour fasting required only if contrast dye is used; plain CT (no contrast) needs no fasting. Inform the desk in advance if the patient is allergic to iodine or contrast dye, or has kidney disease.",
+   "source": "Radiology prep sheet, v4"
+  },
+  {
+   "id": "KB-41",
+   "category": "Procedure prep",
+   "title": "MRI preparation",
+   "detail": "No fasting needed for most MRI scans (4-hour fasting only for MRCP/abdomen with contrast). Remove all metal objects, jewellery and hearing aids; inform the desk of any implants, pacemaker or history of metal fragments before the scan.",
+   "source": "Radiology prep sheet, v4"
+  },
+  {
+   "id": "KB-42",
+   "category": "Procedure prep",
+   "title": "Upper GI endoscopy preparation",
+   "detail": "8-hour fasting required (no food or water). Blood thinners should be stopped 3 days prior, only on the treating doctor's written advice — never stop medication on the patient's own decision. Arrange someone to accompany the patient home if sedation is used.",
+   "source": "Gastroenterology prep sheet, v3"
+  },
+  {
+   "id": "KB-43",
+   "category": "Procedure prep",
+   "title": "TMT (treadmill stress test) preparation",
+   "detail": "Light breakfast is fine 2 hours before the test; avoid caffeine and smoking for 4 hours prior. Wear comfortable clothes and walking shoes; bring the referring doctor's prescription and any recent ECG.",
+   "source": "Cardiology prep sheet, v2"
+  },
+  {
+   "id": "KB-44",
+   "category": "Health check package",
+   "title": "Basic health check",
+   "detail": "₹2,500 — includes CBC, blood sugar, lipid profile, urine routine, ECG, consultation",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-45",
+   "category": "Health check package",
+   "title": "Executive health check",
+   "detail": "₹6,500 — includes Basic panel + USG abdomen, chest X-ray, thyroid profile, liver & kidney function, consultation",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-46",
+   "category": "Health check package",
+   "title": "Senior citizen package",
+   "detail": "₹5,500 — includes Basic panel + bone density screen, vitamin D & B12, ECG, ophthalmology check, consultation",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-47",
+   "category": "Health check package",
+   "title": "Cardiac advanced package",
+   "detail": "₹9,500 — includes Lipid profile, ECG, 2D echo, TMT, cardiology consultation",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-48",
+   "category": "Health check package",
+   "title": "Women's wellness package",
+   "detail": "₹7,200 — includes Basic panel + mammogram, pap smear, pelvic USG, gynaecology consultation",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-49",
+   "category": "Health check package",
+   "title": "Diabetic care package",
+   "detail": "₹4,200 — includes HbA1c, fasting & PP sugar, kidney function, eye screening, dietician consult",
+   "source": "Health check price list"
+  },
+  {
+   "id": "KB-50",
+   "category": "General info",
+   "title": "OPD registration timings",
+   "detail": "OPD registration Mon–Sat 8:00 AM–7:00 PM, Sunday 9:00 AM–1:00 PM. Emergency department is open 24x7, every day including Sundays and holidays.",
+   "source": "Front office SOP"
+  },
+  {
+   "id": "KB-51",
+   "category": "General info",
+   "title": "Parking",
+   "detail": "Basement parking plus an open lot near the main gate; first 30 minutes free, ₹20/hour after that. Valet parking is available at the main entrance for a flat ₹50.",
+   "source": "Facilities notice board"
+  },
+  {
+   "id": "KB-52",
+   "category": "General info",
+   "title": "Visiting hours",
+   "detail": "General wards: 11:00 AM–12:30 PM and 5:00–6:30 PM, maximum two visitors at a time. ICU: 12:30–1:00 PM and 6:00–6:30 PM only, one visitor, on the treating doctor's clearance.",
+   "source": "Nursing station notice"
+  },
+  {
+   "id": "KB-53",
+   "category": "General info",
+   "title": "Report turnaround time",
+   "detail": "Routine lab reports: 4–6 hours, available on the patient portal and app. Specialised/send-out tests: next working day. X-ray/USG/CT/MRI reports: within 24 hours; urgent scans are reported same-day on request.",
+   "source": "Lab & radiology SOP"
+  },
+  {
+   "id": "KB-54",
+   "category": "General info",
+   "title": "Billing desk hours & process",
+   "detail": "Billing counters: Mon–Sat 8:00 AM–8:00 PM, Sunday 9:00 AM–2:00 PM. Cashless (TPA) claims: pre-authorisation typically takes 2–4 hours after documents are submitted; final discharge bill is ready within 2 hours of doctor's discharge order.",
+   "source": "Billing SOP"
+  },
+  {
+   "id": "KB-55",
+   "category": "General info",
+   "title": "Directions to the hospital",
+   "detail": "VPS Lakeshore Hospital, NH Bypass, Maradu, Kochi — nearest landmark is the Maradu bridge, 400m from the NH Bypass junction. From Kochi airport: approx. 45 minutes via NH66. From Ernakulam Junction railway station: approx. 25 minutes.",
+   "source": "Front office SOP"
+  },
+  {
+   "id": "KB-56",
+   "category": "General info",
+   "title": "Emergency (ER) number",
+   "detail": "Emergency line: 0484-2701-234, staffed 24x7. For any chest pain, breathlessness, stroke symptoms, severe bleeding or accident, call this number or come directly to the Emergency entrance — do not wait for an OPD appointment.",
+   "source": "Front office SOP"
+  },
+  {
+   "id": "KB-57",
+   "category": "Insurance (TPA)",
+   "title": "Cashless TPA list",
+   "detail": "Suraksha TPA, MedAssure TPA Services, CareLink Health TPA, Sanjeevani TPA, TrustHealth TPA, Wellcare Insurance TPA, Thejas Mediclaim TPA, Periyar Claims TPA, Monsoon Health Assurance TPA, Kerala Mediclaim TPA, Kayal Health TPA, Vidyut Health TPA, Backwater Assist TPA, Vembanad Care TPA, Kochi Claims Desk TPA, Nova Health TPA",
+   "source": "Insurance desk TPA list, current"
+  }
+ ],
+ "conversations": [
+  {
+   "id": "CC-01",
+   "channel": "WhatsApp",
+   "time": "08:01",
+   "patient": "Rahul Menon",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "enikku Gynaecology doctor kaanan appointment venam, morning slot undenkil parayamo"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": "Kiran"
+  },
+  {
+   "id": "CC-02",
+   "channel": "WhatsApp",
+   "time": "08:17",
+   "patient": "Prakash Iyer",
+   "language": "Manglish",
+   "status": "Bot handling",
+   "intent": "Appointment booking",
+   "waitingMinutes": 10,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "enikku General Medicine doctor kaanan appointment venam, morning slot undenkil parayamo"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "General Medicine",
+    "time": "10:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-03",
+   "channel": "WhatsApp",
+   "time": "08:24",
+   "patient": "Ayesha Khan",
+   "language": "Manglish",
+   "status": "Bot handling",
+   "intent": "Appointment booking",
+   "waitingMinutes": 9,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "enikku Paediatrics doctor kaanan appointment venam, morning slot undenkil parayamo"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-04",
+   "channel": "WhatsApp",
+   "time": "08:47",
+   "patient": "Vinod Panicker",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Appointment booking",
+   "waitingMinutes": 3,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi, I need to book an appointment with Paediatrics this week, is there a slot available?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-06",
+   "channel": "Phone",
+   "time": "08:58",
+   "patient": "Faisal Rahim",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Can I get an appointment with a Gynaecology specialist soon, preferably morning?"
+    },
+    {
+     "role": "agent",
+     "text": "Noted, and this has been arranged. Please reach out again if there is any issue."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-07",
+   "channel": "WhatsApp",
+   "time": "08:59",
+   "patient": "Sudheer Kartha",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Good morning"
+    },
+    {
+     "role": "patient",
+     "text": "Can I get an appointment with a Gastroenterology specialist soon, preferably morning?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gastroenterology",
+    "time": "11:00"
+   },
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-05",
+   "channel": "WhatsApp",
+   "time": "09:00",
+   "patient": "Faisal Rahim",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Appointment booking",
+   "waitingMinutes": 12,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Can I get an appointment with a Cardiology specialist soon, preferably morning?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Cardiology",
+    "time": "10:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-08",
+   "channel": "Phone",
+   "time": "09:30",
+   "patient": "Prakash Iyer",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ഹലോ, Paediatrics ഡിപ്പാർട്ട്മെന്റിൽ ഈ ആഴ്ച ഒരു അപ്പോയിന്റ്മെന്റ് വേണം, സ്ലോട്ട് ഉണ്ടോ?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-09",
+   "channel": "WhatsApp",
+   "time": "09:46",
+   "patient": "Arjun Balan",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Appointment booking",
+   "waitingMinutes": 46,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi, Gynaecologyil oru appointment venam ee week, slot undo?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-11",
+   "channel": "Phone",
+   "time": "09:52",
+   "patient": "Anu Mathew",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ഹലോ, General Medicine ഡിപ്പാർട്ട്മെന്റിൽ ഈ ആഴ്ച ഒരു അപ്പോയിന്റ്മെന്റ് വേണം, സ്ലോട്ട് ഉണ്ടോ?"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "General Medicine",
+    "time": "10:00"
+   },
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-10",
+   "channel": "Phone",
+   "time": "09:57",
+   "patient": "Ayesha Khan",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Appointment booking",
+   "waitingMinutes": 6,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Orthopaedics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "Hi, I need to book an appointment with Orthopaedics this week, is there a slot available?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Orthopaedics",
+    "time": "10:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-12",
+   "channel": "WhatsApp",
+   "time": "10:06",
+   "patient": "Farha Nizar",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "ഹലോ, Gynaecology ഡിപ്പാർട്ട്മെന്റിൽ ഈ ആഴ്ച ഒരു അപ്പോയിന്റ്മെന്റ് വേണം, സ്ലോട്ട് ഉണ്ടോ?"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": "Kiran"
+  },
+  {
+   "id": "CC-13",
+   "channel": "WhatsApp",
+   "time": "10:09",
+   "patient": "Vinod Panicker",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Appointment booking",
+   "waitingMinutes": 71,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Can I get an appointment with a Paediatrics specialist soon, preferably morning?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-14",
+   "channel": "WhatsApp",
+   "time": "10:49",
+   "patient": "Anu Mathew",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Appointment booking",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "ഹലോ, Gastroenterology ഡിപ്പാർട്ട്മെന്റിൽ ഈ ആഴ്ച ഒരു അപ്പോയിന്റ്മെന്റ് വേണം, സ്ലോട്ട് ഉണ്ടോ?"
+    },
+    {
+     "role": "agent",
+     "text": "Noted, and this has been arranged. Please reach out again if there is any issue."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gastroenterology",
+    "time": "11:00"
+   },
+   "agent": "Divya"
+  },
+  {
+   "id": "CC-15",
+   "channel": "Phone",
+   "time": "10:51",
+   "patient": "Sreeja Kumari",
+   "language": "Malayalam",
+   "status": "Needs agent",
+   "intent": "Appointment booking",
+   "waitingMinutes": 98,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ഹലോ, Gynaecology ഡിപ്പാർട്ട്മെന്റിൽ ഈ ആഴ്ച ഒരു അപ്പോയിന്റ്മെന്റ് വേണം, സ്ലോട്ട് ഉണ്ടോ?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-16",
+   "channel": "WhatsApp",
+   "time": "11:14",
+   "patient": "Divya Nair",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Reschedule",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "എന്റെ Paediatrics അപ്പോയിന്റ്മെന്റ് മാറ്റണം, അടുത്ത ആഴ്ചയിലേക്ക് ആക്കാമോ?"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-17",
+   "channel": "WhatsApp",
+   "time": "11:18",
+   "patient": "Nimmy Jacob",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Reschedule",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Need to postpone my Paediatrics appointment to a later slot this week."
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Paediatrics",
+    "time": "10:30"
+   },
+   "agent": "Divya"
+  },
+  {
+   "id": "CC-19",
+   "channel": "WhatsApp",
+   "time": "11:21",
+   "patient": "Sarah Thomas",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Reschedule",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ente Gynaecology appointment 9:00 AMnu undayirunnu, reschedule cheyyan pattumo?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-18",
+   "channel": "Phone",
+   "time": "11:36",
+   "patient": "Anu Mathew",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Reschedule",
+   "waitingMinutes": 186,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "ente General Medicine appointment 4:00 PMnu undayirunnu, reschedule cheyyan pattumo?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "General Medicine",
+    "time": "10:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-21",
+   "channel": "WhatsApp",
+   "time": "11:58",
+   "patient": "Farha Nizar",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Reschedule",
+   "waitingMinutes": 168,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "I had an appointment with Cardiology on 9:00 AM but need to reschedule, is that possible?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Cardiology",
+    "time": "10:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-20",
+   "channel": "WhatsApp",
+   "time": "12:00",
+   "patient": "Rahul Menon",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Reschedule",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "ente Gastroenterology appointment 10:30 AMnu undayirunnu, reschedule cheyyan pattumo?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gastroenterology",
+    "time": "11:00"
+   },
+   "agent": "Renjith"
+  },
+  {
+   "id": "CC-22",
+   "channel": "WhatsApp",
+   "time": "12:02",
+   "patient": "Ayesha Khan",
+   "language": "Manglish",
+   "status": "Bot handling",
+   "intent": "Reschedule",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ente Gynaecology appointment 4:00 PMnu undayirunnu, reschedule cheyyan pattumo?"
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gynaecology",
+    "time": "10:30"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-23",
+   "channel": "WhatsApp",
+   "time": "12:29",
+   "patient": "Bindu Chandran",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Reschedule",
+   "waitingMinutes": 5,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "Need to postpone my Gastroenterology appointment to a later slot this week."
+    }
+   ],
+   "suggestedSlot": {
+    "date": "2026-09-28",
+    "dept": "Gastroenterology",
+    "time": "11:00"
+   },
+   "agent": null
+  },
+  {
+   "id": "CC-24",
+   "channel": "Phone",
+   "time": "12:33",
+   "patient": "Rincy Abraham",
+   "language": "Manglish",
+   "status": "Bot handling",
+   "intent": "Report status",
+   "waitingMinutes": 6,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "blood test result eppo varum, innale aanu edutthe"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-25",
+   "channel": "Phone",
+   "time": "12:36",
+   "patient": "Nimmy Jacob",
+   "language": "Manglish",
+   "status": "Bot handling",
+   "intent": "Report status",
+   "waitingMinutes": 12,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "scan cheythittu 2 divasam aayi, report vannille? portal-il onnum kaanunnilla"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-26",
+   "channel": "WhatsApp",
+   "time": "13:01",
+   "patient": "Sania Firoz",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Report status",
+   "waitingMinutes": 11,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "When will my blood test results be ready, it's been almost a day."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-27",
+   "channel": "WhatsApp",
+   "time": "13:14",
+   "patient": "Sania Firoz",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Report status",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "scan cheythittu 2 divasam aayi, report vannille? portal-il onnum kaanunnilla"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-28",
+   "channel": "WhatsApp",
+   "time": "13:22",
+   "patient": "Sarah Thomas",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Report status",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "I did a scan two days back, has the report come? Haven't received anything on the portal."
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Renjith"
+  },
+  {
+   "id": "CC-30",
+   "channel": "Phone",
+   "time": "13:35",
+   "patient": "Ayesha Khan",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Report status",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Good morning"
+    },
+    {
+     "role": "patient",
+     "text": "blood test result eppo varum, innale aanu edutthe"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-29",
+   "channel": "Phone",
+   "time": "13:36",
+   "patient": "Faisal Rahim",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Report status",
+   "waitingMinutes": 8,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "I did a scan two days back, has the report come? Haven't received anything on the portal."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-31",
+   "channel": "WhatsApp",
+   "time": "13:47",
+   "patient": "Anoop Varma",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Report status",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "I did a scan two days back, has the report come? Haven't received anything on the portal."
+    },
+    {
+     "role": "agent",
+     "text": "Noted, and this has been arranged. Please reach out again if there is any issue."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Divya"
+  },
+  {
+   "id": "CC-32",
+   "channel": "Phone",
+   "time": "14:12",
+   "patient": "Faisal Rahim",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Package price",
+   "waitingMinutes": 59,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Orthopaedics",
+   "pkg": "Cardiac advanced package",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Can you tell me the cost and what all tests are there in the Cardiac advanced package?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-33",
+   "channel": "WhatsApp",
+   "time": "14:17",
+   "patient": "Faisal Rahim",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": "Women's wellness package",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Women's wellness packageil enthokke tests undu, price parayamo"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-35",
+   "channel": "WhatsApp",
+   "time": "14:45",
+   "patient": "Vinod Panicker",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Package price",
+   "waitingMinutes": 162,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": "Women's wellness package",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "Can you tell me the cost and what all tests are there in the Women's wellness package?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-34",
+   "channel": "WhatsApp",
+   "time": "14:46",
+   "patient": "Sudheer Kartha",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": "Basic health check",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "Basic health checkil enthokke tests undu, price parayamo"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-36",
+   "channel": "Phone",
+   "time": "14:54",
+   "patient": "Ayesha Khan",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": "Executive health check",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Can you tell me the cost and what all tests are there in the Executive health check?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-37",
+   "channel": "WhatsApp",
+   "time": "15:22",
+   "patient": "Leyah Varghese",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": "Executive health check",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "Executive health checkil enthokke tests undu, price parayamo"
+    },
+    {
+     "role": "agent",
+     "text": "Noted, and this has been arranged. Please reach out again if there is any issue."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Kiran"
+  },
+  {
+   "id": "CC-38",
+   "channel": "WhatsApp",
+   "time": "15:22",
+   "patient": "Manoj Kurian",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": "Diabetic care package",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "Diabetic care package price ethra aanu? consultation include aano"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-39",
+   "channel": "WhatsApp",
+   "time": "15:26",
+   "patient": "Bindu Chandran",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Package price",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": "Women's wellness package",
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "What is the price of the Women's wellness package? Does it include consultation?"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Kiran"
+  },
+  {
+   "id": "CC-40",
+   "channel": "WhatsApp",
+   "time": "15:58",
+   "patient": "Manoj Kurian",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Directions",
+   "waitingMinutes": 6,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hello"
+    },
+    {
+     "role": "patient",
+     "text": "How do I reach VPS Lakeshore from the airport, and is there valet parking?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-42",
+   "channel": "WhatsApp",
+   "time": "15:58",
+   "patient": "Manoj Kurian",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Directions",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "How do I reach VPS Lakeshore from the airport, and is there valet parking?"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-41",
+   "channel": "WhatsApp",
+   "time": "16:12",
+   "patient": "Salim Ismail",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Directions",
+   "waitingMinutes": 58,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "airport ninnu ethra time aavum hospital ethaan, valet undo"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-43",
+   "channel": "Phone",
+   "time": "16:36",
+   "patient": "Rahul Menon",
+   "language": "Malayalam",
+   "status": "Needs agent",
+   "intent": "Directions",
+   "waitingMinutes": 43,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "ഹോസ്പിറ്റലിലേക്ക് വരാൻ വഴി പറയാമോ? പാർക്കിംഗ് ഉണ്ടോ?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-44",
+   "channel": "WhatsApp",
+   "time": "16:51",
+   "patient": "Leyah Varghese",
+   "language": "Malayalam",
+   "status": "Bot handling",
+   "intent": "Directions",
+   "waitingMinutes": 4,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Orthopaedics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ഹോസ്പിറ്റലിലേക്ക് വരാൻ വഴി പറയാമോ? പാർക്കിംഗ് ഉണ്ടോ?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-45",
+   "channel": "Phone",
+   "time": "16:53",
+   "patient": "Meera Suresh",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Directions",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "How do I reach VPS Lakeshore from the airport, and is there valet parking?"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-46",
+   "channel": "WhatsApp",
+   "time": "17:00",
+   "patient": "Faisal Rahim",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Bill query",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "TPA cashless approval eppo varum, morning muthal wait cheyyunnu"
+    },
+    {
+     "role": "agent",
+     "text": "Noted, and this has been arranged. Please reach out again if there is any issue."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Divya"
+  },
+  {
+   "id": "CC-47",
+   "channel": "WhatsApp",
+   "time": "17:16",
+   "patient": "Anu Mathew",
+   "language": "Malayalam",
+   "status": "Needs agent",
+   "intent": "Bill query",
+   "waitingMinutes": 190,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gynaecology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ബില്ലിൽ ചില എക്സ്ട്രാ ചാർജുകൾ കാണുന്നു, വിശദീകരണം വേണം"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-48",
+   "channel": "WhatsApp",
+   "time": "17:30",
+   "patient": "Cibi Thankachan",
+   "language": "Manglish",
+   "status": "Resolved",
+   "intent": "Bill query",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "TPA cashless approval eppo varum, morning muthal wait cheyyunnu"
+    },
+    {
+     "role": "agent",
+     "text": "Confirmed on our end — you will get a message shortly with the details."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Ashwin"
+  },
+  {
+   "id": "CC-49",
+   "channel": "WhatsApp",
+   "time": "17:51",
+   "patient": "Sudheer Kartha",
+   "language": "English",
+   "status": "Bot handling",
+   "intent": "Bill query",
+   "waitingMinutes": 7,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "My discharge bill has some extra charges I don't understand, can someone explain?"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-50",
+   "channel": "WhatsApp",
+   "time": "17:57",
+   "patient": "Anoop Varma",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Bill query",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "namaskaram"
+    },
+    {
+     "role": "patient",
+     "text": "How long does cashless TPA approval usually take? We are waiting since morning."
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Sneha"
+  },
+  {
+   "id": "CC-51",
+   "channel": "Phone",
+   "time": "17:59",
+   "patient": "Leyah Varghese",
+   "language": "English",
+   "status": "Resolved",
+   "intent": "Bill query",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "How long does cashless TPA approval usually take? We are waiting since morning."
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Renjith"
+  },
+  {
+   "id": "CC-53",
+   "channel": "WhatsApp",
+   "time": "18:09",
+   "patient": "Cibi Thankachan",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Bill query",
+   "waitingMinutes": 141,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Orthopaedics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "How long does cashless TPA approval usually take? We are waiting since morning."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-52",
+   "channel": "Phone",
+   "time": "18:19",
+   "patient": "Manoj Kurian",
+   "language": "Malayalam",
+   "status": "Resolved",
+   "intent": "Bill query",
+   "waitingMinutes": 0,
+   "escalation": {
+    "flag": false,
+    "reason": null
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ബില്ലിൽ ചില എക്സ്ട്രാ ചാർജുകൾ കാണുന്നു, വിശദീകരണം വേണം"
+    },
+    {
+     "role": "agent",
+     "text": "Thank you for reaching out — here are the details you asked for. Let us know if you need anything else."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": "Kiran"
+  },
+  {
+   "id": "CC-54",
+   "channel": "WhatsApp",
+   "time": "18:50",
+   "patient": "Sudheer Kartha",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Complaint",
+   "waitingMinutes": 92,
+   "escalation": {
+    "flag": true,
+    "reason": "Angry/dissatisfied patient — needs a human apology and service-recovery follow-up, not a bot reply."
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Good morning"
+    },
+    {
+     "role": "patient",
+     "text": "Very disappointed with today's experience, nobody at the front desk was willing to help us and we were sent from counter to counter."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-55",
+   "channel": "WhatsApp",
+   "time": "18:56",
+   "patient": "Vishnu Pillai",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Complaint",
+   "waitingMinutes": 108,
+   "escalation": {
+    "flag": true,
+    "reason": "Angry/dissatisfied patient — needs a human apology and service-recovery follow-up, not a bot reply."
+   },
+   "dept": "Gastroenterology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "valare disappointed aanu, 3 mani kootyaayi wait cheyyunnu ninnu ninnu, arum onnum update cheyyunnilla"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-56",
+   "channel": "WhatsApp",
+   "time": "19:04",
+   "patient": "Jaseem Basheer",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Complaint",
+   "waitingMinutes": 176,
+   "escalation": {
+    "flag": true,
+    "reason": "Angry/dissatisfied patient — needs a human apology and service-recovery follow-up, not a bot reply."
+   },
+   "dept": "General Medicine",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "staff okke rude aayirunnu ee counter-il, ee kind of service accept cheyyan pattilla"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-57",
+   "channel": "WhatsApp",
+   "time": "19:14",
+   "patient": "Leyah Varghese",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Complaint",
+   "waitingMinutes": 142,
+   "escalation": {
+    "flag": true,
+    "reason": "Angry/dissatisfied patient — needs a human apology and service-recovery follow-up, not a bot reply."
+   },
+   "dept": "Paediatrics",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "Hi"
+    },
+    {
+     "role": "patient",
+     "text": "I am extremely unhappy — we have been waiting for over 3 hours with no update from anyone, this is unacceptable for a hospital of this reputation."
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-58",
+   "channel": "Phone",
+   "time": "19:15",
+   "patient": "Leyah Varghese",
+   "language": "English",
+   "status": "Needs agent",
+   "intent": "Urgent — chest pain",
+   "waitingMinutes": 3,
+   "escalation": {
+    "flag": true,
+    "reason": "Red-flag symptom (chest pain + sweating) — possible acute cardiac event. Bot must never answer clinically; route to Emergency immediately."
+   },
+   "dept": "Cardiology",
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "My father is having severe chest pain and sweating heavily right now, what should we do??"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-59",
+   "channel": "WhatsApp",
+   "time": "19:38",
+   "patient": "Sarah Thomas",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Complaint",
+   "waitingMinutes": 7,
+   "escalation": {
+    "flag": true,
+    "reason": "Angry, dissatisfied patient threatening to escalate — needs immediate human callback from the duty manager, not a bot reply."
+   },
+   "dept": null,
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "ivide ulla service ee kondu enikku ippo vare kandittulla worst experience aanu, arum onnum ceyyunnilla, refund venam ini!!"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  },
+  {
+   "id": "CC-60",
+   "channel": "Phone",
+   "time": "19:43",
+   "patient": "Noufal Latheef",
+   "language": "Manglish",
+   "status": "Needs agent",
+   "intent": "Medical advice (escalate)",
+   "waitingMinutes": 7,
+   "escalation": {
+    "flag": true,
+    "reason": "Patient is asking for a specific medicine name and dosage — this is a clinical/prescription question. The bot must never prescribe or suggest medication; route to a nurse callback or OPD consult."
+   },
+   "dept": null,
+   "pkg": null,
+   "messages": [
+    {
+     "role": "patient",
+     "text": "randu divasam aayi mild fever undu body pain-um, ethu tablet edukkanam ennu parayamo dosage-um"
+    }
+   ],
+   "suggestedSlot": null,
+   "agent": null
+  }
+ ]
+}

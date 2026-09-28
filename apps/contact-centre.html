@@ -6,159 +6,458 @@
 <title>Call centre & WhatsApp agent</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .chat-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; margin: 6px 0; font-size: 14px; }
-  .chat-bubble.patient { background: var(--accent-soft); margin-right: auto; }
-  .chat-bubble.agent { background: var(--ok-bg); margin-left: auto; text-align: right; }
-  .kb-item { font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--border); }
-  .kb-item:last-child { border-bottom: none; }
+  /* local additions: kit.js has no chat-bubble or fact-list components — built here, brand tokens only */
+  .chat-log { display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto; padding-right:2px; margin-bottom:8px; }
+  .chat-msg.patient { align-self:flex-start; background:var(--accent-soft); border-radius:4px 16px 16px 16px; padding:8px 13px; max-width:85%; font-size:14px; }
+  .chat-msg.agent { align-self:flex-end; background:var(--navy); color:#fff; border-radius:16px 16px 4px 16px; padding:8px 13px; max-width:85%; font-size:14px; }
+  .chat-quick { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  .chat-quick button { font-size:12px; padding:5px 12px; }
+  .fact { font-size:13px; padding:5px 0; border-bottom:1px solid var(--border); }
+  .fact:last-child { border-bottom:none; }
+  .fact b { color: var(--navy); }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Call centre & WhatsApp agent</h1>
-    <p>Draft a reply, tag intent, suggest a booking slot, and flag anything clinical/urgent to escalate — for incoming patient messages in English, Malayalam or Manglish.</p>
+    <p>Today's WhatsApp and phone conversations, worked as a queue: Claude drafts the next reply grounded in the knowledge base, tags intent and flags anything clinical or urgent for human escalation. A contact-centre agent edits, a team lead approves flagged replies, then it's marked sent. Nothing is sent to any patient from this demo.</p>
   </section>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Knowledge base + incoming message</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="usg">Manglish — USG prep question</option>
-          <option value="pkg">Malayalam — health check package pricing</option>
-          <option value="urgent">English — chest pain, needs escalation</option>
-        </select>
-      </div>
-      <label>Knowledge base (editable)</label>
-      <textarea id="kb" rows="8"></textarea>
-      <label>Incoming message (editable)</label>
-      <textarea id="msg" rows="3"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-      <label>Chat preview</label>
-      <div class="card" id="chatBox" style="background:var(--bg)"></div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Synthetic messages for demonstration only. Not for real clinical use — always route urgent/clinical queries to the ER line.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic conversations for demonstration only — fictional patients, no real messages or PHI.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'contact-centre';
 Hub.mountHeader({ dept: 'Patient Experience', title: 'Call centre & WhatsApp agent' });
+const st = Hub.kit.state(SLUG, { tab: 'inbox', selected: null, reviews: {}, statusOverride: {}, bookings: {}, simMsgs: [], kbReview: null });
+let DATA;
 
-const KB = `OPD timings: Mon–Sat 8:00 AM–7:00 PM, Sunday 9:00 AM–1:00 PM (emergency 24x7)
-Cardiology OPD: Dr. Anjali Nair (Mon/Wed/Fri 10–1), Dr. Priya Varghese (Tue/Thu/Sat 4–7)
-Orthopaedics OPD: Dr. Anil Menon (Mon–Sat 9–12)
-USG abdomen prep: 6-hour fasting required; drink water to keep bladder full 1 hr before scan; no fasting needed for pregnancy USG
-CT scan prep: 4-hour fasting if contrast is used; inform desk if allergic to iodine/contrast dye
-Endoscopy (upper GI) prep: 8-hour fasting, avoid blood thinners 3 days prior (only on doctor's advice)
-Health check packages: Basic ₹2,500 | Executive ₹6,500 | Senior Citizen ₹5,500 | Cardiac Advanced ₹9,500
-Parking: Basement + open lot, first 30 min free, ₹20/hr after, valet available at main entrance
-Emergency (ER) number: 0484-XXX-1234, available 24x7
-Booking: Slots available via phone, WhatsApp, or walk-in registration desk`;
-
-const SCENARIOS = {
-  usg: { kb: KB, msg: 'hi doctor naale USG scan undu, food kazhikkamo? engane prepare cheyyanam' },
-  pkg: { kb: KB, msg: 'നമസ്കാരം, ഹെൽത്ത് ചെക്കപ്പ് പാക്കേജിന്റെ വില എത്രയാണ്? സീനിയർ സിറ്റിസൺ പാക്കേജ് ഉണ്ടോ?' },
-  urgent: { kb: KB, msg: 'My father is having severe chest pain and sweating right now, what should we do??' },
-};
-
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('kb').value = s.kb;
-  document.getElementById('msg').value = s.msg;
-  renderChat(s.msg);
+/* ---------- shared helpers ---------- */
+function effStatus(c) { return st.get().statusOverride[c.id] || c.status; }
+function statusTag(s) {
+  const cls = s === 'Resolved' ? 'ok' : s === 'Needs agent' ? 'bad' : 'warn';
+  return `<span class="tag ${cls}">${Hub.esc(s)}</span>`;
 }
-function renderChat(msg) {
-  document.getElementById('chatBox').innerHTML =
-    `<div class="chat-bubble patient">${Hub.esc(msg)}</div>
-     <div class="chat-bubble agent" style="color:var(--muted)"><i>agent reply appears after you run Claude…</i></div>`;
+function escTag(c) {
+  return c.escalation.flag ? '<span class="tag bad">Escalate</span>' : '<span class="tag ok">Routine</span>';
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('msg').addEventListener('input', e => renderChat(e.target.value));
-loadScenario('usg');
+function waitTag(m) {
+  return m > 60 ? `<span class="tag bad">${m}m waiting</span>` : m > 20 ? `<span class="tag warn">${m}m waiting</span>` : `<span class="tag ok">${m}m waiting</span>`;
+}
+function bookingsFor(c) { return st.get().bookings[c.id]; }
+function bookedCount(date, dept, time) {
+  const b = Object.values(st.get().bookings);
+  return b.filter(x => x.date === date && x.dept === dept && x.time === time).length;
+}
+function effAvail(date, dept, time) {
+  const row = DATA.slots.find(s => s.date === date && s.dept === dept);
+  const t = row && row.times.find(x => x.time === time);
+  if (!t) return 0;
+  return Math.max(0, t.available - bookedCount(date, dept, time));
+}
+function findPkg(name) { return DATA.packages.find(p => p.name === name); }
+function findDoc(dept) { return DATA.doctors.find(d => d.dept === dept); }
 
-const DEMO = {
-usg: `## Reply
+/* ================= REPLY DRAFTING (grounded in KB, computed per record) ================= */
+function craftReply(c) {
+  const first = c.patient.split(' ')[0];
+  const src = (t, s) => `\n\n*(Source: ${s})*`;
+  let body = '', intentTag = c.intent, slotLine = 'Not applicable for this enquiry.', escLine = 'Not required — routine, informational enquiry, fully answerable from the knowledge base.', note = '';
 
-"Hi! Yes, for tomorrow's USG abdomen scan please avoid food for 6 hours before the appointment (water is fine). About 1 hour before the scan, please drink water and try not to urinate, so your bladder is full for the scan. Would you like me to check available slots for tomorrow?"
+  if (c.intent === 'Appointment booking' || c.intent === 'Reschedule') {
+    const doc = findDoc(c.dept);
+    const s = c.suggestedSlot;
+    body = `Hi ${first}, thank you for reaching out. For ${c.dept}, ${doc.name} is available ${doc.days}, ${doc.timings}.${src(doc, 'Consultant roster')} `
+      + (s ? `The nearest open slot is **${s.date} at ${s.time}** — shall I go ahead and hold this for you?` : `Let me check the next available slot and get back to you shortly.`);
+    slotLine = s ? `${s.date}, ${c.dept}, **${s.time}** (${effAvail(s.date, s.dept, s.time)} left after this booking) — book below once confirmed.` : 'No open slot found in the next 5 days for this department; escalate to the desk for a wait-list.';
+    note = `${c.intent} — ${c.dept}, via ${c.channel.toLowerCase()}. ${s ? 'Slot offered, awaiting patient confirmation.' : 'No slot available, needs manual follow-up.'}`;
+  } else if (c.intent === 'Report status') {
+    const g = DATA.general.reports;
+    body = `Hi ${first}, thanks for checking in. ${g.text}${src(g, g.source)} If you don't see it on the patient portal within that window, please share the visit date and I'll follow up with the lab/radiology desk directly.`;
+    note = `Report status enquiry, via ${c.channel.toLowerCase()}. Standard turnaround quoted; flag to lab desk only if patient reports a delay beyond the window.`;
+  } else if (c.intent === 'Package price') {
+    const p = findPkg(c.pkg) || DATA.packages[0];
+    body = `Hi ${first}, the **${p.name}** is priced at ₹${p.priceInr.toLocaleString('en-IN')} and includes ${p.includes}.${src(p, 'Health check price list')} Would you like me to check available dates for this package?`;
+    slotLine = 'Health check packages are walk-in friendly on weekday mornings; offer to book a specific date via WhatsApp.';
+    note = `Package price enquiry — ${p.name}. Interested lead; follow up in 48 hrs if no booking.`;
+  } else if (c.intent === 'Directions') {
+    const g = DATA.general.directions, p = DATA.general.parking;
+    body = `Hi ${first}, ${g.text}${src(g, g.source)} On parking: ${p.text}${src(p, p.source)}`;
+    note = `Directions/parking enquiry, via ${c.channel.toLowerCase()}. Fully answered from KB, no follow-up needed.`;
+  } else if (c.intent === 'Bill query') {
+    const g = DATA.general.billing;
+    body = `Hi ${first}, ${g.text}${src(g, g.source)} If a specific charge on your bill still looks unclear after this, I'll get the billing desk to call you and walk through the line items directly.`;
+    note = `Bill/TPA query, via ${c.channel.toLowerCase()}. If unresolved after this reply, route to billing desk for a callback.`;
+    escLine = 'Not required for this reply, but flag to billing desk if the patient remains unsatisfied — do not argue over charges in chat.';
+  } else if (c.intent === 'Complaint') {
+    body = `Hi ${first}, I'm very sorry you had this experience — that falls well short of what we want for our patients. I've flagged this to the duty manager for a call-back within the hour, and we will follow up on exactly what went wrong today.`;
+    intentTag = 'Complaint — service recovery';
+    slotLine = 'Not applicable — this needs a human call-back, not a booking.';
+    escLine = '**ESCALATE.** Dissatisfied/angry patient — a bot reply must not be sent as final; needs a named team lead to review tone and follow-up commitment before anything goes out, and a duty-manager call-back logged.';
+    note = `Complaint, via ${c.channel.toLowerCase()}. Reason: ${c.escalation.reason} Requires approver sign-off before any reply is sent, and a logged call-back.`;
+  } else if (c.intent === 'Urgent — chest pain') {
+    body = `I understand this is very frightening. Please call our Emergency number **${DATA.erNumber.match(/[\d.-]{10,}/)?.[0] || '0484-2701-234'}** right now, or bring your father to the Emergency entrance immediately — this needs urgent in-person medical attention. I can't give medical advice over chat, but our ER team is ready 24x7 the moment you call or arrive.`;
+    intentTag = 'URGENT — possible cardiac emergency (chest pain + sweating)';
+    slotLine = 'Not applicable — this is not a booking scenario. Route to Emergency, not an OPD queue.';
+    escLine = `**ESCALATE IMMEDIATELY.** ${c.escalation.reason} The bot must never attempt clinical guidance here — reply routes to the ER number and advises coming in directly; log as high-priority and notify the shift supervisor.`;
+    note = 'Urgent escalation — chest pain/sweating reported live in chat. Routed to ER line per protocol. Supervisor must be notified at time of escalation.';
+  } else if (c.intent === 'Medical advice (escalate)') {
+    body = `Thanks for letting us know how you're feeling. I'm not able to recommend a specific medicine or dosage over chat — that needs a quick clinical assessment. I can arrange a nurse call-back within the hour, or book you into today's General Medicine OPD (${DATA.opd.find(d => d.dept === 'General Medicine')?.timings}) — which would you prefer?`;
+    intentTag = 'Medical advice request — must be escalated, not answered';
+    slotLine = 'Offer a nurse call-back or a General Medicine OPD slot — never a specific medicine or dosage.';
+    escLine = `**ESCALATE.** ${c.escalation.reason} Never let the bot name a medicine or dosage, even from the knowledge base.`;
+    note = 'Medical advice / prescription question — routed to nurse callback per protocol, no medication named.';
+  }
+
+  return `## Reply${c.language !== 'English' ? ` (translate to ${c.language} before sending; drafted in English for the maker to review)` : ''}
+
+${body}
 
 ## Intent tag
-**Pre-procedure preparation query — USG abdomen** (non-clinical, informational)
+**${intentTag}**
 
 ## Suggested booking slot
-Tomorrow, USG suite: **10:30 AM or 3:00 PM** (both currently open per today's schedule) — confirm if either works.
+${slotLine}
 
 ## Escalation flag
-**Not required.** This is a standard preparation question fully covered by the knowledge base; no clinical judgment involved.
+${escLine}
 
 ## Internal note
-Manglish query, routine USG prep, resolved via KB. No follow-up needed unless patient requests slot confirmation.`,
-pkg: `## Reply
+*${note}*`;
+}
 
-"നമസ്കാരം! ഞങ്ങളുടെ ഹെൽത്ത് ചെക്കപ്പ് പാക്കേജുകൾ: Basic ₹2,500, Executive ₹6,500, Cardiac Advanced ₹9,500, കൂടാതെ Senior Citizen പാക്കേജ് ₹5,500-നും ലഭ്യമാണ്. ഏതെങ്കിലും ഒരു പാക്കേജിന്റെ വിശദാംശങ്ങൾ വേണോ, അല്ലെങ്കിൽ ബുക്ക് ചെയ്യണോ?"
-
-*(Translation: Hello! Our health check packages are: Basic ₹2,500, Executive ₹6,500, Cardiac Advanced ₹9,500, and yes — a Senior Citizen package is available at ₹5,500. Would you like details on any package, or to book one?)*
-
-## Intent tag
-**Pricing/package enquiry — Health check packages** (non-clinical, informational)
-
-## Suggested booking slot
-Health check packages are walk-in friendly; suggest **any weekday morning, 8:00–11:00 AM** for fasting-based packages, or offer to book a specific date via WhatsApp.
-
-## Escalation flag
-**Not required.** Pure pricing enquiry, fully answerable from KB.
-
-## Internal note
-Malayalam query re: Senior Citizen package pricing. Interested lead — flag to health-check desk for follow-up call if no booking within 48 hrs.`,
-urgent: `## Reply
-
-"I understand this is very concerning. Please call our Emergency number **0484-XXX-1234 immediately**, or bring your father to our Emergency department right now — this needs urgent in-person medical attention. I'm not able to give medical advice over chat, but our ER team is available 24x7 and ready to help the moment you arrive or call."
-
-## Intent tag
-**URGENT — Possible cardiac emergency (chest pain + diaphoresis)**
-
-## Suggested booking slot
-**Not applicable — this is not a booking scenario.** Direct to Emergency department / ER helpline immediately, no appointment queue.
-
-## Escalation flag
-**ESCALATE IMMEDIATELY.** Chest pain with sweating is a red-flag symptom (possible acute coronary event). Agent must not attempt any clinical guidance — route to ER number 0484-XXX-1234 and advise coming to hospital directly. Log as high-priority in CRM and notify shift supervisor.
-
-## Internal note
-Urgent escalation — chest pain/sweating reported live in chat. Routed to ER line per protocol. Supervisor notified at time of escalation.`,
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const kb = document.getElementById('kb').value;
-  const msg = document.getElementById('msg').value;
-  const prompt = `You are a patient experience call-centre/WhatsApp agent at VPS Lakeshore Hospital, Kochi. Use only the knowledge base below to answer; you cannot give medical advice.
-
-Knowledge base:
-${kb}
-
-Incoming message (may be in English, Malayalam or Manglish):
-"${msg}"
-
-Provide: (1) a reply in the patient's language/style with an English translation if not in English, (2) an intent tag, (3) a suggested booking slot if relevant (or say not applicable), (4) an escalation flag — if the message suggests anything clinical/urgent, say you cannot give medical advice and must route to the ER number, and mark ESCALATE. Use ₹ formatting for prices.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are a hospital call-centre/WhatsApp support agent at a 350-bed Kerala hospital, strictly limited to non-clinical information and KB-based answers.',
-    prompt, demo: DEMO[key], manualMinutes: 10,
-  }).then(text => {
-    const firstLine = (text.match(/## Reply\s*\n+([^\n]+)/) || [])[1] || '(see output)';
-    document.getElementById('chatBox').innerHTML =
-      `<div class="chat-bubble patient">${Hub.esc(msg)}</div>
-       <div class="chat-bubble agent">${Hub.esc(firstLine.replace(/^"|"$/g, ''))}</div>`;
+/* ================= TAB A: INBOX ================= */
+function inbox(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Conversation queue</h2>
+        <button type="button" id="expQ">Export conversations to Excel</button></div>
+      <p class="small">${DATA.conversations.length} conversations today (${Hub.esc(DATA.today)}), across WhatsApp and phone.</p>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected conversation</h2><div id="detail"><p class="small">Pick a row from the queue.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.conversations, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' }, { key: 'patient', label: 'Patient' }, { key: 'channel', label: 'Channel' },
+      { key: 'intent', label: 'Intent' },
+      { key: 'escalation', label: 'Flag', render: r => escTag(r) },
+      { key: 'waitingMinutes', label: 'Waiting', num: true, render: r => waitTag(r.waitingMinutes) },
+      { key: 'status', label: 'Status', render: r => statusTag(effStatus(r)) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
   });
+  el.querySelector('#expQ').onclick = () => {
+    Hub.kit.exportXlsx(DATA.conversations.map(c => ({
+      ID: c.id, Time: c.time, Patient: c.patient, Channel: c.channel, Language: c.language, Intent: c.intent,
+      Status: effStatus(c), 'Escalation flag': c.escalation.flag ? 'Y' : 'N', 'Waiting (min)': c.waitingMinutes,
+      Department: c.dept || '', 'Suggested slot': c.suggestedSlot ? `${c.suggestedSlot.date} ${c.suggestedSlot.time}` : '',
+    })), 'contact-centre-conversations.xlsx', 'Conversations');
+    Hub.kit.log(SLUG, 'Exported conversations to Excel');
+  };
+  const sel = DATA.conversations.find(c => c.id === st.get().selected) || DATA.conversations.find(c => c.status !== 'Resolved') || DATA.conversations[0];
+  if (sel) { st.set({ selected: sel.id }); detail(sel); }
+}
+
+function needsApproval(c) { return c.escalation.flag || c.intent === 'Complaint'; }
+
+function reviewPanel(el, c) {
+  const rec = (st.get().reviews[c.id]);
+  if (!rec) { el.innerHTML = ''; return; }
+  const approval = needsApproval(c);
+  function save(patch) { st.set(s => ({ reviews: { ...s.reviews, [c.id]: { ...s.reviews[c.id], ...patch } } })); }
+  function draw() {
+    const r = st.get().reviews[c.id];
+    const role = Hub.kit.role(); // re-read on every draw — role can change via the toolbar between renders
+    const badge = { draft: '<span class="tag warn">Draft — with agent</span>', submitted: '<span class="tag warn">Awaiting team lead approval</span>', sent: '<span class="tag ok">Sent</span>', returned: '<span class="tag bad">Returned to agent</span>' }[r.status];
+    el.className = 'kit-review';
+    el.innerHTML = `<div class="row" style="justify-content:space-between"><h3 style="margin:0">Draft reply</h3>${badge}</div>
+      ${r.status === 'sent' ? `<div class="kit-approved">Marked sent ${Hub.esc(r.at || '')}. (Demo only — nothing leaves this page.)</div><div class="claude-out">${Hub.md(r.text)}</div>` : ''}
+      ${r.status === 'returned' && r.note ? `<p class="small"><b>Team lead's note:</b> ${Hub.esc(r.note)}</p>` : ''}
+      ${r.status !== 'sent' ? `<label>${role === 'maker' && r.status !== 'submitted' ? 'Edit the Claude draft before sending' : 'Draft (read-only for approver)'}</label>
+        <textarea data-upload="off" ${role === 'maker' && r.status !== 'submitted' ? '' : 'readonly'}>${Hub.esc(r.text)}</textarea>` : ''}
+      <div class="row" style="margin-top:8px">${actions(r, role, approval)}</div>
+      <p class="small" style="margin-top:6px">${approval ? 'This reply is flagged/escalated or a complaint, so a team lead must approve it before it is marked sent.' : 'Routine reply — the agent can send directly once it looks right; no approval gate needed for this intent.'}</p>`;
+    const ta = el.querySelector('textarea');
+    el.querySelectorAll('[data-a]').forEach(b => b.onclick = () => act(b.dataset.a, ta));
+  }
+  function actions(r, role, approval) {
+    if (r.status === 'sent') return '<button type="button" data-a="word">Download Word (.docx)</button><button type="button" data-a="reopen">Reopen</button>';
+    if (role === 'maker') {
+      if (r.status === 'submitted') return '<span class="small">Submitted. Switch to <b>Approver</b> in the toolbar to review.</span>';
+      return approval ? '<button type="button" data-a="submit">Submit for approval</button>' : '<button type="button" class="primary" data-a="send">Send reply</button>';
+    }
+    if (!approval) return '<span class="small">Routine reply — sent directly by the agent, no approver step for this intent.</span>';
+    if (r.status === 'submitted') return '<button type="button" data-a="approve">Approve & send</button><button type="button" data-a="return">Return with note</button>';
+    return '<span class="small">Waiting for the agent to submit. Switch to <b>Maker</b> to edit and submit.</span>';
+  }
+  function act(a, ta) {
+    const r = st.get().reviews[c.id];
+    if (ta && !ta.readOnly) r.text = ta.value;
+    if (a === 'submit') { save({ status: 'submitted', text: r.text }); Hub.kit.log(SLUG, 'Submitted for approval', c.id); }
+    if (a === 'send') { save({ status: 'sent', text: r.text, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) }); Hub.kit.log(SLUG, 'Reply sent (demo)', c.id); st.set(s => ({ statusOverride: { ...s.statusOverride, [c.id]: 'Resolved' } })); }
+    if (a === 'approve') { save({ status: 'sent', text: r.text, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) }); Hub.kit.log(SLUG, 'Approved & sent (demo)', c.id); st.set(s => ({ statusOverride: { ...s.statusOverride, [c.id]: 'Resolved' } })); }
+    if (a === 'return') { const note = prompt("Note for the agent (what should change?)", '') || ''; save({ status: 'returned', note }); Hub.kit.log(SLUG, 'Returned to agent', `${c.id}${note ? ': ' + note : ''}`); }
+    if (a === 'reopen') { save({ status: 'draft' }); Hub.kit.log(SLUG, 'Reopened', c.id); st.set(s => { const so = { ...s.statusOverride }; delete so[c.id]; return { statusOverride: so }; }); }
+    if (a === 'word') { Hub.wordDownload(r.text, null, `Reply — ${c.id}`); Hub.kit.log(SLUG, 'Downloaded Word', c.id); refreshQueueIfVisible(); return; }
+    draw();
+    refreshQueueIfVisible();
+  }
+  const onRole = () => { if (el.isConnected) draw(); else document.removeEventListener('kit:role', onRole); };
+  document.addEventListener('kit:role', onRole);
+  draw();
+}
+function refreshQueueIfVisible() { const t = document.getElementById('tbl'); if (t) inbox(document.getElementById('view')); }
+
+function detail(c) {
+  const el = document.getElementById('detail');
+  const done = st.get().reviews[c.id];
+  const stepIdx = !done ? 1 : done.status === 'sent' ? 3 : 2;
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(c.patient)}</b> · via ${Hub.esc(c.channel)} · ${Hub.esc(c.language)} · ${Hub.esc(c.time)} today<br>
+    <span class="small">${Hub.esc(c.intent)}${c.dept ? ' · ' + Hub.esc(c.dept) : ''}</span></p>
+    <div class="chat-log" id="log"></div>
+    <button class="primary" id="run">Draft reply with Claude</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv"></div>
+    <div id="bookWrap" style="margin-top:10px"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Received', 'Claude draft', 'Review', 'Sent'], stepIdx);
+  renderChatLog(c);
+  renderBooking(c);
+  if (done) reviewPanel(el.querySelector('#rv'), c);
+  el.querySelector('#run').onclick = async () => {
+    const kbContext = { erNumber: DATA.erNumber, opd: DATA.opd, prep: DATA.prep, packages: DATA.packages, general: DATA.general, doctors: DATA.doctors.filter(d => d.dept === c.dept), slots: DATA.slots.filter(s => s.dept === c.dept) };
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 8,
+      system: 'You are the Patient Experience call-centre/WhatsApp agent at VPS Lakeshore Hospital, Kochi, a 350-bed NABH-accredited hospital, working in English, Malayalam and Manglish. Answer only from the knowledge base given and quote the source line you used. Never give medical advice, a diagnosis or a medicine/dosage — anything clinical or urgent must be flagged for escalation to the ER number or a nurse callback, never answered directly.',
+      prompt: `Draft the next reply for this conversation:\n\n${JSON.stringify({ conversation: c, knowledgeBase: kbContext }, null, 1)}\n\nProvide: (1) the reply text, (2) an intent tag, (3) a suggested booking slot if relevant (or say not applicable), (4) an escalation flag — ESCALATE if anything clinical/urgent/complaint, with the reason, (5) a short internal note.`,
+      demo: () => craftReply(c),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted reply', c.id);
+    Hub.kit.steps(el.querySelector('#steps'), ['Received', 'Claude draft', 'Review', 'Sent'], 2);
+    st.set(s => ({ reviews: { ...s.reviews, [c.id]: { status: 'draft', text } } }));
+    reviewPanel(el.querySelector('#rv'), c);
+  };
+}
+function renderChatLog(c) {
+  const log = document.getElementById('log');
+  if (!log) return;
+  log.innerHTML = c.messages.map(m => `<div class="chat-msg ${m.role === 'patient' ? 'patient' : 'agent'}">${Hub.esc(m.text)}</div>`).join('');
+}
+function renderBooking(c) {
+  const wrap = document.getElementById('bookWrap');
+  if (!wrap) return;
+  if (!c.suggestedSlot) { wrap.innerHTML = ''; return; }
+  const s = c.suggestedSlot;
+  const already = bookingsFor(c);
+  const left = effAvail(s.date, s.dept, s.time);
+  wrap.innerHTML = already
+    ? `<p class="small">Slot booked: <b>${Hub.esc(already.date)} at ${Hub.esc(already.time)}</b> (${Hub.esc(c.dept)}). This reduced availability for that slot.</p>`
+    : `<div class="row"><button type="button" id="bookBtn" ${left <= 0 ? 'disabled' : ''}>Book suggested slot — ${Hub.esc(s.date)}, ${Hub.esc(s.time)} (${left} left)</button></div>`;
+  const btn = document.getElementById('bookBtn');
+  if (btn) btn.onclick = () => {
+    st.set(st2 => ({ bookings: { ...st2.bookings, [c.id]: s } }));
+    Hub.kit.log(SLUG, 'Booked suggested slot', `${c.id} — ${s.date} ${s.time}`);
+    renderBooking(c);
+  };
+}
+
+/* ================= TAB B: LIVE CHAT SIMULATOR ================= */
+const URGENT_WORDS = /chest pain|breathless|unconscious|severe bleeding|stroke|not breathing|fainted|seizure/i;
+function simBotAnswer(q) {
+  const lq = q.toLowerCase();
+  if (URGENT_WORDS.test(lq)) return `**This sounds urgent.** Please call our Emergency number **${DATA.erNumber.match(/[\d.-]{10,}/)?.[0] || '0484-2701-234'}** right now, or come directly to the Emergency entrance — I can't give medical advice over chat, but our ER team is ready 24x7.`;
+  if (/tablet|medicine|dosage|prescri/.test(lq)) return `I'm not able to recommend a specific medicine or dosage over chat — that needs a quick clinical assessment. I can arrange a nurse call-back within the hour, or book you into today's General Medicine OPD. Which would you prefer?`;
+  if (/usg|ultrasound/.test(lq)) return `**${DATA.prep.usg.title}:** ${DATA.prep.usg.text} *(Source: ${DATA.prep.usg.source})*`;
+  if (/\bct\b|contrast/.test(lq)) return `**${DATA.prep.ct.title}:** ${DATA.prep.ct.text} *(Source: ${DATA.prep.ct.source})*`;
+  if (/mri/.test(lq)) return `**${DATA.prep.mri.title}:** ${DATA.prep.mri.text} *(Source: ${DATA.prep.mri.source})*`;
+  if (/endoscop/.test(lq)) return `**${DATA.prep.endoscopy.title}:** ${DATA.prep.endoscopy.text} *(Source: ${DATA.prep.endoscopy.source})*`;
+  if (/tmt|stress test|treadmill/.test(lq)) return `**${DATA.prep.tmt.title}:** ${DATA.prep.tmt.text} *(Source: ${DATA.prep.tmt.source})*`;
+  if (/price|cost|package/.test(lq)) return `Our health check packages: ${DATA.packages.map(p => `${p.name} ₹${p.priceInr.toLocaleString('en-IN')}`).join(', ')}. Would you like the inclusions for any one of these? *(Source: Health check price list)*`;
+  if (/park/.test(lq)) return `${DATA.general.parking.text} *(Source: ${DATA.general.parking.source})*`;
+  if (/direction|reach|address|come to/.test(lq)) return `${DATA.general.directions.text} *(Source: ${DATA.general.directions.source})*`;
+  if (/visiting|visit hours|visitor/.test(lq)) return `${DATA.general.visiting.text} *(Source: ${DATA.general.visiting.source})*`;
+  if (/report|result/.test(lq)) return `${DATA.general.reports.text} *(Source: ${DATA.general.reports.source})*`;
+  if (/bill|tpa|cashless|insurance/.test(lq)) return `${DATA.general.billing.text} *(Source: ${DATA.general.billing.source})* Cashless TPAs on file: ${DATA.tpaList.slice(0, 5).join(', ')} and more.`;
+  if (/appointment|book|slot|doctor/.test(lq)) return `Which department would you like to see a doctor for? Once you tell me, I can check the OPD timings and the next open slot for you.`;
+  return `I don't have a specific answer wired for that in this demo. Try asking about USG/CT/MRI/endoscopy/TMT prep, health check packages, parking, directions, visiting hours, report status, billing/TPA, or booking an appointment.`;
+}
+function liveChat(el) {
+  const msgs = st.get().simMsgs;
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>You (as the patient)</h2>
+      <p class="small">Type as a patient over WhatsApp — this bot answers turn by turn, keyword-matched to the knowledge base. Urgent keywords (chest pain, breathless, etc.) always trigger the escalation response.</p>
+      <div class="chat-quick">
+        <button type="button" data-q="hi doctor naale USG scan undu, food kazhikkamo?">USG prep?</button>
+        <button type="button" data-q="What is the price of the Executive health check package?">Package price?</button>
+        <button type="button" data-q="How do I get cashless approval from my TPA?">TPA/cashless?</button>
+        <button type="button" data-q="My father is having severe chest pain and is sweating">Chest pain (urgent)</button>
+      </div>
+      <div class="chat-log" id="simLog"></div>
+      <div class="row" style="margin-top:6px"><textarea id="simInput" data-upload="off" style="min-height:56px" placeholder="Type a message…"></textarea></div>
+      <div class="row" style="margin-top:6px"><button class="primary" id="simSend">Send</button><button type="button" id="simClear">Clear chat</button></div>
+    </div>
+    <div class="card"><h2>Knowledge base on file</h2><div id="simFacts"></div></div>
+  </div>`;
+  el.querySelector('#simFacts').innerHTML = `
+    <div class="fact"><b>Prep sheets:</b> USG, CT, MRI, endoscopy, TMT</div>
+    <div class="fact"><b>Packages:</b> ${DATA.packages.map(p => p.name).join(', ')}</div>
+    <div class="fact"><b>Parking:</b> ${Hub.esc(DATA.general.parking.text)}</div>
+    <div class="fact"><b>Visiting hours:</b> ${Hub.esc(DATA.general.visiting.text)}</div>
+    <div class="fact"><b>Cashless TPAs:</b> ${DATA.tpaList.slice(0, 6).map(Hub.esc).join(', ')}…</div>
+    <div class="fact"><b>ER number:</b> ${Hub.esc(DATA.erNumber)}</div>`;
+  const log = el.querySelector('#simLog');
+  function renderLog() {
+    const cur = st.get().simMsgs;
+    log.innerHTML = cur.map(m => m.role === 'user' ? `<div class="chat-msg patient">${Hub.esc(m.content)}</div>` : `<div class="chat-msg agent claude-out">${Hub.md(m.content)}</div>`).join('') || '<p class="small">Type a message to start.</p>';
+    log.scrollTop = log.scrollHeight;
+  }
+  renderLog();
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { el.querySelector('#simInput').value = b.dataset.q; send(); });
+  el.querySelector('#simSend').onclick = send;
+  el.querySelector('#simClear').onclick = () => { st.set({ simMsgs: [] }); renderLog(); };
+  async function send() {
+    const ta = el.querySelector('#simInput'), q = ta.value.trim();
+    if (!q) return;
+    const btn = el.querySelector('#simSend'); btn.disabled = true;
+    const cur = st.get().simMsgs.slice();
+    cur.push({ role: 'user', content: q }); st.set({ simMsgs: cur }); renderLog(); ta.value = '';
+    const holder = document.createElement('div'); holder.className = 'chat-msg agent claude-out';
+    holder.innerHTML = '<p class="thinking">Bot is typing</p>'; log.appendChild(holder); log.scrollTop = log.scrollHeight;
+    const text = await Hub.ask({
+      system: 'You are the WhatsApp/phone patient-experience bot at VPS Lakeshore Hospital, Kochi. Answer only from the knowledge base given, quoting the source line. Never give medical advice, a diagnosis, or a medicine name/dosage — escalate anything clinical or urgent to the ER number or a nurse callback instead of answering.',
+      messages: cur,
+      demo: simBotAnswer(q),
+      onText: partial => { const l2 = document.getElementById('simLog'); if (!l2 || !l2.contains(holder)) return; holder.innerHTML = Hub.md(partial); l2.scrollTop = l2.scrollHeight; },
+    });
+    if (!document.getElementById('simLog')) return;
+    const after = st.get().simMsgs.slice(); after.push({ role: 'assistant', content: text }); st.set({ simMsgs: after });
+    renderLog();
+    const b2 = document.getElementById('simSend'); if (b2) b2.disabled = false;
+  }
+}
+
+/* ================= TAB C: KNOWLEDGE BASE ================= */
+function suggestFaqDemo() {
+  const unresolved = DATA.conversations.filter(c => effStatus(c) !== 'Resolved' && !['Appointment booking', 'Reschedule', 'Report status', 'Package price', 'Directions', 'Bill query'].includes(c.intent));
+  const rows = unresolved.slice(0, 3).map(c => `| ${c.intent} | "${c.messages[c.messages.length - 1].text.slice(0, 70)}…" | Not in KB — needs a written policy line (who calls back, in what time) rather than a bot answer. |`).join('\n');
+  return `## Suggested new FAQ entries
+
+Based on conversations still open today that a bot couldn't answer from the current knowledge base:
+
+| Conversation type | Example message | Suggested KB addition |
+|---|---|---|
+${rows}
+
+## Recommendation
+Add a short, explicit **escalation policy line** to the knowledge base for complaints and clinical questions — e.g. "Any complaint about staff behaviour or long waits → duty manager call-back within 1 hour, logged in CRM" — so the bot always has something specific to route to, instead of improvising. Do **not** add a line that answers a medical question directly; escalation policy only.
+
+*Review below before anything is added to the live knowledge base.*`;
+}
+function knowledgeBase(el) {
+  el.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Knowledge base</h2>
+      <button type="button" class="primary" id="kbSuggest">Suggest missing FAQ entries</button></div>
+    <p class="small">${DATA.kbEntries.length} entries — OPD timings, doctor schedules, procedure prep, packages, and general info. Search across all fields.</p>
+    <div id="kbtbl"></div>
+    <div class="claude-out" id="kbOut" style="margin-top:10px"></div><div id="kbRv"></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#kbtbl'), {
+    rows: DATA.kbEntries, search: true,
+    columns: [{ key: 'category', label: 'Category' }, { key: 'title', label: 'Title' }, { key: 'detail', label: 'Detail' }, { key: 'source', label: 'Source' }],
+  });
+  const done = st.get().kbReview;
+  if (done) reviewKb(el.querySelector('#kbRv'), done);
+  el.querySelector('#kbSuggest').onclick = async () => {
+    const unresolved = DATA.conversations.filter(c => effStatus(c) !== 'Resolved');
+    const text = await Hub.run({
+      out: '#kbOut', button: '#kbSuggest', manualMinutes: 15,
+      system: 'You review a hospital call-centre knowledge base and suggest missing FAQ entries based on conversations the bot could not fully resolve. Never suggest a medical/clinical answer — only escalation policy or informational entries.',
+      prompt: JSON.stringify({ existingCategories: [...new Set(DATA.kbEntries.map(k => k.category))], unresolvedConversations: unresolved.map(c => ({ intent: c.intent, lastMessage: c.messages[c.messages.length - 1].text, escalation: c.escalation })) }, null, 1),
+      demo: suggestFaqDemo,
+    });
+    if (!text) return;
+    const rv = document.getElementById('kbRv'); // tab may have switched while Claude was writing
+    if (!rv) return;
+    Hub.kit.log(SLUG, 'Claude suggested FAQ entries from unresolved conversations');
+    st.set({ kbReview: { status: 'draft', text } });
+    reviewKb(rv, st.get().kbReview);
+  };
+}
+function reviewKb(el, rec) {
+  function draw() {
+    const r = st.get().kbReview;
+    const badge = { draft: '<span class="tag warn">Draft — for review</span>', approved: '<span class="tag ok">Approved for KB update</span>' }[r.status];
+    el.innerHTML = `<div class="row" style="justify-content:space-between"><h3 style="margin:0">FAQ suggestions</h3>${badge}</div>
+      <div class="claude-out">${Hub.md(r.text)}</div>
+      <div class="row" style="margin-top:8px">${r.status === 'approved' ? '<span class="small">Marked approved — in production this would open a KB-editor ticket.</span>' : '<button type="button" class="primary" data-a="approve">Approve for KB update</button>'}</div>`;
+    const b = el.querySelector('[data-a=approve]');
+    if (b) b.onclick = () => { st.set({ kbReview: { ...r, status: 'approved' } }); Hub.kit.log(SLUG, 'Approved FAQ suggestions for KB update'); draw(); };
+  }
+  draw();
+}
+
+/* ================= TAB D: DASHBOARD ================= */
+function dashboard(el) {
+  const all = DATA.conversations;
+  const escalations = all.filter(c => c.escalation.flag).length;
+  const botHandled = Math.round(100 * (all.length - escalations) / all.length);
+  const avgWait = Math.round(all.reduce((a, c) => a + c.waitingMinutes, 0) / all.length);
+
+  const byIntent = {};
+  all.forEach(c => { byIntent[c.intent] = (byIntent[c.intent] || 0) + 1; });
+  const intentData = Object.entries(byIntent).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+
+  const byLang = {};
+  all.forEach(c => { byLang[c.language] = (byLang[c.language] || 0) + 1; });
+  const langData = Object.entries(byLang).map(([label, value]) => ({ label, value }));
+
+  const hourCounts = new Array(13).fill(0); // 8am-8pm
+  all.forEach(c => { const h = parseInt(c.time.split(':')[0], 10); const idx = Math.min(12, Math.max(0, h - 8)); hourCounts[idx]++; });
+  const hourLabels = hourCounts.map((_, i) => `${8 + i}:00`);
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Conversations today</div><div class="value">${all.length}</div></div>
+    <div class="kpi"><div class="label">Bot handling (no escalation)</div><div class="value">${botHandled}%</div></div>
+    <div class="kpi"><div class="label">Escalations</div><div class="value">${escalations}</div></div>
+    <div class="kpi"><div class="label">Avg first-reply wait</div><div class="value">${avgWait} min</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="card" id="c3" style="margin-top:16px"></div>`;
+  Hub.chart.bar(el.querySelector('#c1'), { title: 'Conversations by intent', data: intentData });
+  Hub.chart.line(el.querySelector('#c2'), { title: 'Conversations by hour', labels: hourLabels, series: [{ name: 'Conversations', values: hourCounts }] });
+  Hub.chart.bar(el.querySelector('#c3'), { title: 'Conversations by language', data: langData });
+}
+
+/* ================= BOOT ================= */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The inbox', text: '60 conversations from today — WhatsApp and phone, in English, Malayalam and Manglish — tagged with intent, escalation flag and waiting time.' },
+      { sel: '#run', title: 'Claude drafts the reply', text: 'A reply grounded in the knowledge base, with the source line quoted, an intent tag, a suggested slot and an escalation flag — anything clinical/urgent is never answered directly.' },
+      { sel: '#rv', title: 'Agent edits, team lead approves', text: 'For routine replies the agent can send directly. Flagged, escalated or complaint replies need a team lead\'s approval first — switch roles in the toolbar to see both sides.' },
+      { sel: '#bookWrap', title: 'Book the suggested slot', text: 'Booking a suggested slot persists in this demo and reduces the availability shown for that date and time.' },
+      { sel: '#tabs', title: 'Live chat simulator', text: 'Type as a patient and the bot answers turn by turn, keyword-matched to the knowledge base — urgent keywords always trigger the escalation response.' },
+      { sel: '#tabs', title: 'Knowledge base', text: 'Every OPD timing, doctor schedule, prep sheet, package and policy line is searchable here, and Claude can suggest FAQ entries missing from it.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Conversation volume, bot-handling rate, escalations and average first-reply time, by intent, hour and language.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'inbox', label: 'Inbox' }, { id: 'sim', label: 'Live chat simulator' },
+    { id: 'kb', label: 'Knowledge base' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ inbox, sim: liveChat, kb: knowledgeBase, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

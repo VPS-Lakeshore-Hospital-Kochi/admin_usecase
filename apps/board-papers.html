@@ -5,225 +5,421 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Board paper & minutes drafter</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .item-row { border-bottom: 1px solid var(--border); padding: 8px 0; }
+  .item-row:last-child { border-bottom: 0; }
+  .bullet-list { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--muted); }
+  .bullet-list li { margin: 2px 0; }
+  .check-cat { margin: 14px 0 4px; font-size: 13px; font-weight: 500; color: var(--navy); }
+  .check-row { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .check-row:last-child { border-bottom: 0; }
+  .check-row input { width: auto; margin-top: 3px; }
+  .check-row label { margin: 0; font-weight: 400; color: var(--text); flex: 1; }
+  .gauge-wrap { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .gauge-track { flex: 1; height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .gauge-fill { height: 100%; background: var(--navy); border-radius: 999px; }
+  .meeting-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .meeting-picker button { border-radius: 999px; padding: 6px 14px; }
+  .meeting-picker button[aria-pressed="true"] { background: var(--navy); color: var(--surface); border-color: var(--navy); }
+  .tracker-empty { color: var(--muted); font-size: 13px; }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
-    <h1>Board paper & minutes drafter</h1>
-    <p>Turn bullet points into a formal board agenda note, or rough meeting notes into signed-off minutes with resolutions.</p>
+    <h1>Board paper &amp; minutes drafter</h1>
+    <p>The Company Secretary's meeting desk for Lakeshore Hospital &amp; Research Centre Ltd (LHRC): the agenda queue for the next Board and committee meetings, a minutes drafter from rough notes, a pre-meeting compliance checklist, and a dashboard across all three.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample input</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="capex">Mode A — Agenda note: ICU complex capex approval</option>
-          <option value="calicut">Mode A — Agenda note: Calicut O&M agreement proposal</option>
-          <option value="minutes">Mode B — Rough notes → formal minutes</option>
-        </select>
-      </div>
-      <label id="inputLabel">Bullet inputs (editable)</label>
-      <textarea id="input" rows="16"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Have Legal / Company Secretary review before circulation to the Board. Synthetic figures and names for demonstration only.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Have the Company Secretary and Legal review every paper and minute before circulation to the Board. Synthetic meeting data for demonstration only — nothing here is sent or filed with the Registrar of Companies or any real board.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'board-papers';
 Hub.mountHeader({ dept: 'Legal & Secretarial', title: 'Board paper & minutes drafter' });
+const STATUS_ORDER = ['Inputs received', 'Paper drafted', 'Reviewed', 'Circulated'];
+const st = Hub.kit.state(SLUG, { tab: 'agenda', selected: null, reviews: {}, bullets: {}, itemStatus: {},
+  minutesSelected: null, minutesReviews: {}, ticks: {}, actions: [], complianceMeeting: null });
+let DATA;
 
-const SCENARIOS = {
-  capex: {
-    mode: 'A', label: 'Agenda note: ICU complex capex approval',
-    input: `Agenda item: Approval of capital expenditure for new ICU complex (Phase 2 expansion), 4th floor East Wing.
-- Scope: 20-bed ICU/critical care complex, includes 4 additional ventilator-ready isolation bays, central nursing station, dedicated dialysis bay.
-- Estimated capex: ₹18.5 crore (civil + MEP ₹7.2 cr, medical equipment ₹9.8 cr, contingency ₹1.5 cr).
-- Rationale: current ICU at 92% average occupancy over last 2 quarters; turning away 6-8 critical referrals/month from network hospitals and Maldives/GCC corporate referral partners.
-- Funding: ₹12 cr via term loan (in-principle sanction from lead bank), balance ₹6.5 cr from internal accruals.
-- Timeline: 14 months construction + commissioning; targeted go-live Q4 FY28.
-- Expected impact: additional ICU revenue ~₹6.2 cr/yr at 75% steady-state occupancy; also de-bottlenecks Cath Lab and transplant program which are ICU-bed constrained today.
-- Approvals needed: Board approval for capex >₹10 cr per Delegation of Powers; approval of term loan facility.`,
-  },
-  calicut: {
-    mode: 'A', label: 'Agenda note: Calicut O&M agreement proposal',
-    input: `Agenda item: Proposed Operations & Management (O&M) agreement for a 150-bed hospital facility in Calicut, owned by a third-party promoter group.
-- Structure: LHRC to manage clinical operations, quality/NABH systems, and brand under "VPS Lakeshore" name; owner retains asset ownership and capex responsibility.
-- Term: 10 years, renewable, management fee of 6% of gross revenue + 2% of EBITDA as performance incentive.
-- Strategic rationale: extends VPS Lakeshore brand into North Kerala/Malabar catchment without capex; feeds tertiary referrals (cardiology, transplant, robotics) to Kochi.
-- Risks flagged by management: brand/reputation risk if owner underinvests in facility; need clear quality-control and exit rights in agreement.
-- Financial impact: estimated ₹3.5-4.2 cr/yr fee income at steady state (Year 2 onward), near-zero capex from LHRC.
-- Approval sought: in-principle Board approval to proceed with definitive agreement negotiation; authorise MD to finalise terms within outlined parameters.`,
-  },
-  minutes: {
-    mode: 'B', label: 'Rough notes → formal minutes',
-    input: `Meeting: EC meeting, 24 Sept 2026, 4pm, boardroom. Present: MD, CFO, COO, Medical Director, CS (recording).
-- CFO walked through Aug MIS. Revenue up 6% MoM, EBITDA margin steady at 19%. Robotics program contributing more than expected.
-- Discussed ICU capex proposal - CFO said funding plan looks fine, wants one more round with the bank on interest rate before board.
-- COO raised staffing gap in critical care nursing - 8 vacancies, agreed to fast-track recruitment via 2 agencies, review in 4 weeks.
-- Medical Director gave update on transplant program - 2 more successful cases this month, NABH surveyor visit scheduled first week of Nov, prep committee to be formed.
-- CS to circulate NABH prep committee terms of reference by 3 Oct.
-- Approved: renewal of biomedical waste management contract with existing vendor for 1 more year, same commercial terms.
-- Next EC meeting: 22 Oct 2026.`,
-  },
-};
-
-const KPI_DATA = {
-  capex: [
-    { label: 'Capex proposed', value: '₹18.5 cr' },
-    { label: 'DoP threshold', value: '>₹10 cr', delta: 'Board approval required', cls: 'down' },
-    { label: 'Payback (approx.)', value: '~3.0 yrs' },
-  ],
-  calicut: [
-    { label: 'Proposed term', value: '10 yrs' },
-    { label: 'Fee income (steady state)', value: '₹3.5-4.2 cr/yr' },
-    { label: 'LHRC capex', value: '~₹0' },
-  ],
-  minutes: [
-    { label: 'Attendees', value: '5' },
-    { label: 'Resolutions/approvals', value: '1' },
-    { label: 'Action items', value: '3' },
-  ],
-};
-
-function renderKpis(key) {
-  const box = document.getElementById('kpis');
-  box.innerHTML = KPI_DATA[key].map(k => `
-    <div class="kpi"><div class="label">${Hub.esc(k.label)}</div><div class="value">${Hub.esc(k.value)}</div>
-    ${k.delta ? `<div class="delta ${k.cls || ''}">${Hub.esc(k.delta)}</div>` : ''}</div>`).join('');
+/* ---------- shared helpers ---------- */
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function parseDate(s) { return new Date(s + 'T00:00:00Z'); }
+function meetingOf(id) { return DATA.meetings.find(m => m.id === id); }
+function itemsOf(meetingId) { return DATA.items.filter(i => i.meetingId === meetingId); }
+function effStatus(it) { return (st.get().itemStatus || {})[it.id] || it.status; }
+function bulletsFor(it) { const b = (st.get().bullets || {})[it.id]; return b != null ? b : it.bullets.join('\n'); }
+function setStatus(id, s) { st.set(state => ({ itemStatus: { ...(state.itemStatus || {}), [id]: s } })); }
+function reviewOf(id) { return (st.get().reviews || {})[id]; }
+function dueTag(dateStr) {
+  const d = daysBetween(parseDate(DATA.today), parseDate(dateStr));
+  if (d < 0) return { tag: 'bad', label: `${Math.abs(d)}d ago` };
+  if (d <= 5) return { tag: 'warn', label: `In ${d}d` };
+  return { tag: 'ok', label: `In ${d}d` };
 }
+const LEGAL_MAP = {
+  board: 'Section 173 (Board meetings) and Section 179 (general powers of the Board), read with the Company\'s Delegation of Powers policy',
+  ordinary: 'Section 188 (related-party transactions) and/or Section 177(4)(iv) (Audit Committee omnibus approval), requiring an ordinary resolution of the shareholders where the transaction is material',
+  special: 'Section 180(1)(c) (borrowing powers of the Board), requiring a special resolution of the shareholders in general meeting',
+};
+const RES_VERB = { approval: 'RESOLVED THAT', noting: 'NOTED THAT', discussion: 'RESOLVED THAT, subject to further discussion,' };
 
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('input').value = s.input;
-  document.getElementById('inputLabel').textContent = s.mode === 'A' ? 'Bullet inputs for agenda note (editable)' : 'Rough meeting notes (editable)';
-  renderKpis(key);
-}
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-loadScenario('capex');
+/* ---------- Claude agenda-paper builder, computed from the selected item ---------- */
+function buildAgendaDemo(it, meeting) {
+  const bullets = bulletsFor(it).split('\n').map(s => s.trim()).filter(Boolean);
+  const bg = bullets.slice(0, Math.min(3, bullets.length)).join(' ');
+  const figRows = bullets.filter(b => /₹/.test(b));
+  const riskBullets = bullets.filter(b => /risk|flagged/i.test(b));
+  const otherBullets = bullets.filter(b => !figRows.includes(b) && !riskBullets.includes(b)).slice(0, 6);
+  const table = figRows.length
+    ? `| Detail |\n|---|\n${figRows.map(b => `| ${b.replace(/\|/g, '/')} |`).join('\n')}`
+    : `| Detail |\n|---|\n${otherBullets.slice(0, 3).map(b => `| ${b.replace(/\|/g, '/')} |`).join('\n')}`;
+  const risks = riskBullets.length
+    ? riskBullets.map(b => `- ${b}`).join('\n')
+    : `- Standard execution risk: timelines and figures above are management estimates and should be reconfirmed at the meeting.\n- No material legal or regulatory risk flagged beyond the approvals set out below.`;
+  const options = it.type === 'approval'
+    ? `1. **Approve as proposed** — proceed on the terms set out above.\n2. **Approve with conditions** — approve in principle, subject to specified conditions being closed out before implementation.\n3. **Defer** — seek further information before deciding.`
+    : it.type === 'discussion'
+    ? `1. **Note and direct management to proceed** as outlined.\n2. **Note and ask for a follow-up paper** with more detail at the next meeting.`
+    : `1. **Take on record.**`;
+  const resolutionText = it.type === 'noting'
+    ? `"**NOTED THAT** the Board/Committee takes on record the update on ${it.title.toLowerCase()}, as placed before it."`
+    : it.resolutionType === 'special'
+    ? `"**RESOLVED THAT**, subject to the approval of the members by way of a special resolution, the Board approves the matter set out in this agenda note, in terms of ${LEGAL_MAP[it.resolutionType]}; **FURTHER RESOLVED THAT** the Company Secretary be and is hereby authorised to take all steps necessary to place the special resolution before the members at the next general meeting."`
+    : it.resolutionType === 'ordinary'
+    ? `"**RESOLVED THAT** the Board approves the related-party transaction described in this agenda note, subject to the approval of the members by way of an ordinary resolution where required under ${LEGAL_MAP[it.resolutionType]}; interested director(s), if any, have not participated in the vote on this item; **FURTHER RESOLVED THAT** the Managing Director be and is hereby authorised to finalise the terms and execute all necessary documents."`
+    : `"**RESOLVED THAT** the Board approves the matter set out in this agenda note, in terms of ${LEGAL_MAP[it.resolutionType]}; **FURTHER RESOLVED THAT** the Managing Director/Chief Financial Officer be and are hereby authorised, jointly or severally, to give effect to this resolution and execute all necessary documents in connection therewith."`;
+  return `## Board Agenda Note
 
-const DEMO = {
-capex: `## Board Agenda Note
-
-**Item:** Approval of Capital Expenditure — ICU Complex, Phase 2 Expansion (4th Floor, East Wing)
-**Placed before:** Board of Directors, Lakeshore Hospital & Research Centre Ltd.
+**Meeting:** ${meeting.label}, ${meeting.date} | **Item ${it.itemNo}:** ${it.title}
+**Sponsor:** ${it.sponsor} | **Nature:** ${it.type === 'approval' ? 'For approval' : it.type === 'noting' ? 'For noting' : 'For discussion'}
 
 ### Background
-The hospital's existing ICU has operated at an average **92% occupancy** over the last two quarters, resulting in an estimated 6-8 critical referrals turned away each month, including referrals from network hospitals and international corporate partners (Maldives/GCC). Management proposes a 20-bed ICU/critical care complex on the 4th Floor East Wing, comprising 4 ventilator-ready isolation bays, a central nursing station and a dedicated dialysis bay.
+${bg}
 
 ### Proposal
-| Component | Amount |
-|---|---|
-| Civil & MEP works | ₹7.2 cr |
-| Medical equipment | ₹9.8 cr |
-| Contingency | ₹1.5 cr |
-| **Total capex** | **₹18.5 cr** |
+${otherBullets.length ? otherBullets.map(b => `- ${b}`).join('\n') + '\n\n' : ''}${figRows.length ? '### Financial impact\n\n' + table : ''}
 
-Construction and commissioning timeline: 14 months, targeted go-live Q4 FY28.
+### Options
+${options}
 
-### Financial impact
-- Funding: ₹12 cr via term loan (in-principle bank sanction obtained) + ₹6.5 cr internal accruals.
-- Additional ICU revenue of approximately ₹6.2 cr/yr at 75% steady-state occupancy.
-- Secondary benefit: de-bottlenecks Cath Lab and the transplant program, both currently ICU-bed constrained.
+### Risks
+${risks}
+
+### Legal references
+This item is placed before the meeting in terms of ${LEGAL_MAP[it.resolutionType]}. Minutes of this meeting will be recorded and signed in accordance with Section 118 and Secretarial Standard SS-1.
 
 ### Resolution proposed
-"**RESOLVED THAT** the Board approves capital expenditure of up to ₹18,50,00,000 (Rupees Eighteen Crore Fifty Lakh only) for the ICU Complex Phase 2 expansion, in terms of Section 179(3)(d) of the Companies Act, 2013 read with the Company's Delegation of Powers policy (Board approval required for capex exceeding ₹10 crore; **FURTHER RESOLVED THAT** the Board approves availing of a term loan facility of up to ₹12 crore for part-financing the above, and authorises the Managing Director and CFO, jointly, to finalise loan terms and execute all necessary documents in connection therewith."`,
+${resolutionText}`;
+}
 
-calicut: `## Board Agenda Note
+/* =====================================================================
+   TAB: Agenda (work queue)
+   ===================================================================== */
+function agendaTab(el) {
+  el.innerHTML = `<div class="card" style="margin-bottom:16px">
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap">
+        <h2 style="margin:0">Upcoming meetings</h2>
+        <button type="button" id="agExport">Export agenda to Excel</button>
+      </div>
+      <div id="agTbl"></div>
+    </div>
+    <div class="grid cols-2"><div class="card"><h2>Selected item</h2><div id="agDetail"><p class="small">Pick an item from the table above.</p></div></div>
+    <div class="card"><h2>Action tracker</h2><p class="small">Action items copied from drafted minutes land here for follow-up.</p><div id="agTracker"></div></div></div>`;
 
-**Item:** Proposed Operations & Management Agreement — 150-bed Facility, Calicut
-**Placed before:** Board of Directors, Lakeshore Hospital & Research Centre Ltd.
+  const rows = DATA.items.map(it => Object.assign({}, it, { meetingLabel: meetingOf(it.meetingId).label, meetingDate: meetingOf(it.meetingId).date, effStatus: effStatus(it) }));
+  Hub.kit.table(el.querySelector('#agTbl'), {
+    rows, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'meetingLabel', label: 'Meeting', render: r => `${Hub.esc(r.meetingLabel)}<br><span class="small">${Hub.esc(r.meetingDate)}</span>` },
+      { key: 'itemNo', label: '#', num: true },
+      { key: 'title', label: 'Agenda item' },
+      { key: 'type', label: 'Type', render: r => `<span class="tag ${r.type === 'approval' ? 'warn' : r.type === 'noting' ? 'ok' : 'warn'}">${Hub.esc(r.type)}</span>` },
+      { key: 'sponsor', label: 'Sponsor' },
+      { key: 'effStatus', label: 'Status', render: r => `<span class="tag ${r.effStatus === 'Circulated' ? 'ok' : r.effStatus === 'Inputs received' ? 'bad' : 'warn'}">${Hub.esc(r.effStatus)}</span>` },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); itemDetail(r); },
+  });
+  let sel = DATA.items.find(i => i.id === st.get().selected);
+  if (!sel) { sel = DATA.items[0]; st.set({ selected: sel.id }); }
+  itemDetail(sel);
+  renderTracker(el.querySelector('#agTracker'));
 
-### Background
-Management has evaluated a proposal to enter into an Operations & Management (O&M) arrangement with a third-party promoter group owning a 150-bed facility in Calicut, extending the "VPS Lakeshore" brand and clinical/quality systems into the North Kerala/Malabar catchment without incremental capex to LHRC.
+  el.querySelector('#agExport').onclick = () => {
+    Hub.kit.exportXlsx(rows.map(r => ({ Meeting: r.meetingLabel, Date: r.meetingDate, 'Item No.': r.itemNo, Title: r.title, Type: r.type, Sponsor: r.sponsor, 'Resolution type': r.resolutionType, Status: r.effStatus })), 'board-agenda.xlsx', 'Agenda');
+    Hub.kit.log(SLUG, 'Exported agenda to Excel');
+  };
+}
 
-### Proposal
-- LHRC to manage clinical operations, quality/NABH systems and the VPS Lakeshore brand; owner retains asset ownership and all capex responsibility.
-- Term: 10 years, renewable; management fee of 6% of gross revenue plus 2% of EBITDA as performance incentive.
-- Strategic rationale: brand extension and a natural tertiary-referral feeder (cardiology, transplant, robotics) into the Kochi flagship, with near-zero capex outlay.
+function itemDetail(it) {
+  const el = document.getElementById('agDetail');
+  if (!el) return;
+  const meeting = meetingOf(it.meetingId);
+  const done = reviewOf(it.id);
+  el.innerHTML = `<div id="itSteps"></div>
+    <p><b>Item ${it.itemNo}. ${Hub.esc(it.title)}</b></p>
+    <p class="small">${Hub.esc(meeting.label)} · ${Hub.esc(meeting.date)} · Sponsor: ${Hub.esc(it.sponsor)} · <span class="tag ${it.type === 'noting' ? 'ok' : 'warn'}">${Hub.esc(it.type)}</span> · resolution: ${Hub.esc(it.resolutionType)}</p>
+    <label for="itBullets">Bullet inputs (editable)</label>
+    <textarea id="itBullets" rows="9">${Hub.esc(bulletsFor(it))}</textarea>
+    <div class="row" style="margin-top:10px"><button class="primary" id="itRun">Run with Claude — draft agenda paper</button></div>
+    <div class="claude-out" id="itOut" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+    <div id="itRev"></div>`;
+  Hub.kit.steps(el.querySelector('#itSteps'), STATUS_ORDER, STATUS_ORDER.indexOf(effStatus(it)));
+  const ta = el.querySelector('#itBullets');
+  ta.oninput = () => st.set(s => ({ bullets: { ...(s.bullets || {}), [it.id]: ta.value } }));
+  const onDecision = status => {
+    if (status === 'approved') setStatus(it.id, 'Reviewed');
+    if (status === 'submitted') setStatus(it.id, 'Paper drafted');
+    document.getElementById('agTbl') && agendaTab(document.getElementById('view'));
+  };
+  if (done) Hub.kit.review(el.querySelector('#itRev'), { slug: SLUG, item: { id: it.id, title: `Agenda note — Item ${it.itemNo}, ${meeting.label}` }, text: done.text, st, docTitle: `Agenda note — ${it.id}`, onDecision });
+  el.querySelector('#itRun').onclick = async () => {
+    const bulletsText = ta.value;
+    const prompt = `You are assisting the Legal & Secretarial (Company Secretarial) team at Lakeshore Hospital & Research Centre Ltd (LHRC), Kochi, in drafting a formal ${meeting.kind} agenda note.
 
-### Risks flagged by management
-- **Brand/reputation risk** if the owner underinvests in facility upkeep or clinical infrastructure over the term.
-- Need for explicit **quality-control rights** (LHRC audit/inspection rights, NABH-standard compliance covenants) and **exit rights** (termination for quality breach, brand-damage events) in the definitive agreement.
+Meeting: ${meeting.label}, ${meeting.date}
+Item ${it.itemNo}: ${it.title} (${it.type}, sponsor: ${it.sponsor}, resolution type: ${it.resolutionType})
 
-### Financial impact
-Estimated fee income of ₹3.5-4.2 crore/year at steady state (Year 2 onward), with negligible capex outlay from LHRC.
+Bullet inputs:
+${bulletsText}
 
-### Resolution proposed
-"**RESOLVED THAT** the Board accords in-principle approval for Lakeshore Hospital & Research Centre Ltd to negotiate and enter into a definitive Operations & Management Agreement for the 150-bed facility at Calicut on the broad commercial parameters placed before the Board, in terms of Section 188 of the Companies Act, 2013 (if applicable, subject to related-party determination) and the Company's related contracting policy; **FURTHER RESOLVED THAT** the Managing Director be and is hereby authorised to finalise the definitive terms, including quality-control and exit provisions, and to execute the agreement on behalf of the Company."`,
+Draft a formal agenda note with sections: Background, Proposal (with a financial-impact table where figures are given), Options, Risks, Legal references (cite the relevant Companies Act, 2013 sections — Section 173 for board meetings, 179 for Board powers, 180 for borrowing, 185/186 for loans and investments, 188 for related-party transactions, 118 for minutes — and Secretarial Standard SS-1/SS-2 where relevant), and a Resolution proposed in formal "RESOLVED THAT" language. Use ₹ crore/lakh formatting.`;
+    const text = await Hub.run({
+      out: '#itOut', button: '#itRun', manualMinutes: 120,
+      system: 'You are an experienced Company Secretary at a 350-bed NABH-accredited Kerala hospital group, skilled in board-paper drafting under the Companies Act, 2013 and Secretarial Standards.',
+      prompt, demo: () => buildAgendaDemo(it, meeting),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Agenda paper drafted', `Item ${it.itemNo} — ${it.title}`);
+    if (effStatus(it) === 'Inputs received') setStatus(it.id, 'Paper drafted');
+    const stepsEl = document.getElementById('itSteps'), revEl = document.getElementById('itRev');
+    if (!stepsEl || !revEl) return; // tab switched while Claude was writing
+    Hub.kit.steps(stepsEl, STATUS_ORDER, STATUS_ORDER.indexOf(effStatus(it)));
+    Hub.kit.review(revEl, { slug: SLUG, item: { id: it.id, title: `Agenda note — Item ${it.itemNo}, ${meeting.label}` }, text, st, docTitle: `Agenda note — ${it.id}`, onDecision });
+  };
+}
 
-minutes: `## Minutes of the Executive Committee Meeting
+function renderTracker(el) {
+  if (!el) return;
+  const rows = st.get().actions || [];
+  if (!rows.length) { el.innerHTML = '<p class="tracker-empty">No action items yet — draft minutes and use "Add to action tracker".</p>'; return; }
+  Hub.kit.table(el, {
+    rows, rowKey: 'key',
+    columns: [
+      { key: 'action', label: 'Action' }, { key: 'owner', label: 'Owner' }, { key: 'due', label: 'Due' },
+      { key: 'source', label: 'Source' },
+      { key: 'done', label: 'Status', render: r => `<span class="tag ${r.done ? 'ok' : 'warn'}">${r.done ? 'Done' : 'Open'}</span>` },
+    ],
+    onRowClick: r => { st.set(s => ({ actions: (s.actions || []).map(a => a.key === r.key ? { ...a, done: !a.done } : a) })); renderTracker(el); },
+  });
+}
 
-**Date:** 24 September 2026, 4:00 PM | **Venue:** Boardroom
-**Present:** Managing Director; Chief Financial Officer; Chief Operating Officer; Medical Director
-**In attendance:** Company Secretary (recording minutes)
+/* =====================================================================
+   TAB: Minutes
+   ===================================================================== */
+function buildMinutesDemo(n) {
+  const numbered = n.agendaItems.map((a, i) => {
+    let body = `### ${i + 1}. ${a.heading}\n\n`;
+    if (a.discussion) body += `${a.discussion}\n\n`;
+    if (a.resolution) body += `**${a.resolution}**\n\n`;
+    if (a.action) body += `**Action:** ${a.action.text}. *Owner: ${a.action.owner}. Due: ${a.action.due}.*\n\n`;
+    return body.trim();
+  }).join('\n\n');
+  const actionRows = n.agendaItems.filter(a => a.action).map((a, i) => `| ${i + 1} | ${a.action.text} | ${a.action.owner} | ${a.action.due} |`).join('\n');
+  const resCount = n.agendaItems.filter(a => a.resolution).length;
+  return `## Minutes of the ${n.meetingLabel}
 
-### 1. Confirmation of previous minutes
-Taken as read.
+**Date:** ${n.date} | **Venue:** ${n.venue}
+**Present:** ${n.present.join('; ')}
+**In attendance:** ${n.inAttendance.join('; ')}
+**Quorum:** confirmed present and quorum was met throughout the meeting.
 
-### 2. August MIS review
-The CFO presented the August MIS. Revenue was up 6% month-on-month, with EBITDA margin steady at 19%. The robotics surgery program contributed above expectation for the month. **Noted.**
-
-### 3. ICU Complex capex proposal
-The proposal for the ICU Complex (Phase 2) capex was discussed. The CFO noted the funding plan was broadly acceptable but requested one further round of discussion with the lead bank on interest rate terms before the proposal is placed before the Board. **Action: CFO to finalise bank terms before Board placement.**
-
-### 4. Critical care nursing staffing
-The COO reported 8 vacancies in critical care nursing. It was agreed to fast-track recruitment through two external agencies, with a status review in 4 weeks. **Action: COO — review in 4 weeks (by 22 Oct 2026).**
-
-### 5. Transplant program update
-The Medical Director reported 2 further successful transplant cases during the month. An NABH surveyor visit is scheduled for the first week of November 2026; a preparation committee is to be constituted. **Action: Medical Director to constitute NABH prep committee.**
-
-### 6. NABH preparation committee — terms of reference
-**Action: Company Secretary to circulate draft Terms of Reference for the NABH preparation committee by 3 October 2026.**
-
-### 7. Biomedical waste management contract renewal
-**RESOLVED THAT** the biomedical waste management services contract with the existing vendor be renewed for a further period of one year on the same commercial terms as the current agreement.
+${numbered}
 
 ### Action items summary
 | # | Action | Owner | Due |
 |---|---|---|---|
-| 1 | Finalise bank terms for ICU capex before Board placement | CFO | Before next Board meeting |
-| 2 | Review critical care nursing recruitment progress | COO | 22 Oct 2026 |
-| 3 | Constitute NABH preparation committee | Medical Director | Ahead of Nov survey |
-| 4 | Circulate NABH prep committee Terms of Reference | Company Secretary | 3 Oct 2026 |
+${actionRows}
 
-**Next meeting:** 22 October 2026.`
-};
+**Resolutions passed:** ${resCount || 'none'}. **Next meeting:** ${n.nextMeeting}.
 
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const mode = SCENARIOS[key].mode;
-  const input = document.getElementById('input').value;
-  const prompt = mode === 'A'
-    ? `You are assisting the Legal & Secretarial team at VPS Lakeshore Hospital, Kochi (LHRC) in drafting a formal board agenda note from the bullet points below.
+*Drafted in Secretarial Standard SS-1 style. These minutes are a draft for review by the Company Secretary and Chairman before being entered in the minutes book under Section 118 of the Companies Act, 2013.*`;
+}
 
-Bullet inputs:
-${input}
+function minutesTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Rough notes from past meetings</h2><div id="mnTbl"></div></div>
+    <div class="card"><h2>Selected notes</h2><div id="mnDetail"><p class="small">Pick a set of rough notes.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#mnTbl'), {
+    rows: DATA.minutesNotes, selectedKey: st.get().minutesSelected,
+    columns: [{ key: 'title', label: 'Meeting' }, { key: 'date', label: 'Date' }, { key: 'venue', label: 'Venue' }],
+    onRowClick: r => { st.set({ minutesSelected: r.id }); minutesDetail(r); },
+  });
+  let sel = DATA.minutesNotes.find(n => n.id === st.get().minutesSelected) || DATA.minutesNotes[0];
+  st.set({ minutesSelected: sel.id });
+  minutesDetail(sel);
+}
 
-Draft a formal board agenda note with sections: Background, Proposal (with figures in a table where relevant), Financial impact, and a Resolution proposed (with appropriate Companies Act 2013 section references). Use ₹ crore/lakh formatting.`
-    : `You are assisting the Legal & Secretarial team at VPS Lakeshore Hospital, Kochi (LHRC) in converting rough meeting notes into formal minutes.
+function minutesDetail(n) {
+  const el = document.getElementById('mnDetail');
+  if (!el) return;
+  const done = (st.get().minutesReviews || {})[n.id];
+  el.innerHTML = `<p><b>${Hub.esc(n.title)}</b></p>
+    <p class="small">Present: ${Hub.esc(n.present.join(', '))}<br>In attendance: ${Hub.esc(n.inAttendance.join(', '))}</p>
+    <label for="mnNotes">Rough meeting notes (editable)</label>
+    <textarea id="mnNotes" rows="10" data-upload="off">${Hub.esc(n.roughNotes)}</textarea>
+    <div class="row" style="margin-top:10px"><button class="primary" id="mnRun">Run with Claude — draft formal minutes</button></div>
+    <div class="claude-out" id="mnOut" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+    <div id="mnRev"></div>
+    ${done ? '<div class="row" style="margin-top:10px"><button type="button" id="mnTrack">Add action items to tracker</button></div>' : ''}`;
+  const onDecision = () => {};
+  if (done) {
+    Hub.kit.review(el.querySelector('#mnRev'), { slug: SLUG, item: { id: n.id, title: `Minutes — ${n.title}` }, text: done.text, st: { get: () => ({ reviews: st.get().minutesReviews }), set: patch => st.set(s => ({ minutesReviews: (typeof patch === 'function' ? patch({ reviews: s.minutesReviews }) : patch).reviews })) }, docTitle: `Minutes — ${n.title}`, onDecision });
+    el.querySelector('#mnTrack').onclick = () => {
+      const added = n.agendaItems.filter(a => a.action).map(a => ({
+        key: `${n.id}::${a.heading}`, action: a.action.text, owner: a.action.owner, due: a.action.due, source: n.title, done: false,
+      }));
+      st.set(s => {
+        const existingKeys = new Set((s.actions || []).map(x => x.key));
+        const merged = (s.actions || []).concat(added.filter(a => !existingKeys.has(a.key)));
+        return { actions: merged };
+      });
+      Hub.kit.log(SLUG, 'Copied action items to tracker', n.title);
+      alert(`${added.length} action item(s) added to the tracker on the Agenda tab.`);
+    };
+  }
+  el.querySelector('#mnRun').onclick = async () => {
+    const notesText = el.querySelector('#mnNotes').value;
+    const prompt = `You are assisting the Company Secretary at Lakeshore Hospital & Research Centre Ltd (LHRC), Kochi, converting rough meeting notes into formal minutes.
+
+Meeting: ${n.meetingLabel}, ${n.date}, ${n.venue}
+Present: ${n.present.join(', ')}
+In attendance: ${n.inAttendance.join(', ')}
 
 Rough notes:
-${input}
+${notesText}
 
-Draft formal minutes with: heading (meeting, date, venue, present/in attendance), numbered agenda items with discussion summary, clearly marked resolutions/approvals, an action items table (action, owner, due date), and the next meeting date.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced Company Secretary at a Kerala hospital group, skilled in board paper drafting and minute-taking under the Companies Act, 2013.',
-    prompt, demo: DEMO[key], manualMinutes: 180,
+Draft formal minutes in Secretarial Standard SS-1 style: heading with meeting/date/venue/present/in-attendance, a note on quorum, numbered agenda items with a discussion summary, clearly marked resolutions passed (in "RESOLVED THAT" language), an action items table (action, owner, due date), and the next meeting date. Reference Section 118 of the Companies Act, 2013 on minutes where relevant.`;
+    const text = await Hub.run({
+      out: '#mnOut', button: '#mnRun', manualMinutes: 90,
+      system: 'You are an experienced Company Secretary at a Kerala hospital group, skilled in minute-taking under the Companies Act, 2013 and Secretarial Standard SS-1.',
+      prompt, demo: () => buildMinutesDemo(n),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Minutes drafted', n.title);
+    st.set(s => ({ minutesReviews: { ...(s.minutesReviews || {}), [n.id]: { status: 'draft', text } } }));
+    minutesDetail(n);
+  };
+}
+
+/* =====================================================================
+   TAB: Compliance checklist
+   ===================================================================== */
+function ticksFor(meetingId) {
+  const stored = st.get().ticks || {};
+  if (stored[meetingId]) return stored[meetingId];
+  const initial = Object.assign({}, DATA.compliance[meetingId].ticks);
+  st.set(s => ({ ticks: { ...(s.ticks || {}), [meetingId]: initial } }));
+  return initial;
+}
+
+function complianceTab(el) {
+  const mId = st.get().complianceMeeting || DATA.meetings[0].id;
+  el.innerHTML = `<div class="card">
+    <h2>Pre-meeting compliance checklist</h2>
+    <p class="small">Notice period, quorum and disclosure checks per meeting, tracked here before the paper goes out. Ticks are kept in this browser.</p>
+    <div class="meeting-picker" id="mPicker"></div>
+    <div id="cGauge"></div>
+    <div id="cList"></div>
+  </div>`;
+  el.querySelector('#mPicker').innerHTML = DATA.meetings.map(m => `<button type="button" data-m="${Hub.esc(m.id)}" aria-pressed="${m.id === mId}">${Hub.esc(m.label)}</button>`).join('');
+  el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { st.set({ complianceMeeting: b.dataset.m }); complianceTab(document.getElementById('view')); });
+  drawChecklist(mId);
+}
+
+function drawChecklist(mId) {
+  const meeting = meetingOf(mId);
+  const { items } = DATA.compliance[mId];
+  const ticks = ticksFor(mId);
+  const done = items.filter(i => ticks[i.id]).length;
+  const pct = Math.round((done / items.length) * 100);
+  const gauge = document.getElementById('cGauge');
+  if (gauge) gauge.innerHTML = `<p class="small">${Hub.esc(meeting.label)} · ${Hub.esc(meeting.date)} · Quorum rule: ${Hub.esc(meeting.quorumRule)}</p>
+    <div class="gauge-wrap"><div class="gauge-track"><div class="gauge-fill" style="width:${pct}%"></div></div>
+    <span class="tag ${pct === 100 ? 'ok' : pct >= 60 ? 'warn' : 'bad'}">${pct}% ready — ${done}/${items.length}</span></div>`;
+  const cats = [...new Set(items.map(i => i.category))];
+  const list = document.getElementById('cList');
+  if (!list) return;
+  list.innerHTML = cats.map(cat => `<div class="check-cat">${Hub.esc(cat)}</div>${items.filter(i => i.category === cat).map(i => `
+    <div class="check-row"><input type="checkbox" id="chk-${Hub.esc(i.id)}" ${ticks[i.id] ? 'checked' : ''}><label for="chk-${Hub.esc(i.id)}">${Hub.esc(i.label)}</label></div>`).join('')}`).join('');
+  items.forEach(i => {
+    const box = document.getElementById(`chk-${i.id}`);
+    if (box) box.onchange = () => {
+      st.set(s => ({ ticks: { ...(s.ticks || {}), [mId]: { ...(s.ticks || {})[mId], [i.id]: box.checked } } }));
+      Hub.kit.log(SLUG, 'Updated compliance checklist', `${meeting.label} — ${i.label}`);
+      drawChecklist(mId);
+    };
   });
+}
+
+/* =====================================================================
+   TAB: Dashboard
+   ===================================================================== */
+function dashboardTab(el) {
+  const items = DATA.items.map(it => Object.assign({}, it, { effStatus: effStatus(it) }));
+  const drafted = items.filter(i => i.effStatus !== 'Inputs received').length;
+  const pctDrafted = Math.round((drafted / items.length) * 100);
+  const nearest = DATA.meetings.map(m => daysBetween(parseDate(DATA.today), parseDate(m.date))).sort((a, b) => a - b)[0];
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Agenda items across 3 meetings</div><div class="value">${items.length}</div></div>
+    <div class="kpi"><div class="label">Papers drafted or further</div><div class="value">${pctDrafted}%</div></div>
+    <div class="kpi"><div class="label">Days to nearest meeting</div><div class="value">${nearest}</div></div>
+    <div class="kpi"><div class="label">Items awaiting circulation</div><div class="value">${items.filter(i => i.effStatus !== 'Circulated').length}</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>`;
+
+  Hub.chart.stacked(el.querySelector('#c1'), {
+    title: 'Items by status per meeting', format: v => String(v),
+    labels: DATA.meetings.map(m => m.label.replace('Meeting ', '').replace(' Committee Meeting', ' Cttee')),
+    series: STATUS_ORDER.map(s => ({ name: s, values: DATA.meetings.map(m => itemsOf(m.id).filter(it => effStatus(it) === s).length) })),
+  });
+  const byType = {};
+  items.forEach(i => byType[i.type] = (byType[i.type] || 0) + 1);
+  Hub.chart.bar(el.querySelector('#c2'), {
+    title: 'Items by type', format: v => String(v),
+    data: Object.entries(byType).map(([label, value]) => ({ label, value })),
+  });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#agTbl', title: 'The agenda queue', text: '14 agenda items across the 143rd Board Meeting, the Audit Committee and the CSR Committee — each with its type, sponsor and drafting status.' },
+      { sel: '#itBullets', title: 'Bullet inputs', text: 'Every item starts as bullet points from the sponsoring department — capex figures, an O&M proposal, a related-party lease. Edit them before drafting.' },
+      { sel: '#itRun', title: 'Run with Claude', text: 'Claude turns the bullets into a full agenda note: background, proposal, a financial table, options, risks, legal references and a formal resolution.' },
+      { sel: '#itRev', title: 'Maker edits, approver signs off', text: 'A CS executive edits the draft and submits it. Switch to Approver in the toolbar — the Company Secretary approves or returns it before it is marked circulated.' },
+      { sel: '#tabs', title: 'Minutes and compliance', text: 'The Minutes tab turns rough notes from past meetings into SS-1 style minutes with an action list. The Compliance tab tracks notice, quorum and disclosure readiness per meeting.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'KPIs and charts across all three meetings — how many papers are drafted, and where each meeting stands.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'agenda', label: 'Agenda' },
+    { id: 'minutes', label: 'Minutes' },
+    { id: 'compliance', label: 'Compliance checklist' },
+    { id: 'dash', label: 'Dashboard' },
+  ], id => {
+    st.set({ tab: id });
+    ({ agenda: agendaTab, minutes: minutesTab, compliance: complianceTab, dash: dashboardTab }[id])(document.getElementById('view'));
+  }, st.get().tab);
 });
 </script>
 </body>

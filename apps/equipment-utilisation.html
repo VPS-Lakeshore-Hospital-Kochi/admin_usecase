@@ -5,153 +5,378 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Equipment utilisation & AMC analyser</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .factbox { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px 16px; margin: 8px 0 14px; }
+  .factbox div { font-size: 13px; }
+  .factbox b { color: var(--navy); font-weight: 500; }
+  .ticketrow td { vertical-align: top; }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Equipment utilisation & AMC analyser</h1>
-    <p>Check high-value equipment usage, revenue and downtime against AMC spend to find underused assets and new ideas.</p>
+    <p>Eighteen high-value assets — utilisation, revenue per AMC rupee and downtime, with Claude drafting the levers to lift usage (out-of-Kochi packages, visiting-clinician revenue share, extended lists) and the AMC renewal negotiation notes.</p>
   </section>
-
-  <div id="kpis" class="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample equipment table</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="q2">This quarter — Jul-Sep 2026</option>
-          <option value="prior">Prior quarter — Apr-Jun 2026</option>
-        </select>
-      </div>
-      <label>Asset | Available hrs/mo | Used hrs/mo | Cases/mo | Revenue/mo (₹) | AMC ₹/yr | Downtime hrs/mo — editable</label>
-      <textarea id="eq" rows="12"></textarea>
-      <div id="eqTable"></div>
-      <div class="row" style="margin-top:12px"><button class="primary" id="runBtn">Run with Claude</button></div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-  <p class="footer-note">Synthetic equipment and revenue figures for demonstration only.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic asset register and figures for demonstration only. Nothing here is sent or posted to any hospital or OEM system; a named biomedical engineer and the COO approve before anything goes out.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'equipment-utilisation';
 Hub.mountHeader({ dept: 'Facilities & Biomedical', title: 'Equipment utilisation & AMC analyser' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, renewSelected: null, reviews: {} });
+let DATA;
 
-const SCENARIOS = {
-  q2: {
-    text: `Asset | Available hrs | Used hrs | Cases | Revenue/mo | AMC/yr | Downtime hrs
-Surgical robot (da Vinci) | 260 | 78 | 22 | 4200000 | 9500000 | 14
-Cath lab 1 | 300 | 195 | 145 | 6800000 | 3200000 | 8
-Cath lab 2 | 300 | 140 | 98 | 4100000 | 3200000 | 22
-MRI 3T | 300 | 240 | 310 | 5600000 | 3850000 | 6
-CT scanner | 300 | 255 | 480 | 4200000 | 2100000 | 4
-Lithotripter | 260 | 32 | 18 | 780000 | 1450000 | 2
-Dialysis unit (12 stations) | 2880 | 2350 | 620 | 3900000 | 1650000 | 18`,
-  },
-  prior: {
-    text: `Asset | Available hrs | Used hrs | Cases | Revenue/mo | AMC/yr | Downtime hrs
-Surgical robot (da Vinci) | 260 | 62 | 17 | 3300000 | 9500000 | 26
-Cath lab 1 | 300 | 210 | 160 | 7200000 | 3200000 | 5
-Cath lab 2 | 300 | 118 | 82 | 3500000 | 3200000 | 12
-MRI 3T | 300 | 232 | 298 | 5400000 | 3850000 | 10
-CT scanner | 300 | 248 | 462 | 4050000 | 2100000 | 3
-Lithotripter | 260 | 28 | 15 | 650000 | 1450000 | 4
-Dialysis unit (12 stations) | 2880 | 2280 | 598 | 3780000 | 1650000 | 9`,
-  },
+/* ---------- shared stats helpers ---------- */
+function last3(months) { return months.slice(-3); }
+function first3(months) { return months.slice(0, 3); }
+function utilFrac(months, availHrs, n) {
+  const used = months.reduce((s, m) => s + m.usedHours, 0);
+  return used / (availHrs * n);
+}
+function stats(a) {
+  const util3 = utilFrac(last3(a.months), a.availableHoursMonth, 3);
+  const utilFirst3 = utilFrac(first3(a.months), a.availableHoursMonth, 3);
+  const util12 = utilFrac(a.months, a.availableHoursMonth, 12);
+  const totalRevenueRupee = a.months.reduce((s, m) => s + m.revenueLakh, 0) * 100000;
+  const totalUsedHours = a.months.reduce((s, m) => s + m.usedHours, 0);
+  const totalDowntime = a.months.reduce((s, m) => s + m.downtimeHours, 0);
+  const totalCases = a.months.reduce((s, m) => s + m.cases, 0);
+  const revPerAmc = totalRevenueRupee / a.amcAnnual;
+  const avgRevPerHour = totalUsedHours > 0 ? totalRevenueRupee / totalUsedHours : 0;
+  const plannedHours = a.availableHoursMonth * 12;
+  const uptimePct = Math.max(0, (plannedHours - totalDowntime) / plannedHours * 100);
+  const reasons = { Breakdown: 0, PM: 0, 'Awaiting part': 0 };
+  a.months.forEach(m => { reasons.Breakdown += m.downtimeBreakdown.breakdown; reasons.PM += m.downtimeBreakdown.pm; reasons['Awaiting part'] += m.downtimeBreakdown.awaitingPart; });
+  const trend = util3 - utilFirst3 > 0.03 ? 'rising' : util3 - utilFirst3 < -0.03 ? 'falling' : 'flat';
+  return { util3, util12, totalRevenueRupee, totalUsedHours, totalDowntime, totalCases, revPerAmc, avgRevPerHour, uptimePct, reasons, trend };
+}
+function utilTag(f) { return f < 0.4 ? ['bad', 'Underused'] : f < 0.65 ? ['warn', 'Moderate'] : ['ok', 'Well utilised']; }
+function downtimeTag(a, s) {
+  const pct = s.totalDowntime / 12 / a.availableHoursMonth;
+  return pct > 0.06 ? ['bad', 'High downtime'] : pct > 0.03 ? ['warn', 'Some downtime'] : ['ok', 'Low downtime'];
+}
+function daysToRenewal(a) { return Math.round((new Date(a.amcRenewalDate) - new Date(DATA.generatedAt)) / 86400000); }
+function ticketsFor(id) { return DATA.tickets.filter(t => t.assetId === id).sort((x, y) => y.openedDate.localeCompare(x.openedDate)); }
+
+const LEVERS = {
+  Surgery: ['Extended evening/weekend lists', 'Out-of-Kochi patient package — discounted off-peak slots', 'Visiting-surgeon revenue-share slots'],
+  Cardiology: ['Extended evening lists for elective procedures', 'Load-balance elective cases across cath labs', 'Visiting-cardiologist revenue-share slots'],
+  Imaging: ['Extended evening/weekend outpatient list', 'Out-of-Kochi / referral-hospital tie-up package', 'Reporting revenue-share with referring clinics'],
+  Oncology: ['Extended evening treatment slots', 'Referral tie-up with peripheral oncology centres', 'Visiting radiation-oncologist revenue-share'],
+  Urology: ['Extended weekend camp days', 'Out-of-Kochi patient discount package', 'Visiting-urologist revenue-share slots'],
+  Nephrology: ['Additional evening dialysis shift', 'Outstation/tourist dialysis package', 'Referral tie-up with peripheral dialysis centres'],
+  'Critical care': ['Regional referral network agreement', 'Cross-hospital retrieval revenue-share', 'AMC renegotiation to usage-based pricing'],
+  Gastroenterology: ['Extended evening OPD slots', 'Referral tie-up with GI clinics', 'Bundled liver-screening package for corporates'],
 };
+function leversFor(a, s) {
+  const labels = LEVERS[a.category] || ['Extended evening/weekend list', 'Out-of-Kochi patient package', 'Referral tie-up / revenue-share slots'];
+  const last3AvgUsed = last3(a.months).reduce((sum, m) => sum + m.usedHours, 0) / 3;
+  const spare = Math.max(0, a.availableHoursMonth - last3AvgUsed);
+  const h1 = Math.round(Math.min(spare * 0.35, a.availableHoursMonth * 0.15));
+  const h2 = Math.round(Math.min(spare * 0.25, a.availableHoursMonth * 0.10));
+  const h3 = Math.round(Math.min(spare * 0.20, a.availableHoursMonth * 0.08));
+  const m1 = Math.round(h1 * s.avgRevPerHour);
+  const m2 = Math.round(h2 * s.avgRevPerHour * 0.88); // net of ~12% discount
+  const m3 = Math.round(h3 * s.avgRevPerHour * 0.65); // hospital share after revenue-share
+  const amcSaving = s.revPerAmc < 3 ? Math.round(a.amcAnnual * 0.12) : 0;
+  return { labels, h1, h2, h3, m1, m2, m3, amcSaving, spare: Math.round(spare) };
+}
 
-function parseEq(text) {
-  return text.trim().split('\n').slice(1).filter(Boolean).map(r => {
-    const c = r.split('|').map(x => x.trim());
-    return { asset: c[0], avail: +c[1], used: +c[2], cases: +c[3], rev: +c[4], amc: +c[5], downtime: +c[6] };
+function analysisPrompt(a, s) {
+  return JSON.stringify({
+    asset: a.name, id: a.id, category: a.category, oem: a.oem, model: a.model, installYear: a.installYear,
+    capitalCostCr: a.capitalCostCr, amcAnnual: a.amcAnnual, amcRenewalDate: a.amcRenewalDate, availableHoursMonth: a.availableHoursMonth,
+    utilisationLast3Months: Math.round(s.util3 * 1000) / 10, utilisationTrend: s.trend, revenuePerAmcRupee: Math.round(s.revPerAmc * 10) / 10,
+    uptimePctVsSLA: { actual: Math.round(s.uptimePct * 10) / 10, sla: a.slaUptimePct },
+    downtimeHoursByReason12mo: s.reasons, openTickets: ticketsFor(a.id).filter(t => t.status === 'Open').length,
+  }, null, 1);
+}
+function analysisDemo(a, s) {
+  const lv = leversFor(a, s);
+  const openT = ticketsFor(a.id).filter(t => t.status === 'Open');
+  const topReason = Object.entries(s.reasons).sort((x, y) => y[1] - x[1])[0];
+  const slaBreach = s.uptimePct < a.slaUptimePct;
+  return `## Utilisation review — ${a.name} (${a.id})
+
+**${Math.round(s.util3 * 1000) / 10}%** utilisation over the last 3 months (${s.trend}), against ₹${(a.amcAnnual / 100000).toFixed(1)}L/yr AMC — **${(Math.round(s.revPerAmc * 10) / 10)}x** revenue per AMC rupee. Capital cost ₹${a.capitalCostCr} Cr, installed ${a.installYear}, ${a.oem} ${a.model}.
+
+### Why utilisation is where it is
+- At ${Math.round(s.util3 * 1000) / 10}% of ${a.availableHoursMonth} available hours/month, this asset is ${utilTag(s.util3)[1].toLowerCase()} against its capacity; the 12-month trend is **${s.trend}**.
+- ${s.revPerAmc < 3 ? `Revenue per AMC rupee (${(Math.round(s.revPerAmc * 10) / 10)}x) is on the low side for the fleet — the AMC is a heavier fixed cost relative to what the asset earns back.` : `Revenue per AMC rupee (${(Math.round(s.revPerAmc * 10) / 10)}x) is healthy — the constraint here is capacity, not cost recovery.`}
+- ${topReason[1] > 0 ? `**${topReason[0]}** is the largest downtime driver (${round1(topReason[1])} hrs over 12 months) and directly removes bookable capacity.` : 'Downtime has not been a material constraint on capacity over the last 12 months.'}
+- Category context (${a.category}): demand for this class of asset at Lakeshore is driven by both walk-in OPD/IP referrals and the international/out-of-Kochi patient mix, so spare capacity (~${lv.spare} hrs/month at the current run-rate) is a real, addressable gap rather than a demand ceiling.
+
+### Three levers to lift utilisation
+| Lever | Extra hours/month | ₹ impact | Basis |
+|---|---|---|---|
+| 1. ${lv.labels[0]} | ${lv.h1} | ₹${Hub.inr(lv.m1)}/mo (₹${Hub.inr(lv.m1 * 12)}/yr) | At the asset's average realisation of ₹${Math.round(s.avgRevPerHour)}/hr |
+| 2. ${lv.labels[1]} | ${lv.h2} | ₹${Hub.inr(lv.m2)}/mo (₹${Hub.inr(lv.m2 * 12)}/yr) | Net of an assumed 12% discount for the package |
+| 3. ${lv.labels[2]} | ${lv.h3} | ₹${Hub.inr(lv.m3)}/mo (₹${Hub.inr(lv.m3 * 12)}/yr) | Hospital retains ~65% under a revenue-share slot |
+${lv.amcSaving ? `\n**AMC renegotiation:** revenue per AMC rupee is below the fleet's 3x guideline — worth citing ${round1(s.totalDowntime)} hrs of 12-month downtime and this utilisation level to negotiate the next AMC down by ~12% (≈ ₹${Hub.inr(lv.amcSaving)}/yr) or move to an usage-linked structure.` : ''}
+
+### Downtime concerns
+- ${round1(s.totalDowntime)} total downtime hours over 12 months (Breakdown ${round1(s.reasons.Breakdown)}h · PM ${round1(s.reasons.PM)}h · Awaiting part ${round1(s.reasons['Awaiting part'])}h). Actual uptime **${Math.round(s.uptimePct * 10) / 10}%** vs the ${a.slaUptimePct}% AMC SLA${slaBreach ? ' — **below SLA**, a valid basis for a service-credit claim.' : ' — within SLA.'}
+- ${openT.length} ticket${openT.length === 1 ? '' : 's'} currently open${openT.length ? `: ${openT.map(t => `${t.id} (${t.reason.toLowerCase()}, ${t.hoursDown}h, since ${t.openedDate})`).join('; ')}.` : '.'}
+
+### OEM escalation
+${openT.length || slaBreach
+  ? `Draft note to ${a.oem}: "Over the last 12 months the ${a.model} (${a.id}) recorded ${round1(s.totalDowntime)} hours of downtime against a contracted ${a.slaUptimePct}% uptime SLA, actual uptime ${Math.round(s.uptimePct * 10) / 10}%${topReason[1] > 0 ? `, with ${topReason[0].toLowerCase()} the leading cause` : ''}. ${openT.length ? `${openT.length} ticket(s) remain open (${openT.map(t => t.id).join(', ')}).` : ''} We request a root-cause review, confirmation of spare-part stocking at the regional depot, and a service-credit discussion ahead of the ${a.amcRenewalDate} renewal."`
+  : `No open tickets and uptime is at or above SLA — no escalation needed this cycle; keep this record for the renewal file.`}
+
+*Recommendation:* start with lever ${lv.m1 >= lv.m2 && lv.m1 >= lv.m3 ? 1 : lv.m2 >= lv.m3 ? 2 : 3} (${lv.labels[lv.m1 >= lv.m2 && lv.m1 >= lv.m3 ? 0 : lv.m2 >= lv.m3 ? 1 : 2]}) — it needs no capex and the ₹ impact is the largest of the three.`;
+}
+function round1(v) { return Math.round(v * 10) / 10; }
+
+/* ================= Tab: Assets ================= */
+function sortedAssets() { return DATA.assets.slice().sort((a, b) => utilFrac(last3(a.months), a.availableHoursMonth, 3) - utilFrac(last3(b.months), b.availableHoursMonth, 3)); }
+
+function queue(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Assets</h2>
+      <p class="small">Sorted by utilisation over the last 3 months — most underused first. Rev/AMC₹ is annual revenue divided by annual AMC/CMC.</p>
+      <div class="row" style="margin-bottom:8px"><button type="button" id="expA">Export assets to Excel</button></div>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected asset</h2><div id="detail"><p class="small">Pick an asset from the list.</p></div></div>
+  </div>`;
+  const rows = sortedAssets();
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Asset' },
+      { key: 'category', label: 'Category' },
+      { key: 'util', label: 'Util% (3mo)', num: true, render: r => { const s = stats(r); const t = utilTag(s.util3); return `<span class="tag ${t[0]}">${round1(s.util3 * 100)}%</span>`; } },
+      { key: 'revAmc', label: 'Rev/AMC₹', num: true, render: r => `${round1(stats(r).revPerAmc * 10) / 10}x` },
+      { key: 'downtime', label: 'Downtime', render: r => { const s = stats(r); const t = downtimeTag(r, s); return `<span class="tag ${t[0]}">${t[1]}</span>`; } },
+      { key: 'status', label: 'Action plan', render: r => { const rv = st.get().reviews[r.id]; const badge = { draft: ['warn', 'Draft'], submitted: ['warn', 'Awaiting approval'], approved: ['ok', 'Approved'], returned: ['bad', 'Returned'] }[rv && rv.status]; return badge ? `<span class="tag ${badge[0]}">${badge[1]}</span>` : '<span class="small">Not started</span>'; } },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
+  });
+  el.querySelector('#expA').onclick = () => Hub.kit.exportXlsx(DATA.assets.map(a => {
+    const s = stats(a);
+    return {
+      ID: a.id, Asset: a.name, Category: a.category, OEM: a.oem, Model: a.model, 'Install year': a.installYear,
+      'Capital cost ₹Cr': a.capitalCostCr, 'AMC ₹/yr': a.amcAnnual, 'AMC renewal': a.amcRenewalDate, 'Available hrs/month': a.availableHoursMonth,
+      'Util% (3mo)': round1(s.util3 * 100), 'Rev/AMC₹ (x)': round1(s.revPerAmc * 10) / 10, 'Downtime hrs (12mo)': round1(s.totalDowntime),
+      'Uptime% (12mo)': round1(s.uptimePct), 'SLA%': a.slaUptimePct,
+    };
+  }), 'equipment-assets.xlsx', 'Assets');
+  const sel = rows.find(a => a.id === st.get().selected) || rows[0];
+  if (sel) { st.set({ selected: sel.id }); detail(sel); }
+}
+
+function detail(a) {
+  const el = document.getElementById('detail');
+  if (!el) return;
+  const s = stats(a);
+  const rv = st.get().reviews[a.id];
+  const tks = ticketsFor(a.id);
+  const stepIdx = rv ? (rv.status === 'approved' ? 3 : 2) : 0;
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(a.name)}</b> <span class="small">(${Hub.esc(a.id)})</span></p>
+    <div class="factbox">
+      <div><b>${Hub.esc(a.oem)}</b><br>${Hub.esc(a.model)}</div>
+      <div><b>Installed</b><br>${a.installYear}</div>
+      <div><b>Capital cost</b><br>₹${a.capitalCostCr} Cr</div>
+      <div><b>AMC/CMC</b><br>₹${Hub.inr(a.amcAnnual)}/yr</div>
+      <div><b>Renewal</b><br>${Hub.esc(a.amcRenewalDate)}</div>
+      <div><b>Available</b><br>${a.availableHoursMonth} hrs/mo</div>
+    </div>
+    <div class="card" id="trendCard" style="padding:0;border:0;box-shadow:none"><div id="trend"></div></div>
+    <h3>Downtime tickets</h3>
+    <div id="tickets"></div>
+    <div class="row" style="margin-top:12px"><button class="primary" id="run">Run Claude analysis</button></div>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Data reviewed', 'Ready for Claude', 'Claude draft', 'Approved'], stepIdx);
+  Hub.chart.line(el.querySelector('#trend'), {
+    title: 'Used vs available hours (12 months)', labels: DATA.monthLabels,
+    series: [{ name: 'Used hrs', values: a.months.map(m => m.usedHours) }, { name: 'Available hrs', values: a.months.map(() => a.availableHoursMonth) }],
+    format: v => `${Math.round(v)}h`,
+  });
+  Hub.kit.table(el.querySelector('#tickets'), {
+    rows: tks, pageSize: 8,
+    columns: [
+      { key: 'id', label: 'Ticket' }, { key: 'openedDate', label: 'Opened' }, { key: 'reason', label: 'Reason' },
+      { key: 'hoursDown', label: 'Hrs down', num: true },
+      { key: 'status', label: 'Status', render: r => `<span class="tag ${r.status === 'Open' ? 'warn' : 'ok'}">${Hub.esc(r.status)}</span>` },
+      { key: 'description', label: 'Note' },
+    ],
+  });
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: a.id, title: `Action plan — ${a.name}` }, text: rv.text, st, docTitle: `Action plan ${a.name}`, onDecision: () => { detail(a); drawQueueIfPresent(); } });
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 45,
+      system: 'You are a hospital biomedical engineer at a 350-bed Kerala hospital (VPS Lakeshore, Kochi) preparing a utilisation and AMC value review for one high-value asset, for the COO to approve. Be specific with numbers and ₹ impact.',
+      prompt: analysisPrompt(a, s), demo: () => analysisDemo(a, s),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted utilisation analysis', a.name);
+    const stepsBox = document.getElementById('steps');
+    if (stepsBox) Hub.kit.steps(stepsBox, ['Data reviewed', 'Ready for Claude', 'Claude draft', 'Approved'], 2);
+    const rvBox = document.getElementById('rv');
+    if (!rvBox) return;
+    Hub.kit.review(rvBox, { slug: SLUG, item: { id: a.id, title: `Action plan — ${a.name}` }, text, st, docTitle: `Action plan ${a.name}`, onDecision: () => { detail(a); drawQueueIfPresent(); } });
+  };
+}
+function drawQueueIfPresent() { if (st.get().tab === 'queue') queue(document.getElementById('view')); }
+
+/* ================= Tab: AMC renewals ================= */
+function renewalsDue() { return DATA.assets.filter(a => daysToRenewal(a) <= 180).sort((a, b) => daysToRenewal(a) - daysToRenewal(b)); }
+
+function negotiationPrompt(a, s) {
+  return JSON.stringify({
+    asset: a.name, id: a.id, oem: a.oem, model: a.model, amcAnnual: a.amcAnnual, renewalDate: a.amcRenewalDate,
+    daysToRenewal: daysToRenewal(a), uptimeActual: round1(s.uptimePct), slaContracted: a.slaUptimePct,
+    downtimeHours12mo: round1(s.totalDowntime), downtimeByReason: s.reasons, openTickets: ticketsFor(a.id).filter(t => t.status === 'Open').map(t => t.id),
+    utilisationLast3Months: round1(s.util3 * 100), revenuePerAmcRupee: round1(s.revPerAmc * 10) / 10,
+  }, null, 1);
+}
+function negotiationDemo(a, s) {
+  const breach = s.uptimePct < a.slaUptimePct;
+  const gap = round1(a.slaUptimePct - s.uptimePct);
+  return `## AMC renewal negotiation note — ${a.name} (${a.id})
+
+**To:** ${a.oem} — Account Manager
+**Re:** AMC renewal, ${a.model}, due ${a.amcRenewalDate} (${daysToRenewal(a)} days out)
+**Current AMC:** ₹${Hub.inr(a.amcAnnual)}/yr
+
+### Performance over the last 12 months
+- Actual uptime **${round1(s.uptimePct)}%** against the contracted **${a.slaUptimePct}%** SLA${breach ? ` — a shortfall of **${gap} points**, which breaches the SLA and supports a service-credit or price adjustment request.` : ` — within SLA; renewal can proceed on service performance grounds, with room to negotiate on price given the asset's usage level.`}
+- ${round1(s.totalDowntime)} hours of downtime recorded (Breakdown ${round1(s.reasons.Breakdown)}h · PM ${round1(s.reasons.PM)}h · Awaiting part ${round1(s.reasons['Awaiting part'])}h).
+- ${ticketsFor(a.id).filter(t => t.status === 'Open').length} ticket(s) still open at the time of this review.
+- Utilisation over the last 3 months: ${round1(s.util3 * 100)}%; revenue per AMC rupee: ${round1(s.revPerAmc * 10) / 10}x.
+
+### Points to raise
+1. ${breach ? `Request a service credit against the ${gap}-point SLA shortfall, applied to the renewed term.` : `Confirm the current uptime performance in writing as the baseline for the renewed SLA.`}
+2. ${s.reasons['Awaiting part'] > s.totalDowntime * 0.25 ? `"Awaiting part" accounts for a large share of downtime (${round1(s.reasons['Awaiting part'])}h) — request committed local spare-part stocking or a maximum turnaround time clause.` : `Request a maximum response/repair time clause for future breakdowns.`}
+3. ${s.revPerAmc < 3 ? `Given revenue per AMC rupee of ${round1(s.revPerAmc * 10) / 10}x, propose a renewal price reduction of ~10-12% or a move to usage-linked pricing.` : `Given healthy revenue per AMC rupee (${round1(s.revPerAmc * 10) / 10}x), a flat renewal is reasonable — focus the negotiation on service terms rather than price.`}
+
+### Proposed terms
+- Renewal term: 12 months from ${a.amcRenewalDate}.
+- Uptime SLA: ${a.slaUptimePct}%${breach ? ' (unchanged, with a service-credit clause for shortfalls)' : ' (unchanged)'}.
+- Price: ${s.revPerAmc < 3 ? `seek a ~12% reduction (≈ ₹${Hub.inr(Math.round(a.amcAnnual * 0.12))}/yr) or usage-linked pricing` : 'flat renewal at current AMC'}.
+
+*Recommendation:* send this note at least 30 days before the ${a.amcRenewalDate} renewal date so there is room to negotiate before the current AMC lapses.`;
+}
+
+function renewals(el) {
+  const due = renewalsDue();
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>AMC renewals — next 180 days</h2>
+      <p class="small">${due.length} of ${DATA.assets.length} assets have an AMC/CMC renewal due within 180 days of ${Hub.esc(DATA.generatedAt)}.</p>
+      <div id="rtbl"></div>
+    </div>
+    <div class="card"><h2>Negotiation note</h2><div id="rdetail"><p class="small">Pick a renewal from the list.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#rtbl'), {
+    rows: due, selectedKey: st.get().renewSelected,
+    columns: [
+      { key: 'name', label: 'Asset' },
+      { key: 'amcAnnual', label: 'AMC ₹/yr', num: true, format: v => Hub.inr(v) },
+      { key: 'amcRenewalDate', label: 'Renewal date' },
+      { key: 'days', label: 'Days left', num: true, render: r => { const d = daysToRenewal(r); return `<span class="tag ${d <= 45 ? 'bad' : d <= 90 ? 'warn' : 'ok'}">${d}d</span>`; } },
+      { key: 'uptime', label: 'Uptime vs SLA', render: r => { const s = stats(r); const breach = s.uptimePct < r.slaUptimePct; return `<span class="tag ${breach ? 'bad' : 'ok'}">${round1(s.uptimePct)}% / ${r.slaUptimePct}%</span>`; } },
+    ],
+    onRowClick: r => { st.set({ renewSelected: r.id }); renewalDetail(r); },
+  });
+  const sel = due.find(a => a.id === st.get().renewSelected) || due[0];
+  if (sel) { st.set({ renewSelected: sel.id }); renewalDetail(sel); }
+}
+
+function renewalDetail(a) {
+  const el = document.getElementById('rdetail');
+  if (!el) return;
+  const s = stats(a);
+  const key = `AMC-${a.id}`;
+  const rv = st.get().reviews[key];
+  el.innerHTML = `<p><b>${Hub.esc(a.name)}</b> <span class="small">(${Hub.esc(a.id)})</span><br>
+    <span class="small">${Hub.esc(a.oem)} ${Hub.esc(a.model)} · AMC ₹${Hub.inr(a.amcAnnual)}/yr · renews ${Hub.esc(a.amcRenewalDate)} (${daysToRenewal(a)} days) · uptime ${round1(s.uptimePct)}% vs SLA ${a.slaUptimePct}%</span></p>
+    <div class="row"><button class="primary" id="rrun">Draft negotiation note</button></div>
+    <div class="claude-out" id="rout" style="margin-top:10px"></div>
+    <div id="rrv"></div>`;
+  if (rv) Hub.kit.review(el.querySelector('#rrv'), { slug: SLUG, item: { id: key, title: `AMC negotiation note — ${a.name}` }, text: rv.text, st, docTitle: `AMC negotiation ${a.name}`, onDecision: () => renewalDetail(a) });
+  el.querySelector('#rrun').onclick = async () => {
+    const text = await Hub.run({
+      out: '#rout', button: '#rrun', manualMinutes: 30,
+      system: 'You are a hospital biomedical engineer at VPS Lakeshore, Kochi drafting an AMC renewal negotiation note to an OEM, citing measured uptime against the contracted SLA.',
+      prompt: negotiationPrompt(a, s), demo: () => negotiationDemo(a, s),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted AMC negotiation note', a.name);
+    const rvBox = document.getElementById('rrv');
+    if (!rvBox) return;
+    Hub.kit.review(rvBox, { slug: SLUG, item: { id: key, title: `AMC negotiation note — ${a.name}` }, text, st, docTitle: `AMC negotiation ${a.name}`, onDecision: () => renewalDetail(a) });
+  };
+}
+
+/* ================= Tab: Dashboard ================= */
+function dashboard(el) {
+  const assets = DATA.assets;
+  const allStats = assets.map(a => ({ a, s: stats(a) }));
+  const avgUtil = Math.round(allStats.reduce((sum, x) => sum + x.s.util3, 0) / assets.length * 1000) / 10;
+  const totalDowntimeLastMonth = round1(assets.reduce((sum, a) => sum + a.months[a.months.length - 1].downtimeHours, 0));
+  const totalAmcCr = round1(assets.reduce((sum, a) => sum + a.amcAnnual, 0) / 1e7);
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Assets tracked</div><div class="value">${assets.length}</div></div>
+    <div class="kpi"><div class="label">Avg utilisation (3mo)</div><div class="value">${avgUtil}%</div></div>
+    <div class="kpi"><div class="label">Downtime hrs (last month)</div><div class="value">${totalDowntimeLastMonth}</div></div>
+    <div class="kpi"><div class="label">AMC spend</div><div class="value">₹${totalAmcCr} Cr</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>
+  <div class="grid cols-2" style="margin-top:16px"><div class="card" id="c3"></div><div class="card" style="display:flex;align-items:center"><p class="small">Downtime by reason is summed across the fleet over the last 12 months (43 tickets logged). Reasons: breakdown, preventive maintenance and parts awaited from the OEM.</p></div></div>`;
+  Hub.chart.hbar(el.querySelector('#c1'), {
+    title: 'Utilisation by asset (last 3 months)',
+    data: allStats.slice().sort((x, y) => y.s.util3 - x.s.util3).map(x => ({ label: x.a.name, value: round1(x.s.util3 * 100) })),
+    format: v => `${v}%`,
+  });
+  const byRevenue = allStats.slice().sort((x, y) => y.s.totalRevenueRupee - x.s.totalRevenueRupee);
+  const top3 = byRevenue.slice(0, 3);
+  const rest = byRevenue.slice(3);
+  Hub.chart.line(el.querySelector('#c2'), {
+    title: 'Monthly revenue — top 3 assets + other (₹ lakh)',
+    labels: DATA.monthLabels,
+    series: [
+      ...top3.map(x => ({ name: x.a.name, values: x.a.months.map(m => round1(m.revenueLakh)) })),
+      { name: 'Other', values: DATA.monthLabels.map((_, i) => round1(rest.reduce((sum, x) => sum + x.a.months[i].revenueLakh, 0))) },
+    ],
+    format: v => `₹${v}L`,
+  });
+  const reasonTotals = { Breakdown: 0, PM: 0, 'Awaiting part': 0 };
+  assets.forEach(a => { const s = stats(a); reasonTotals.Breakdown += s.reasons.Breakdown; reasonTotals.PM += s.reasons.PM; reasonTotals['Awaiting part'] += s.reasons['Awaiting part']; });
+  Hub.chart.bar(el.querySelector('#c3'), {
+    title: 'Downtime hours by reason (fleet, 12 months)',
+    data: Object.entries(reasonTotals).map(([label, value]) => ({ label, value: round1(value) })),
+    format: v => `${v}h`,
   });
 }
 
-function renderTable(rows) {
-  const trs = rows.map(r => {
-    const util = Math.round((r.used / r.avail) * 100);
-    const revPerAmc = (r.rev * 12 / r.amc).toFixed(1);
-    const tag = util < 40 ? ['bad', 'Underused'] : util < 65 ? ['warn', 'Moderate'] : ['ok', 'Well utilised'];
-    return `<tr><td>${Hub.esc(r.asset)}</td><td class="num">${util}%</td><td class="num">${r.cases}</td><td class="num">${Hub.inr(r.rev)}</td><td class="num">${revPerAmc}x</td><td><span class="tag ${tag[0]}">${tag[1]}</span></td></tr>`;
-  }).join('');
-  document.getElementById('eqTable').innerHTML = `<div class="table-wrap"><table><thead><tr><th>Asset</th><th class="num">Util%</th><th class="num">Cases</th><th class="num">Revenue/mo</th><th class="num">Rev/AMC₹</th><th>Flag</th></tr></thead><tbody>${trs}</tbody></table></div>`;
-
-  const avgUtil = Math.round(rows.reduce((s, r) => s + r.used / r.avail, 0) / rows.length * 100);
-  const totalRev = rows.reduce((s, r) => s + r.rev, 0);
-  const totalDowntime = rows.reduce((s, r) => s + r.downtime, 0);
-  const underused = rows.filter(r => (r.used / r.avail) < 0.4).length;
-  document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><div class="label">Avg utilisation</div><div class="value">${avgUtil}%</div></div>
-    <div class="kpi"><div class="label">Total revenue/mo</div><div class="value">${Hub.inr(totalRev)}</div></div>
-    <div class="kpi"><div class="label">Underused assets</div><div class="value">${underused}</div></div>
-    <div class="kpi"><div class="label">Total downtime hrs/mo</div><div class="value">${totalDowntime}</div></div>`;
-}
-
-function loadScenario(key) {
-  document.getElementById('eq').value = SCENARIOS[key].text;
-  renderTable(parseEq(SCENARIOS[key].text));
-}
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('eq').addEventListener('change', e => { try { renderTable(parseEq(e.target.value)); } catch (err) {} });
-loadScenario('q2');
-
-const DEMO = {
-q2: `## Underused assets
-
-| Asset | Utilisation | Concern |
-|---|---|---|
-| Surgical robot (da Vinci) | 30% | Highest AMC (₹95L/yr) of any asset but lowest utilisation — revenue/AMC-rupee ratio of just 5.3x, weakest return on maintenance spend in the fleet |
-| Lithotripter | 12% | Very low case volume (18/mo); AMC of ₹14.5L/yr against ₹7.8L monthly revenue is a thin margin once running costs are counted |
-| Cath lab 2 | 47% | Moderate, running at roughly half the volume of Cath lab 1 despite identical AMC cost |
-
-## Ideas to lift utilisation
-1. **Robot: out-of-Kochi patient discount package.** With Maldives/GCC/Africa referral volume already strong for cardiology and transplant, bundle a discounted robotic-surgery package (e.g., 8-10% off) for international/out-of-state patients booked in low-demand weekday slots — fills capacity that would otherwise sit idle.
-2. **Revenue-share slots for visiting clinicians.** Offer visiting surgeons (urology, gynae-onc) block time on the robot under a revenue-share model instead of a flat facility fee, lowering the barrier for occasional users and raising case count.
-3. **Cath lab 2 — shift emergency PTCA load evenly.** Cath lab 1 is running near-saturated (65%) while Cath lab 2 sits at 47%; a scheduling rule to route elective diagnostic angiograms to Lab 2 would balance load and reduce Lab 1 turnaround delays.
-4. **Lithotripter — evaluate consolidation.** At 12% utilisation and thin per-case economics, consider a shared-service or visiting-specialist-day model rather than year-round AMC coverage, or renegotiate the AMC to a pay-per-use structure.
-
-## Downtime concerns
-- **Cath lab 2's 22 hours/month downtime** is the highest in the fleet and coincides with its lower utilisation — worth checking whether downtime is a *cause* (patients diverted to Lab 1) rather than a symptom of low demand. Recommend a root-cause review with the AMC vendor on recurring fault codes.
-- **Dialysis unit downtime (18 hrs/mo across 12 stations)** is low per-station but affects a high-volume, safety-critical service — track by individual station rather than as a fleet average.`,
-
-prior: `## Underused assets
-
-| Asset | Utilisation | Concern |
-|---|---|---|
-| Surgical robot (da Vinci) | 24% | Utilisation and revenue both lower than the current quarter, with downtime (26 hrs/mo) nearly double the latest period — investigate whether early-period reliability issues suppressed bookings |
-| Lithotripter | 11% | Consistently the lowest utilised asset across both quarters — this is a structural pattern, not a one-off dip |
-| Cath lab 2 | 39% | Below the 40% threshold this quarter; downtime of 12 hrs/mo is roughly half the latest quarter's 22 hrs, suggesting downtime is worsening even as utilisation improves — worth flagging as an emerging maintenance trend |
-
-## Ideas to lift utilisation
-1. **Robot downtime root cause first.** Before marketing discounts, resolve the 26 hrs/mo downtime — no discount campaign will fill slots that are cancelled for equipment unavailability.
-2. **Revenue-share for visiting clinicians**, as in the current quarter, remains the fastest lever to add case volume without new capex.
-3. **Extended operating hours for MRI/CT** — both are already near-saturated (77-83%); consider add-on evening slots for elective outpatient scans (e.g., 6-9pm) to capture demand without new equipment.
-4. **Track Cath lab 2 downtime trend quarter-on-quarter** — it nearly doubled into the current period; if this continues, an AMC vendor escalation is warranted before it becomes a revenue-impacting pattern.
-
-## Downtime concerns
-- **Rising Cath lab 2 downtime (12 → 22 hrs/mo)** across the two quarters is the single most concerning trend in the dataset and should be raised with Biomedical/AMC vendor proactively rather than waiting for a case-cancelling failure.
-- **Robot downtime fell (26 → 14 hrs/mo)** quarter-on-quarter alongside rising utilisation and revenue — worth confirming if a specific fix (part replacement, software update) explains the improvement, so it can be documented for future AMC negotiations.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const text = document.getElementById('eq').value;
-  const prompt = `You are assisting Facilities & Biomedical at VPS Lakeshore Hospital, Kochi with equipment utilisation and AMC value analysis.
-
-Equipment table (Asset | Available hrs/mo | Used hrs/mo | Cases/mo | Revenue/mo ₹ | AMC ₹/yr | Downtime hrs/mo):
-${text}
-
-Provide: (1) underused assets with utilisation % and why it matters given AMC cost, (2) concrete ideas to lift utilisation (e.g. discounted packages for out-of-Kochi/international patients on the robot, revenue-share slots for visiting clinicians, extended operating hours, load-balancing between similar assets), (3) downtime concerns worth escalating. Use ₹ formatting.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced hospital biomedical engineering/facilities manager at a 350-bed Kerala hospital with cardiology, robotics and transplant programs.',
-    prompt, demo: DEMO[key], manualMinutes: 120,
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'Assets, sorted by utilisation', text: 'Eighteen high-value assets — surgical robot, cath labs, MRI/CT/PET, LINAC, dialysis and more — sorted with the most underused first, alongside revenue per AMC rupee.' },
+      { sel: '#trend', title: '12-month trend', text: 'Used vs available hours for the selected asset, plus its downtime tickets.' },
+      { sel: '#run', title: 'Claude drafts the analysis', text: 'Why utilisation is where it is, three levers with ₹ impact — evening lists, out-of-Kochi packages, visiting-clinician revenue share — and downtime/OEM escalation notes.' },
+      { sel: '#rv', title: 'Maker edits, COO approves', text: 'The biomedical engineer edits the draft; switch to Approver in the toolbar to approve as the COO. Nothing is sent anywhere from this demo.' },
+      { sel: '#tabs', title: 'AMC renewals', text: 'Every renewal due in the next 180 days, with uptime measured against the AMC SLA — Claude drafts the negotiation note.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Fleet KPIs, utilisation ranking, revenue trend for the top assets and downtime by reason.' },
+    ],
   });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Assets' }, { id: 'renewals', label: 'AMC renewals' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ queue, renewals, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>
