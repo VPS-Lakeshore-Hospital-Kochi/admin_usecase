@@ -207,7 +207,7 @@ const tenders = [
         quoteText: 'Our 4-machine bundle is priced to win on capital cost. Please note our consumables (dialyzers, bloodlines) are firmware-matched to the machine for safety and warranty compliance; third-party consumables will not be accepted by the machine and will void warranty.',
       },
       {
-        id: 'V2', name: 'Amrita Renal Technologies', oem: 'Amrita Renal (JV)',
+        id: 'V2', name: 'Kaveri Renal Technologies', oem: 'Kaveri Renal (JV)',
         unitPrice: 1620000, qty: 4, gstPct: 12, freightInstall: 90000,
         warrantyYears: 3, cmcStartYear: 4, cmcAnnual: 180000, cmcQuotedEscalationPct: 4,
         cmcCoverage: 'Comprehensive parts and labour.',
