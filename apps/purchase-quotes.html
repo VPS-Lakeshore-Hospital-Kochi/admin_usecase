@@ -6,417 +6,345 @@
 <title>Quote comparison & PC note</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .scn-btns { margin-bottom: 10px; }
-  .scn-btns button { margin-right: 6px; margin-bottom: 6px; }
-  .scn-btns button.active { background: var(--magenta); border-color: var(--magenta); color: #fff; }
-  textarea#quotesInput { min-height: 260px; font-family: ui-monospace, monospace; font-size: 12.5px; }
-  .tco-hi { font-weight: 700; color: var(--navy); }
-  .l1 { color: var(--ok); font-weight: 700; }
+  .tco-inputs { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin: 8px 0 12px; }
+  .tco-inputs label { margin: 0 0 4px; }
+  .tco-inputs input { width: 90px; }
+  .l1tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; margin-left: 6px; white-space: nowrap; }
+  .l1tag.price { background: var(--warn-bg); color: var(--warn); }
+  .l1tag.tco { background: var(--ok-bg); color: var(--ok); }
+  .vendor-card { border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
+  .vendor-card h4 { margin: 0 0 4px; font-weight: 500; color: var(--navy); }
+  .hidden-flag { background: var(--warn-bg); border-left: 3px solid var(--magenta); border-radius: 8px; padding: 6px 10px; font-size: 13px; margin-top: 6px; }
+  .neg-row { border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 13.5px; }
+  .neg-row:last-child { border-bottom: 0; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
-    <h1>Quote comparison & Purchase Committee note</h1>
-    <p>Paste or edit vendor quotations below, pick a scenario, and Claude normalises them into a comparative
-      statement with hidden-cost flags, negotiation levers and a draft Purchase Committee approval note.</p>
+    <h1>Quote comparison & PC note</h1>
+    <p>Open tenders, a comparative statement built from the vendor quotes on file, and a Claude draft flagging hidden costs
+      and recommending an award — reviewed by the purchase manager and approved by the PC chair before it ever leaves this screen.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample input — vendor quotations</h2>
-      <div class="row scn-btns" id="scnBtns"></div>
-      <label for="quotesInput">Quotation data (editable — one vendor block per section)</label>
-      <textarea id="quotesInput" spellcheck="false"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-        <span class="small" id="modeNote" style="color:var(--muted)"></span>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude's comparative analysis</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2>Computed comparative statement (deterministic, no Claude)</h2>
-    <p class="small" style="color:var(--muted);margin:0 0 8px">Built directly from the figures in the textarea — landed cost year 1, and 7-year total cost of ownership including CMC/AMC.</p>
-    <div class="table-wrap"><table id="compTable"></table></div>
-  </div>
-
-  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no real vendor names.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · synthetic tender data, no real vendors · nothing here is sent to any procurement system.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'purchase-quotes';
 Hub.mountHeader({ dept: 'Purchase & Stores', title: 'Quote comparison & PC note' });
-
-const SCENARIOS = {
-  ct: {
-    label: 'CT Scanner (128-slice) — 1 unit',
-    text: `ITEM: 128-Slice CT Scanner, 1 unit, for Radiology (replacing 16-slice unit, 2014)
-TENDER REF: LHRC/PUR/2026/CT-128/07   |   DATE OF OPENING: 18-Sep-2026
-
---- VENDOR A: Meridian Imaging Systems Pvt Ltd (OEM: Veltrion Medical) ---
-Basic price (ex-works): Rs 3,85,00,000
-Freight & insurance: Rs 4,50,000
-GST: 12% (medical equipment)
-Installation & commissioning: included
-Warranty: 2 years comprehensive (parts + labour + tube)
-CMC (year 3-7, per year): Rs 18,50,000, escalation 5% p.a. from year 4
-CMC covers: tube replacement capped at 1 per contract (extra tube Rs 42,00,000 each)
-Delivery: 14 weeks from PO + advance
-Payment terms: 20% advance, 70% on delivery, 10% after installation sign-off
-Installed base: 3 units in Kerala (Kottayam, Thrissur, Kollam) - refs on request
-Training: 5 days on-site, 2 engineers
-Power/site requirements: dedicated 3-phase, UPS by hospital
-
---- VENDOR B: Suryodaya Health Technologies ---
-Basic price (ex-works): Rs 3,65,00,000
-Freight & insurance: Rs 6,00,000 (quoted separately, hospital to arrange customs clearance)
-GST: 12%
-Installation & commissioning: Rs 3,50,000 extra
-Warranty: 1 year standard (tube warranty 1 year or 60,000 scans, whichever earlier)
-CMC (year 2-7, per year): Rs 21,00,000 flat, no escalation mentioned
-CMC covers: preventive maintenance only; tube NOT included (replacement tube Rs 38,00,000, lead time 6 weeks)
-Delivery: 10 weeks from PO
-Payment terms: 30% advance, 60% on delivery, 10% after 90 days
-Installed base: 1 unit in Kochi (private diagnostic chain), 4 units in Tamil Nadu
-Training: 3 days on-site, 1 engineer
-Note: quote silent on power backup / site prep responsibility
-
---- VENDOR C: Advitya Medisystems (OEM: Skanray-Fujita JV) ---
-Basic price (ex-works): Rs 4,10,00,000
-Freight & insurance: included
-GST: 12%
-Installation & commissioning: included
-Warranty: 3 years comprehensive incl. tube (2 tube replacements over warranty)
-CMC (year 4-7, per year): Rs 16,00,000, escalation 4% p.a. from year 5
-CMC covers: full comprehensive incl. tube (max 1 tube per year)
-Delivery: 16 weeks from PO
-Payment terms: 15% advance, 75% on delivery, 10% after 6-month performance review
-Installed base: 6 units across South India incl. 2 NABH-accredited hospitals in Kochi
-Training: 7 days on-site + 1 week remote support, unlimited engineers
-Additional: free AERB licensing support, 24x7 remote diagnostics for first 3 years`,
-  },
-  ventilators: {
-    label: 'ICU Ventilators × 6 units',
-    text: `ITEM: ICU Ventilator (invasive + non-invasive, adult & paediatric), Qty 6, for new ICU wing
-TENDER REF: LHRC/PUR/2026/VENT-06/03   |   DATE OF OPENING: 22-Sep-2026
-
---- VENDOR A: Prithvi Biomedical Solutions ---
-Unit price: Rs 9,80,000 x 6 = Rs 58,80,000
-GST: 12%
-Accessories (breathing circuits, humidifiers - 2 sets/unit): included
-Warranty: 2 years comprehensive
-AMC (year 3-5, per unit per year): Rs 65,000, escalation 5% p.a. from year 4
-AMC covers: all parts except flow sensors & O2 cells (consumables, billed separately ~Rs 8,000/unit/year)
-Delivery: 6 weeks
-Payment terms: 25% advance, 65% on delivery, 10% after commissioning
-Installed base: 40+ units across Kerala govt & private hospitals
-Training: 2 days, biomedical + nursing staff
-
---- VENDOR B: Clearline Critical Care Equipment ---
-Unit price: Rs 8,90,000 x 6 = Rs 53,40,000
-GST: 12% (vendor quote shows 5% - appears to be an error, standard rate for this HSN code is 12%)
-Accessories: 1 set/unit only, additional sets Rs 22,000 each
-Warranty: 1 year standard
-AMC (year 2-5, per unit per year): Rs 72,000 flat
-AMC covers: comprehensive incl. sensors
-Delivery: 4 weeks
-Payment terms: 40% advance, 50% on delivery, 10% after 30 days
-Installed base: 2 units supplied to a nursing home in Ernakulam (Aug 2025) - no other Kerala references
-Training: 1 day only
-
---- VENDOR C: Ananta MedTech (OEM: Draeger-licensed) ---
-Unit price: Rs 10,50,000 x 6 = Rs 63,00,000
-GST: 12%
-Accessories: 2 sets/unit + 1 spare humidifier chamber/unit, included
-Warranty: 3 years comprehensive incl. sensors & batteries
-AMC (year 4-5, per unit per year): Rs 55,000, no escalation
-AMC covers: fully comprehensive, next-business-day part replacement SLA
-Delivery: 8 weeks
-Payment terms: 20% advance, 70% on delivery, 10% after 6-month uptime audit (>=98% uptime required)
-Installed base: 25 units incl. 8 units at two NABH hospitals in Kochi and Kozhikode
-Training: 3 days incl. ventilator-associated pneumonia (VAP) protocol training for nursing staff`,
-  },
-  consumables: {
-    label: 'Annual rate contract — surgical consumables',
-    text: `ITEM: Annual Rate Contract FY2026-27 — Sutures, Surgical Gloves, IV Catheters (basket of 18 SKUs)
-TENDER REF: LHRC/PUR/2026/RC-SURG/11   |   DATE OF OPENING: 25-Sep-2026
-(Figures below are basket totals for estimated annual consumption)
-
---- VENDOR A: Keraleeya Surgical Distributors (authorised: Ethicon, Kanam, Romsons) ---
-Basket annual value (at quoted unit rates x est. consumption): Rs 84,20,000
-GST: 12% (sutures), 5% (gloves - exempted category cited, needs verification), 12% (catheters)
-Rate validity: 12 months, no mid-year escalation clause
-Discount structure: 3% additional on orders above Rs 5 lakh/month
-Delivery: 48 hours for stock items, 7 days for special sutures (barbed/absorbable specialty)
-Payment terms: 45 days credit from invoice
-Rate contract covers: fixed unit rates; hospital to place PO per requirement (no minimum offtake)
-Buy-back/return policy: near-expiry stock (within 3 months) returnable
-References: existing vendor for OT consumables at LHRC since 2022, 2 other NABH hospitals in Kochi
-
---- VENDOR B: Sanjeevani Medisales ---
-Basket annual value: Rs 79,50,000
-GST: 12% flat across all SKUs (may be incorrect for gloves - needs HSN verification)
-Rate validity: 6 months only, thereafter subject to revision (unusual for annual RC)
-Discount structure: none mentioned
-Delivery: 5-10 days, no urgent/emergency SLA specified
-Payment terms: 15 days credit, else 2% cash discount
-Rate contract covers: fixed rates for first 6 months; silent on H2
-Buy-back/return policy: not mentioned
-References: 1 mid-size hospital in Kottayam, operating for 18 months
-
---- VENDOR C: Om Sai Healthcare Supplies ---
-Basket annual value: Rs 91,00,000
-GST: 12% (sutures, catheters), 0% (gloves - correctly cites exemption notification)
-Rate validity: 12 months with cap of 4% escalation permitted only on documented input cost rise, needs Purchase Committee approval each time
-Discount structure: 5% volume rebate paid quarterly if offtake targets met
-Delivery: 24 hours emergency SLA for catheters and sutures (penalty clause: 1% of order value per day delay)
-Payment terms: 60 days credit
-Rate contract covers: fixed + rebate; minimum annual offtake commitment of Rs 60 lakh required from hospital
-Buy-back/return policy: near-expiry (within 4 months) returnable, damaged-in-transit fully replaced
-References: supplies 5 NABH hospitals across Kerala & Tamil Nadu incl. 40-bed to 500-bed range`,
-  },
-};
-
-let current = 'ct';
-const scnBtns = document.getElementById('scnBtns');
-scnBtns.innerHTML = Object.entries(SCENARIOS).map(([k, v]) =>
-  `<button type="button" data-k="${k}" class="${k === current ? 'active' : ''}">${Hub.esc(v.label)}</button>`).join('');
-const ta = document.getElementById('quotesInput');
-ta.value = SCENARIOS[current].text;
-
-scnBtns.querySelectorAll('button').forEach(b => b.onclick = () => {
-  current = b.dataset.k;
-  scnBtns.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
-  ta.value = SCENARIOS[current].text;
-  document.getElementById('out').innerHTML = '';
-  renderComputed();
+const st = Hub.kit.state(SLUG, {
+  tab: 'tenders', selected: 'PUR-2601', reviews: {}, assumptions: {}, negRows: {},
 });
+let DATA;
 
-// --- Deterministic parsing: pull vendor blocks + a few key numbers per vendor (best-effort) ---
-function parseVendors(text) {
-  const blocks = text.split(/\n---\s*VENDOR\s+/i).slice(1);
-  return blocks.map(b => {
-    const nameMatch = b.match(/^([A-Z]):\s*([^\n(]+)/);
-    const letter = nameMatch ? nameMatch[1] : '?';
-    const name = nameMatch ? nameMatch[2].trim() : 'Vendor';
-    const num = (re) => { const m = b.match(re); return m ? parseFloat(m[1].replace(/,/g, '')) : 0; };
-    const basic = num(/(?:Basic price[^:]*|Unit price[^:]*|Basket annual value)[^R]*Rs\s*([\d,]+(?:\.\d+)?)/i);
-    const gstPct = (() => { const m = b.match(/GST:\s*(\d+)%/); return m ? parseFloat(m[1]) : 12; })();
-    const freight = num(/Freight[^R]*Rs\s*([\d,]+)/i);
-    const install = num(/Installation[^R]*extra[^R]*Rs\s*([\d,]+)/i);
-    const cmcMatch = b.match(/(?:CMC|AMC)\s*\(year[^)]*\)[^R]*Rs\s*([\d,]+)/i);
-    const cmcAnnual = cmcMatch ? parseFloat(cmcMatch[1].replace(/,/g, '')) : 0;
-    const escMatch = b.match(/escalation\s*(\d+)%/i);
-    const esc = escMatch ? parseFloat(escMatch[1]) / 100 : 0;
-    const warrYears = (() => { const m = b.match(/Warranty:\s*(\d+)\s*year/i); return m ? parseFloat(m[1]) : 1; })();
-    return { letter, name, basic, gstPct, freight, install, cmcAnnual, esc, warrYears };
+/* ---------- money & TCO maths ---------- */
+const cr = v => Hub.chart.compact(v);
+function baseLanded(v) { return v.unitPrice * v.qty * (1 + v.gstPct / 100) + (v.freightInstall || 0); }
+function tcoAt(tender, v, years, escPct) {
+  let total;
+  if (tender.type === 'contract') {
+    total = 0;
+    const annual = baseLanded(v);
+    for (let y = 1; y <= years; y++) total += annual * Math.pow(1 + escPct / 100, y - 1);
+  } else {
+    total = baseLanded(v);
+    for (let y = 1; y <= years; y++) {
+      if (y > v.warrantyYears) total += v.cmcAnnual * Math.pow(1 + escPct / 100, Math.max(0, y - (v.cmcStartYear || v.warrantyYears + 1)));
+    }
+  }
+  if (v.hiddenAnnual) for (let y = 1; y <= years; y++) if (y >= (v.hiddenAnnualStartYear || 1)) total += v.hiddenAnnual * Math.pow(1 + escPct / 100, y - (v.hiddenAnnualStartYear || 1));
+  if (v.hiddenOneTime && v.hiddenOneTimeYear && v.hiddenOneTimeYear <= years) total += v.hiddenOneTime;
+  return Math.round(total);
+}
+function assumptionsFor(t) {
+  const a = st.get().assumptions[t.id];
+  return a || { years: t.tcoYearsDefault, esc: t.escalationDefaultPct };
+}
+function setAssumptions(t, patch) {
+  st.set(s => ({ assumptions: { ...s.assumptions, [t.id]: { ...assumptionsFor(t), ...patch } } }));
+}
+function tenderStatus(t) {
+  const rv = (st.get().reviews || {})[t.id];
+  if (!rv) return 'Open';
+  if (rv.status === 'draft') return 'Evaluated';
+  if (rv.status === 'submitted' || rv.status === 'returned') return 'PC note drafted';
+  if (rv.status === 'approved') return 'Approved';
+  return 'Open';
+}
+function l1Ranking(t, years, esc) {
+  const byPrice = t.vendors.map(v => ({ id: v.id, val: baseLanded(v) })).sort((a, b) => a.val - b.val);
+  const byTco = t.vendors.map(v => ({ id: v.id, val: tcoAt(t, v, years, esc) })).sort((a, b) => a.val - b.val);
+  return { l1Price: byPrice[0].id, l1Tco: byTco[0].id };
+}
+
+/* ---------- Tenders tab ---------- */
+function tenders(el) {
+  el.innerHTML = `<div class="grid cols-2"><div class="card"><h2>Tender queue</h2><div id="tbl"></div></div>
+    <div class="card"><h2>Selected tender</h2><div id="detail"><p class="small">Pick a row.</p></div></div></div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.tenders, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'refNo', label: 'Ref' },
+      { key: 'title', label: 'Tender' },
+      { key: 'category', label: 'Category' },
+      { key: 'status', label: 'Status', render: r => { const s = tenderStatus(r); return `<span class="tag ${s === 'Approved' ? 'ok' : s === 'Open' ? 'warn' : 'warn'}">${Hub.esc(s)}</span>`; } },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); tenderDetail(r); },
   });
+  const sel = DATA.tenders.find(t => t.id === st.get().selected) || DATA.tenders[0];
+  if (sel) { st.set({ selected: sel.id }); tenderDetail(sel); }
 }
 
-function landedCost(v) {
-  const gst = v.basic * v.gstPct / 100;
-  return v.basic + gst + v.freight + v.install;
+function computedTable(t, years, esc) {
+  const { l1Price, l1Tco } = l1Ranking(t, years, esc);
+  const rows = t.vendors.map(v => ({
+    v, price: baseLanded(v), tco: tcoAt(t, v, years, esc),
+  }));
+  const cols = ['Vendor', 'Qty', 'GST %', t.type === 'contract' ? `Rate/unit (₹${t.qtyRequired ? '' : ''})` : 'Unit price', 'Freight/install', 'Year-1 landed', `TCO (${years} yrs)`, 'Warranty (yrs)', t.type === 'contract' ? 'Escalation clause' : 'CMC/AMC · esc.', 'Delivery', 'Tag'];
+  return `<div class="table-wrap"><table id="compTable"><thead><tr>${cols.map(c => `<th class="${/qty|gst|price|landed|tco|warranty|delivery/i.test(c) ? 'num' : ''}">${Hub.esc(c)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td>${Hub.esc(r.v.name)}</td>
+      <td class="num">${r.v.qty.toLocaleString('en-IN')}</td>
+      <td class="num">${r.v.gstPct}%</td>
+      <td class="num">${Hub.inr(r.v.unitPrice)}</td>
+      <td class="num">${Hub.inr(r.v.freightInstall || 0)}</td>
+      <td class="num">${Hub.inr(r.price)}</td>
+      <td class="num">${Hub.inr(r.tco)}</td>
+      <td class="num">${r.v.warrantyYears}</td>
+      <td class="num">${t.type === 'contract' ? (r.v.hiddenAnnual ? 'Index/clause risk' : 'Fixed') : `${Hub.inr(r.v.cmcAnnual)}/yr · ${r.v.cmcQuotedEscalationPct}%`}</td>
+      <td class="num">${t.type === 'contract' ? '—' : r.v.deliveryWeeks + ' wks'}</td>
+      <td>${r.v.id === l1Price ? '<span class="l1tag price">L1 · price</span>' : ''}${r.v.id === l1Tco ? '<span class="l1tag tco">L1 · TCO</span>' : ''}</td>
+    </tr>`).join('')}</tbody></table></div>`;
 }
-function tco7(v) {
-  let total = landedCost(v);
-  for (let y = 2; y <= 7; y++) {
-    if (y <= v.warrYears) continue; // under warranty, no CMC
-    const yearsIntoCmc = y - v.warrYears - 1;
-    const amt = v.cmcAnnual * Math.pow(1 + v.esc, Math.max(0, yearsIntoCmc));
-    total += amt;
+
+function tenderDetail(t) {
+  const el = document.getElementById('detail');
+  const done = st.get().reviews[t.id];
+  const a = assumptionsFor(t);
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(t.title)}</b> · ${Hub.esc(t.refNo)} · ${Hub.esc(t.department)}</p>
+    <p class="small">${Hub.esc(t.brief)} Opened ${Hub.esc(t.openedOn)}.</p>
+    <h3 style="margin-top:14px">Comparative statement</h3>
+    <div class="tco-inputs">
+      <span><label for="yrs">TCO horizon (years)</label><input id="yrs" type="number" min="1" max="10" value="${a.years}"></span>
+      <span><label for="esc">Assumed annual escalation %</label><input id="esc" type="number" min="0" max="20" step="0.5" value="${a.esc}"></span>
+      <span class="small" style="max-width:320px">Applied uniformly to all vendors' recurring costs (CMC/AMC, hidden extras, RC renewal) for a fair comparison, regardless of what each vendor's own quote assumes.</span>
+      <button type="button" id="exportComp">Export to Excel</button>
+    </div>
+    <div id="compWrap">${computedTable(t, a.years, a.esc)}</div>
+    <div id="vendorCards" style="margin-top:14px"></div>
+    <button class="primary" id="run">Run with Claude — flag hidden costs, negotiate, draft PC note</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv" style="margin-top:10px"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Open', 'Evaluated', 'PC note drafted', 'Approved'],
+    { Open: 0, Evaluated: 1, 'PC note drafted': 2, Approved: 3 }[tenderStatus(t)]);
+
+  const vc = el.querySelector('#vendorCards');
+  vc.innerHTML = t.vendors.map(v => `<div class="vendor-card"><h4>${Hub.esc(v.name)} <span class="small">(${Hub.esc(v.oem)})</span></h4>
+    <p class="small" style="margin:0 0 4px">${Hub.esc(v.quoteText)}</p>
+    <p class="small" style="margin:0"><b>Exclusions:</b> ${Hub.esc(v.exclusions)}</p>
+    <p class="small" style="margin:2px 0 0"><b>Installed base:</b> ${Hub.esc(v.installedBase)} · <b>Payment:</b> ${Hub.esc(v.paymentTerms)}</p>
+    <div class="hidden-flag">${Hub.esc(v.hiddenNote)}</div></div>`).join('');
+
+  el.querySelector('#yrs').onchange = e => { setAssumptions(t, { years: Math.max(1, Math.min(10, Number(e.target.value) || t.tcoYearsDefault)) }); refreshComp(t); };
+  el.querySelector('#esc').onchange = e => { setAssumptions(t, { esc: Math.max(0, Number(e.target.value) || 0) }); refreshComp(t); };
+  el.querySelector('#exportComp').onclick = () => {
+    const cur = assumptionsFor(t);
+    const rows = t.vendors.map(v => ({
+      Vendor: v.name, OEM: v.oem, Qty: v.qty, 'GST %': v.gstPct, 'Unit price (₹)': v.unitPrice,
+      'Freight/install (₹)': v.freightInstall || 0, 'Year-1 landed (₹)': baseLanded(v),
+      [`TCO over ${cur.years} yrs (₹)`]: tcoAt(t, v, cur.years, cur.esc),
+      'Warranty (yrs)': v.warrantyYears, 'CMC/AMC per yr (₹)': v.cmcAnnual || 0,
+      'Delivery (wks)': v.deliveryWeeks, 'Payment terms': v.paymentTerms, Exclusions: v.exclusions,
+    }));
+    Hub.kit.exportXlsx(rows, `${t.id}-comparative-statement.xlsx`, 'Comparative statement');
+    Hub.kit.log(SLUG, 'Exported comparative statement to Excel', t.title);
+  };
+
+  function refreshComp(tt) {
+    const cur = assumptionsFor(tt);
+    document.getElementById('compWrap').innerHTML = computedTable(tt, cur.years, cur.esc);
   }
-  return total;
+
+  if (done) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: t.id, title: `PC note — ${t.title}` }, text: done.text, st, docTitle: `PC note — ${t.title}`, onDecision: () => tenderDetail(t) });
+
+  el.querySelector('#run').onclick = async () => {
+    const cur = assumptionsFor(t);
+    const { l1Price, l1Tco } = l1Ranking(t, cur.years, cur.esc);
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 90,
+      system: 'You are a purchase officer at VPS Lakeshore Hospital, Kochi, preparing tender evaluation material for the Purchase Committee (PC). Be specific about numbers, cite the vendor quotes given, and flag hidden costs plainly.',
+      prompt: JSON.stringify({ tender: t, assumedYears: cur.years, assumedEscalationPct: cur.esc, l1OnPrice: l1Price, l1OnTco: l1Tco }),
+      demo: () => demoNote(t, cur, l1Price, l1Tco),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude draft created', t.title);
+    st.set(s => ({ reviews: { ...(s.reviews || {}), [t.id]: { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps'), ['Open', 'Evaluated', 'PC note drafted', 'Approved'], 1);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: t.id, title: `PC note — ${t.title}` }, text, st, docTitle: `PC note — ${t.title}`, onDecision: () => tenderDetail(t) });
+  };
 }
 
-function renderComputed() {
-  const vendors = parseVendors(ta.value);
-  if (!vendors.length || !vendors.some(v => v.basic)) {
-    document.getElementById('compTable').innerHTML = '<tr><td>Could not auto-parse figures — edit text in a similar format to recompute.</td></tr>';
-    document.getElementById('kpis').innerHTML = '';
-    return;
-  }
-  const withTco = vendors.map(v => ({ ...v, landed: landedCost(v), tco: tco7(v) }));
-  const minLanded = Math.min(...withTco.map(v => v.landed));
-  const minTco = Math.min(...withTco.map(v => v.tco));
-  document.getElementById('compTable').innerHTML = `
-    <thead><tr><th>Vendor</th><th class="num">Basic price</th><th class="num">GST</th>
-    <th class="num">Landed cost (Yr 1)</th><th>Warranty</th><th class="num">CMC/AMC p.a.</th>
-    <th class="num">7-yr TCO</th><th>L1</th></tr></thead>
-    <tbody>${withTco.map(v => `<tr>
-      <td>${Hub.esc(v.letter)}: ${Hub.esc(v.name)}</td>
-      <td class="num">${Hub.inr(v.basic)}</td>
-      <td class="num">${v.gstPct}%</td>
-      <td class="num ${v.landed === minLanded ? 'tco-hi' : ''}">${Hub.inr(v.landed)}</td>
-      <td>${v.warrYears} yr</td>
-      <td class="num">${Hub.inr(v.cmcAnnual)}${v.esc ? ` (+${Math.round(v.esc*100)}%/yr)` : ''}</td>
-      <td class="num ${v.tco === minTco ? 'tco-hi' : ''}">${Hub.inr(v.tco)}</td>
-      <td>${v.landed === minLanded ? '<span class="l1">L1 (price)</span>' : ''}${v.tco === minTco && v.tco !== minLanded ? '<span class="l1"> L1 (7-yr TCO)</span>' : ''}</td>
-    </tr>`).join('')}</tbody>`;
-  document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><div class="label">Vendors quoted</div><div class="value">${withTco.length}</div></div>
-    <div class="kpi"><div class="label">L1 by landed cost</div><div class="value" style="font-size:1.05rem">${Hub.esc(withTco.find(v=>v.landed===minLanded).letter)}</div></div>
-    <div class="kpi"><div class="label">L1 by 7-yr TCO</div><div class="value" style="font-size:1.05rem">${Hub.esc(withTco.find(v=>v.tco===minTco).letter)}</div></div>
-    <div class="kpi"><div class="label">Spread (7-yr TCO)</div><div class="value" style="font-size:1.05rem">${Hub.inr(Math.max(...withTco.map(v=>v.tco)) - minTco)}</div></div>`;
-}
-renderComputed();
-ta.addEventListener('input', renderComputed);
+function demoNote(t, cur, l1Price, l1Tco) {
+  const byVal = id => t.vendors.find(v => v.id === id);
+  const price = byVal(l1Price), tco = byVal(l1Tco);
+  const flip = l1Price !== l1Tco;
+  const flags = t.vendors.filter(v => v.hiddenAnnual || v.hiddenOneTime).map(v => `- **${v.name}:** ${v.hiddenNote}`).join('\n') || '- No material hidden-cost exposure flagged across the quotes on file.';
+  const levers = t.vendors.map(v => {
+    if (v.hiddenAnnual || v.hiddenOneTime) return `- **${v.name}:** ask them to close the excluded cost item into the base CMC/rate, or offer a discount that offsets the modelled exposure of roughly ${Hub.inr((v.hiddenAnnual || 0) * cur.years + (v.hiddenOneTime || 0))} over ${cur.years} years.`;
+    return `- **${v.name}:** limited hidden-cost lever here — negotiate on delivery lead time or payment terms instead.`;
+  }).join('\n');
+  return `## Tender evaluation — ${t.title}
+**Ref:** ${t.refNo} · **Department:** ${t.department} · **Opened:** ${t.openedOn}
 
-const DEMOS = {
-  ct: `## Comparative statement — 128-Slice CT Scanner (Tender LHRC/PUR/2026/CT-128/07)
-
-| Parameter | A: Meridian | B: Suryodaya | C: Advitya |
+### Comparative summary (${cur.years}-year TCO, ${cur.esc}% assumed escalation)
+| Vendor | Year-1 landed | ${cur.years}-yr TCO | Tag |
 |---|---|---|---|
-| Landed cost (Yr 1) | ₹4,36,80,000 | ₹4,15,80,000 | ₹4,59,20,000 |
-| Warranty | 2 yr comprehensive + tube | 1 yr, tube 1yr/60k scans | 3 yr comprehensive + tube |
-| CMC start / rate | Yr 3, ₹18.5L, +5% from Yr4 | Yr 2, ₹21L flat | Yr 4, ₹16L, +4% from Yr5 |
-| Tube coverage in CMC | 1 per contract; extra ₹42L | Not covered; ₹38L/tube | Covered, 1/yr max |
-| 7-year TCO (approx.) | **₹5.78 cr** | ₹6.02 cr* | **₹5.61 cr** |
-| Kochi installed base | 0 (Kerala: 3) | 1 (private chain) | 2 (NABH hospitals) |
+${t.vendors.map(v => `| ${v.name} | ${Hub.inr(baseLanded(v))} | ${Hub.inr(tcoAt(t, v, cur.years, cur.esc))} | ${v.id === l1Price ? 'L1 on price ' : ''}${v.id === l1Tco ? 'L1 on TCO' : ''} |`).join('\n')}
 
-*Vendor B's TCO assumes at least one tube replacement (₹38L) is likely within 7 years given no tube coverage in CMC — this is a **hidden cost**, not a quoted line item.
+${flip
+  ? `**${price.name} is L1 on quoted price, but ${tco.name} is L1 on ${cur.years}-year total cost of ownership.** The price-only ranking hides real cost that only shows up once CMC, escalation and the exclusions below are modelled in.`
+  : `**${tco.name} is L1 on both price and ${cur.years}-year TCO** — the ranking does not flip once hidden costs are modelled in.`}
 
 ### Hidden-cost flags
-- **Vendor B — tube exclusion**: CMC explicitly excludes the CT tube, the single highest-failure, highest-cost component (₹38L). Over 7 years, at typical tube life of 3–5 years in a busy 350-bed hospital, budget for at least one replacement — effectively adds ~₹38–45L to the headline price, erasing its apparent ₹20L price advantage.
-- **Vendor B — freight & customs silent on responsibility**: quote separates freight/insurance and is silent on who clears customs — likely to surface as a change request post-PO.
-- **Vendor A — capped tube replacement**: "1 per contract" cap is ambiguous over a 7-year period; get this written as "1 per contract year" or clarified in the PO.
-- **Vendor C — GST rate check**: 12% is correctly applied (medical imaging equipment HSN 9022), consistent across all three — no discrepancy here.
-- **Escalation compounding**: A's and C's CMC escalation compounds annually — confirm whether escalation is on the CMC value or a fixed % of Yr-1 CMC (materially different over 4 CMC years).
+${flags}
 
-### Negotiation levers
-1. Ask **Vendor A** to match Vendor C's tube coverage terms, or extend comprehensive warranty to 3 years given a large existing Kerala footprint (3 units) — use as reference-check leverage.
-2. Ask **Vendor C** to bring CMC start from Year 4 to Year 3 (their acquisition cost is ~₹23L higher than A) — partially offsets the price gap given their superior TCO position.
-3. Push **Vendor B** to either (a) include tube in CMC at a capped additional annual premium, or (b) offer firm price protection on replacement tubes for the contract period — either materially changes their TCO ranking.
-4. Use Vendor C's 24x7 remote diagnostics offer (first 3 years) as a value-add to negotiate a small price reduction from Vendor A, who does not mention remote support.
-5. Request AERB licensing support in writing from all three — currently only Vendor C states this explicitly; missing AERB support can delay commissioning by 4–6 weeks.
+### Negotiation levers by vendor
+${levers}
 
 ### Recommendation
-**Vendor C (Advitya Medisystems)** is recommended despite the highest sticker price: lowest 7-year TCO, only vendor with genuinely comprehensive tube coverage, strongest Kochi-NABH reference base (directly comparable operating environment), and longest warranty (3 yr) deferring first CMC outflow. Recommend awarding subject to (a) written confirmation that escalation applies to CMC value not compounding differently, (b) AERB support and 24x7 remote diagnostics being contractually binding, not marketing language.
+Award to **${tco.name}**, the L1 vendor once CMC/AMC, assumed escalation and the flagged exclusions are priced in over ${cur.years} years. ${flip ? `${price.name}'s lower headline price does not survive the TCO view and should not be the basis for the award without first closing the gaps noted above.` : ''} Recommend negotiating on the levers above before final award, particularly around consumable/tube/licensing exclusions.
 
----
-
-## Draft Purchase Committee Note
-
+### Draft Purchase Committee note
 **To:** Purchase Committee, VPS Lakeshore Hospital, Kochi
-**From:** Purchase & Stores
-**Subject:** Award of contract — 128-Slice CT Scanner (1 unit), Radiology Dept.
-**Ref:** LHRC/PUR/2026/CT-128/07
+**Subject:** Award recommendation — ${t.title} (${t.refNo})
 
-1. **Background**: Existing 16-slice CT (installed 2014) is due for replacement. Tender floated 18-Sep-2026; three technically qualified bids received.
-2. **Comparative summary**: See table above. Landed cost range ₹4.16–4.59 cr; 7-year TCO range ₹5.61–6.02 cr.
-3. **Technical evaluation**: All three meet the 128-slice specification. Vendor C has the strongest local NABH reference base (2 hospitals in Kochi) directly relevant to duty-cycle expectations of a 350-bed multi-specialty facility.
-4. **Financial evaluation**: While Vendor B is L1 on landed cost, its exclusion of tube replacement from CMC is assessed as a material hidden cost (~₹38–45L over the contract), placing it above both A and C on 7-year TCO.
-5. **Recommendation**: Award to **Vendor C — Advitya Medisystems** at quoted landed cost of ₹4,59,20,000, subject to (a) written clarification on CMC escalation base, (b) binding AERB licensing support and 3-year remote diagnostics in the PO, (c) standard performance bank guarantee of 10% contract value valid till end of warranty.
-6. **Payment terms**: As quoted — 15% advance / 75% on delivery / 10% after 6-month performance review — recommended as-is; the deferred final tranche protects the hospital during commissioning.
+The Purchase Department invited quotes from ${t.vendors.length} vendors for ${t.title.toLowerCase()}. Quotes were evaluated on landed cost and ${cur.years}-year total cost of ownership, including CMC/AMC, assumed ${cur.esc}% p.a. escalation, and the exclusions each vendor has stated in writing.
 
-*Prepared for Purchase Committee review — figures are illustrative/sample data.*`,
+${tco.name} is recommended for award at a ${cur.years}-year TCO of ${Hub.inr(tcoAt(t, tco, cur.years, cur.esc))}, subject to closing the negotiation points above and standard technical/commercial verification. This note is a draft for the Purchase Manager to review and edit before submission to the PC chair for approval.
 
-  ventilators: `## Comparative statement — ICU Ventilators × 6 (Tender LHRC/PUR/2026/VENT-06/03)
+*Prepared by the Purchase Department. Figures are demo/synthetic and for internal discussion only — nothing here has been sent to any vendor or system.*`;
+}
 
-| Parameter | A: Prithvi | B: Clearline | C: Ananta |
-|---|---|---|---|
-| Unit price (6 units) | ₹58,80,000 | ₹53,40,000 | ₹63,00,000 |
-| GST applied | 12% (correct) | **5% quoted — likely error** | 12% (correct) |
-| Landed cost (Yr1, GST-corrected) | ₹65,85,600 | **₹59,80,800** (at correct 12%, not vendor's 5%) | ₹70,56,000 |
-| Warranty | 2 yr comprehensive | 1 yr standard | 3 yr comprehensive incl. sensors/batteries |
-| AMC start / rate (per unit) | Yr 3, ₹65,000 +5%/yr | Yr 2, ₹72,000 flat | Yr 4, ₹55,000 flat |
-| 6-unit 7-yr TCO (approx.) | ₹1.10 cr | ₹1.21 cr | **₹1.05 cr** |
-| Kochi/NABH references | 0 direct (Kerala broad) | 0 (1 nursing home, 12 mo) | 8 units, 2 NABH Kochi/Kozhikode |
+/* ---------- Negotiation tracker tab ---------- */
+function negotiation(el) {
+  const t = DATA.tenders.find(x => x.id === st.get().selected) || DATA.tenders[0];
+  el.innerHTML = `<div class="card">
+    <h2>Negotiation tracker</h2>
+    <label for="negTender">Tender</label>
+    <select id="negTender">${DATA.tenders.map(x => `<option value="${x.id}" ${x.id === t.id ? 'selected' : ''}>${Hub.esc(x.refNo)} — ${Hub.esc(x.title)}</option>`).join('')}</select>
+    <div id="negRows" style="margin-top:10px"></div>
+    <h3 style="margin-top:16px">Record a counter-offer</h3>
+    <div class="grid cols-2">
+      <div><label for="negVendor">Vendor</label><select id="negVendor"></select></div>
+      <div><label for="negOutcome">Outcome</label><select id="negOutcome"><option>Countered</option><option>Accepted</option><option>Declined</option></select></div>
+    </div>
+    <label for="negAsk">Our ask</label><textarea id="negAsk" data-upload="off" placeholder="What we asked the vendor to change or match…"></textarea>
+    <label for="negResp">Vendor response</label><textarea id="negResp" data-upload="off" placeholder="What the vendor came back with…"></textarea>
+    <label for="negSavings">Savings recognised (₹ lakh, if accepted)</label><input id="negSavings" type="number" min="0" step="0.1" value="0">
+    <div class="row" style="margin-top:10px"><button type="button" id="addNeg">Add to tracker</button></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>Draft a negotiation email</h2>
+    <p class="small" style="margin:0 0 8px">Claude drafts an email to a chosen vendor summarising our ask. Review before sending — this demo never actually sends anything.</p>
+    <label for="negEmailVendor">Vendor to email</label><select id="negEmailVendor"></select>
+    <div class="row" style="margin-top:10px"><button type="button" id="draftEmail">Draft negotiation email with Claude</button></div>
+    <div class="claude-out" id="emailOut" style="margin-top:10px"></div>
+  </div>`;
 
-### Hidden-cost flags
-- **Vendor B — GST discrepancy**: Quote shows 5% GST on ventilators; correct HSN classification for ICU ventilators is 12%. This understates the landed cost by ~₹4.2L across 6 units — **do not accept the quoted GST rate at face value**; recompute before comparison, which already narrows B's apparent price advantage substantially.
-- **Vendor B — sensor/consumable exclusion**: Flow sensors and O2 cells excluded from Vendor A's AMC (₹8,000/unit/year extra, ~₹48,000/yr across 6 units not in headline TCO) — a smaller version of the same flag applies to A, not B (B's AMC states "incl. sensors").
-- **Vendor B — thin reference base**: Only 2 units supplied in Kerala, 13 months old — insufficient track record for critical-care equipment before a 6-unit commitment.
-- **Vendor A — escalating AMC**: 5% p.a. from year 4 compounds over a 6-unit fleet — recompute the true year-5/6/7 outflow before comparing flat-rate competitors.
-- **Vendor C — uptime-linked final payment**: 10% withheld pending a 6-month uptime audit (≥98%) — favourable to hospital, but confirm the audit methodology is jointly agreed, not vendor-self-certified.
+  const vendorSel = () => t.vendors.map(v => `<option value="${v.id}">${Hub.esc(v.name)}</option>`).join('');
+  el.querySelector('#negVendor').innerHTML = vendorSel();
+  el.querySelector('#negEmailVendor').innerHTML = vendorSel();
 
-### Negotiation levers
-1. Formally query Vendor B in writing on the GST rate — either they correct it (raising their true landed cost) or confirm an exemption certificate, which must then be verified against CBIC notification before acceptance.
-2. Use Vendor C's superior NABH-Kochi reference base and VAP-protocol training to negotiate a ~3–5% price reduction, since the price premium is otherwise the main objection.
-3. Ask Vendor A to fold flow-sensor/O2-cell consumables into the AMC to close the gap with Vendor C's genuinely comprehensive cover.
-4. Request Vendor B extend warranty to 2 years minimum and provide at least 3 additional operational references (ICU setting, not nursing home) as a precondition to shortlisting for a critical-care purchase.
-5. Given the paediatric ICU component, ask all three vendors to confirm neonatal/paediatric mode certification (CE/US-FDA) explicitly in writing — not stated in any of the three quotes as received.
+  function renderRows() {
+    const rows = (st.get().negRows[t.id] || []);
+    el.querySelector('#negRows').innerHTML = rows.length
+      ? rows.map(r => `<div class="neg-row"><b>Round ${r.round}</b> · ${Hub.esc(r.date)} · ${Hub.esc((t.vendors.find(v => v.id === r.vendorId) || {}).name || r.vendorId)} · <span class="tag ${r.outcome === 'Accepted' ? 'ok' : r.outcome === 'Declined' ? 'bad' : 'warn'}">${Hub.esc(r.outcome)}</span>${r.savingsLakh ? ` · savings ₹${r.savingsLakh}L` : ''}<br><b>Our ask:</b> ${Hub.esc(r.ourAsk)}<br><b>Vendor response:</b> ${Hub.esc(r.vendorResponse)}</div>`).join('')
+      : '<p class="small">No counter-offers logged yet for this tender.</p>';
+  }
+  renderRows();
 
-### Recommendation
-**Vendor C (Ananta MedTech)** recommended for a critical-care asset: 3-year comprehensive warranty (sensors + batteries), next-business-day SLA, strongest and most relevant reference base (NABH ICUs in the same city), and lowest 7-year TCO once Vendor B's GST and sensor exclusions are corrected for. Vendor B should not be shortlisted for critical-care equipment on a 13-month, single-site reference base regardless of headline price.
+  el.querySelector('#negTender').onchange = e => { st.set({ selected: e.target.value }); negotiation(el); };
+  el.querySelector('#addNeg').onclick = () => {
+    const ask = el.querySelector('#negAsk').value.trim(), resp = el.querySelector('#negResp').value.trim();
+    if (!ask) { alert('Add what we asked the vendor before saving.'); return; }
+    const existing = (st.get().negRows[t.id] || (DATA.negotiations[t.id] || []).slice());
+    const row = { round: existing.length + 1, date: new Date().toISOString().slice(0, 10), vendorId: el.querySelector('#negVendor').value, ourAsk: ask, vendorResponse: resp || '(awaiting vendor response)', outcome: el.querySelector('#negOutcome').value, savingsLakh: Number(el.querySelector('#negSavings').value) || 0 };
+    st.set(s => ({ negRows: { ...s.negRows, [t.id]: [...existing, row] } }));
+    Hub.kit.log(SLUG, 'Recorded negotiation counter-offer', `${t.title} — ${row.vendorId}`);
+    negotiation(el);
+  };
+  el.querySelector('#draftEmail').onclick = async () => {
+    const v = t.vendors.find(x => x.id === el.querySelector('#negEmailVendor').value) || t.vendors[0];
+    await Hub.run({
+      out: '#emailOut', button: '#draftEmail', manualMinutes: 20,
+      system: 'You are a purchase officer at VPS Lakeshore Hospital, Kochi, writing a firm but professional negotiation email to a vendor on an open tender. Be specific and reference the quote figures given.',
+      prompt: JSON.stringify({ tender: { title: t.title, refNo: t.refNo }, vendor: v }),
+      demo: () => `**To:** ${v.name}\n**Subject:** ${t.refNo} — clarification and commercial ask ahead of PC evaluation\n\nDear ${v.name.split(' ')[0]} team,\n\nThank you for your quotation dated against tender ${t.refNo} for ${t.title.toLowerCase()}. As part of our comparative evaluation, we have modelled the total cost of ownership over the contract period, including the items noted below your quote as exclusions.\n\nSpecifically: ${v.hiddenNote}\n\nWe would like you to either (a) include this within your CMC/AMC or contract rate at no extra cost, or (b) offer a commercial adjustment that reflects this exposure, before we finalise our recommendation to the Purchase Committee. Please revert within 5 working days.\n\nRegards,\nPurchase Department\nVPS Lakeshore Hospital, Kochi\n\n*This is a draft for internal review. It has not been sent to the vendor.*`,
+    });
+    Hub.kit.log(SLUG, 'Drafted negotiation email', `${t.title} — ${v.name}`);
+  };
+}
 
----
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const openCount = DATA.tenders.filter(t => tenderStatus(t) !== 'Approved').length;
+  const valueUnderEval = DATA.tenders.filter(t => tenderStatus(t) !== 'Approved').reduce((a, t) => {
+    const cur = assumptionsFor(t), { l1Tco } = l1Ranking(t, cur.years, cur.esc);
+    return a + tcoAt(t, t.vendors.find(v => v.id === l1Tco), cur.years, cur.esc);
+  }, 0);
+  const allNeg = DATA.tenders.flatMap(t => (st.get().negRows[t.id] || DATA.negotiations[t.id] || []));
+  const savings = allNeg.filter(r => r.outcome === 'Accepted').reduce((a, r) => a + (r.savingsLakh || 0), 0);
 
-## Draft Purchase Committee Note
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Tenders open</div><div class="value">${openCount}</div></div>
+    <div class="kpi"><div class="label">Value under evaluation</div><div class="value">${(valueUnderEval / 1e7).toFixed(1)} Cr</div></div>
+    <div class="kpi"><div class="label">Savings negotiated so far</div><div class="value">₹${savings.toFixed(1)} L</div></div>
+    <div class="kpi"><div class="label">Approved this cycle</div><div class="value">${DATA.tenders.filter(t => tenderStatus(t) === 'Approved').length}</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>`;
 
-**To:** Purchase Committee | **From:** Purchase & Stores | **Subject:** ICU Ventilators (Qty 6) — New ICU Wing
-**Ref:** LHRC/PUR/2026/VENT-06/03
-
-1. **Requirement**: 6 invasive/non-invasive adult & paediatric ventilators for the new ICU wing.
-2. **Bids received**: 3 (Prithvi, Clearline, Ananta). Note: Clearline's quote applies 5% GST; correct rate for this HSN is 12% — recomputed landed cost used in this note.
-3. **Recommendation**: Award to **Vendor C — Ananta MedTech**, quoted price ₹63,00,000 (6 units) plus GST, on grounds of superior warranty cover, relevant NABH-Kochi installed base, and lowest 7-year TCO net of hidden costs identified in Section 2 above.
-4. **Conditions of award**: (a) written CE/FDA certification for paediatric mode, (b) uptime-audit methodology to be jointly defined before the 6-month review, (c) SLA penalty clause for parts delivery beyond next-business-day to be added to the PO.
-5. **Not recommended**: Vendor B, on grounds of GST discrepancy requiring clarification and insufficient critical-care reference base for a 6-unit ICU commitment.
-
-*Prepared for Purchase Committee review — figures are illustrative/sample data.*`,
-
-  consumables: `## Comparative statement — Annual Rate Contract, Surgical Consumables (LHRC/PUR/2026/RC-SURG/11)
-
-| Parameter | A: Keraleeya | B: Sanjeevani | C: Om Sai |
-|---|---|---|---|
-| Basket annual value | ₹84,20,000 | ₹79,50,000 | ₹91,00,000 |
-| Rate validity | 12 months, no escalation | **6 months only** | 12 months, capped 4% escalation w/ PC approval |
-| GST accuracy | Gloves at 5% — needs check | Flat 12% on gloves — **likely incorrect** | Gloves at 0% — correctly cites exemption |
-| Payment credit | 45 days | 15 days (or 2% cash discount) | 60 days |
-| Emergency SLA | 48 hrs stock / 7 days special | None specified | 24 hrs + penalty clause |
-| Minimum offtake commitment | None | None | **₹60L required** |
-| Existing LHRC relationship | Yes, since 2022 | No | No |
-
-### Hidden-cost flags
-- **Vendor B — GST misclassification**: Surgical gloves are exempt/nil-rated under the applicable notification in most cases (as Vendor C correctly applies); Vendor B charging a flat 12% across the whole basket likely overcharges on the glove line items — recompute basket value at correct rates before comparing headline figures; true comparable value is likely lower than quoted ₹79.5L is misleading in the other direction (hospital may be *overpaying* tax pass-through, or vendor mis-quoting compliance).
-- **Vendor B — 6-month rate validity**: An "annual" rate contract that only guarantees rates for 6 months defeats the purpose of an RC; H2 rates are undefined and could rise sharply — effectively a hidden cost/risk, not comparable on equal terms to A and C's 12-month terms.
-- **Vendor C — minimum offtake clause**: ₹60L mandatory annual offtake is a **hospital-side financial commitment/risk**, not a vendor cost, but must be weighed — if actual consumption runs lower (e.g., lower elective surgical volume some months), the hospital is contractually exposed. Needs a "best-efforts" softening or volume review clause.
-- **Vendor A — no escalation clause but no rebate either**: simplest structure, but no downside protection if their input costs rise mid-year (they may seek an off-cycle renegotiation informally).
-- **Vendor C — escalation needs case-by-case PC approval**: administratively heavier (each escalation ask must return to PC) but caps risk better than an automatic clause.
-
-### Negotiation levers
-1. Ask Vendor B to confirm GST treatment on gloves in writing with HSN code reference, and to extend rate validity to a full 12 months to be considered as a genuine annual RC bid — reject as non-compliant with tender terms otherwise.
-2. Negotiate Vendor C's ₹60L minimum offtake down to a "best-efforts target" or tie it to actual OT case volume, given seasonal variation in elective surgery.
-3. Use Vendor A's 3-year incumbency and 2022 relationship to negotiate the additional 3% volume discount threshold down from ₹5L/month to ₹4L/month, given LHRC's typical monthly order size.
-4. Ask Vendor C to extend its 24-hour emergency SLA and penalty clause to Vendor A and B's contracts as a standard term regardless of award, or use it as the deciding tie-breaker given OT stock-out risk.
-5. Request all three vendors itemise the basket by SKU (sutures / gloves / catheters) rather than a lump sum — needed for accurate YoY variance tracking in Finance MIS.
-
-### Recommendation
-**Vendor A (Keraleeya Surgical Distributors)** recommended for continuity, lowest verified-comparable annual value, no minimum-offtake exposure, and an established 3-year LHRC relationship with 2 other NABH hospital references. **Vendor C** is a strong alternative if OT emergency SLA is weighted heavily and the ₹60L offtake clause can be softened — its correct GST treatment on gloves is also a compliance positive. **Vendor B should be disqualified** or asked to re-quote: 6-month rate validity does not meet the tender's "annual rate contract" requirement, and its GST treatment needs verification.
-
----
-
-## Draft Purchase Committee Note
-
-**To:** Purchase Committee | **From:** Purchase & Stores | **Subject:** Annual Rate Contract FY2026-27 — Surgical Consumables (18-SKU basket)
-**Ref:** LHRC/PUR/2026/RC-SURG/11
-
-1. **Background**: Annual rate contract renewal for sutures, surgical gloves and IV catheters supporting OT and ward consumption.
-2. **Bids received**: 3. Vendor B's bid does not meet tender terms (6-month validity vs. 12-month requirement) and is recommended for **rejection as non-responsive**, subject to Purchase Committee concurrence.
-3. **Recommendation**: Award to **Vendor A — Keraleeya Surgical Distributors** at basket value ₹84,20,000 (indicative; actuals per PO against fixed unit rates, no minimum offtake), on grounds of continuity, GST compliance to be re-verified on gloves line, and established local NABH reference base.
-4. **Conditions of award**: (a) GST rate on gloves to be certified against current exemption notification before first invoice, (b) 3% additional volume discount threshold to be renegotiated to ₹4L/month, (c) near-expiry buy-back terms to be documented in the PO.
-5. **Alternative for PC consideration**: Vendor C offers superior emergency SLA (24-hr + penalty) and correct GST treatment, at ~8% higher basket value and subject to a ₹60L minimum offtake commitment — PC may consider a split award (emergency/critical SKUs to Vendor C, bulk SKUs to Vendor A) if service levels are a priority.
-
-*Prepared for Purchase Committee review — figures are illustrative/sample data.*`,
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const scenario = SCENARIOS[current].label;
-  const data = ta.value;
-  Hub.run({
-    out: '#out',
-    button: '#runBtn',
-    manualMinutes: 120,
-    system: 'You are a hospital purchase & stores analyst at VPS Lakeshore Hospital, Kochi. You normalise vendor quotations into a comparative statement, flag hidden costs (CMC/AMC exclusions and escalation, GST errors, warranty gaps), suggest negotiation levers, give a clear recommendation, and draft a Purchase Committee approval note. Use Indian Rupee formatting (lakh/crore) and be specific with figures.',
-    prompt: `Scenario: ${scenario}\n\nHere are the vendor quotations as received (tender opening ref included):\n\n${data}\n\nPlease produce:\n1. A normalised comparative statement table (landed cost year 1, and 7-year total cost of ownership including CMC/AMC with escalation).\n2. Hidden-cost flags (CMC/AMC scope exclusions, escalation traps, GST errors or inconsistencies across vendors, warranty gaps).\n3. Negotiation levers, specific to each vendor.\n4. A clear recommendation with reasoning.\n5. A drafted Purchase Committee approval note ready to circulate (background, comparative summary, recommendation, conditions of award).`,
-    demo: DEMOS[current],
+  Hub.chart.hbar(el.querySelector('#c1'), {
+    title: 'L1-on-TCO value by tender', sub: `Recommended-vendor total cost of ownership, at each tender's assumed years/escalation`,
+    data: DATA.tenders.map(t => { const cur = assumptionsFor(t), { l1Tco } = l1Ranking(t, cur.years, cur.esc); return { label: t.title, value: tcoAt(t, t.vendors.find(v => v.id === l1Tco), cur.years, cur.esc) }; }),
+    format: cr,
   });
+  const byCat = {};
+  DATA.categories.forEach(c => byCat[c] = 0);
+  allNeg.filter(r => r.outcome === 'Accepted').forEach(r => {
+    const t = DATA.tenders.find(x => (st.get().negRows[x.id] || DATA.negotiations[x.id] || []).includes(r));
+    if (t) byCat[t.category] = (byCat[t.category] || 0) + r.savingsLakh;
+  });
+  Hub.chart.bar(el.querySelector('#c2'), {
+    title: 'Savings negotiated by category (₹ lakh)', sub: 'Accepted counter-offers only',
+    data: DATA.categories.map(c => ({ label: c, value: byCat[c] || 0 })),
+    format: v => '₹' + v.toFixed(1) + 'L',
+  });
+}
+
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The tender queue', text: 'Six open tenders. Status moves from Open to Evaluated, PC note drafted, then Approved as work proceeds.' },
+      { sel: '#compWrap', title: 'Comparative statement', text: 'Built automatically from every vendor\'s quote fields. The TCO horizon and escalation assumption are editable and persist.' },
+      { sel: '.l1tag.price', title: 'L1 on price vs L1 on TCO', text: 'The cheapest quoted price is tagged separately from the cheapest total cost of ownership — they are not always the same vendor.' },
+      { sel: '#vendorCards', title: 'Vendor quotes', text: 'Each vendor\'s exclusions and hidden-cost note, drawn straight from their quotation.' },
+      { sel: '#run', title: 'Run with Claude', text: 'Claude flags hidden costs, suggests negotiation levers per vendor, recommends an award, and drafts a Purchase Committee note.' },
+      { sel: '#tabs', title: 'Negotiation tracker & dashboard', text: 'Log counter-offers and draft vendor emails on one tab; KPIs and value/savings charts on the other.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'tenders', label: 'Tenders' },
+    { id: 'negotiation', label: 'Negotiation tracker' },
+    { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ tenders, negotiation, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>
