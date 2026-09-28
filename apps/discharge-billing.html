@@ -5,166 +5,331 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Discharge bill checker</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .lt-summary { display: flex; gap: 18px; flex-wrap: wrap; margin: 8px 0 14px; }
+  .lt-summary div b { display: block; color: var(--navy); font-size: 1.15rem; font-weight: 300; }
+  .lt-summary div span { font-size: 12px; color: var(--muted); }
+  .inc-list { margin: 6px 0 0; padding-left: 1.1em; font-size: 13px; color: var(--muted); }
+  .inc-list li { margin: 2px 0; }
+  .lt-tags .tag { margin: 1px 3px 1px 0; }
+  .mini-note { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Discharge bill checker</h1>
-    <p>Cross-check the interim IP bill against the clinical service log before final approval, to catch unbilled items and duplicate/misclassified charges.</p>
+    <p>Every patient due for discharge in the next 24 hours: the interim IP bill checked line by line against the
+      clinical service log, package inclusions and payer entitlements — before the final bill goes to TPA approval.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample discharge case</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="ortho">Ortho TKR — discharge in 2 hours</option>
-          <option value="cardiac">Cardiac PTCA — discharge tomorrow AM</option>
-        </select>
-      </div>
-      <label>Interim IP bill lines (editable)</label>
-      <textarea id="bill" rows="10"></textarea>
-      <label>Clinical service log (editable)</label>
-      <textarea id="log" rows="8"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Synthetic case data for demonstration only. No real patient identifiers.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic patients for demonstration only — no real patients. Nothing here is submitted to
+    any TPA, scheme or hospital system; approval only marks the bill ready to finalise.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'discharge-billing';
 Hub.mountHeader({ dept: 'Revenue Cycle · TPA', title: 'Discharge bill checker' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, reviews: {}, expReviews: {} });
+let DATA;
+const cr = v => Hub.chart.compact(v);
 
-const SCENARIOS = {
-  ortho: {
-    bill: `Room rent (5 days, private AC @ ₹6,500/day): ₹32,500
-Implant (cemented titanium, standard): ₹1,45,000
-OT & anaesthesia charges: ₹58,000
-Surgeon & anaesthetist professional fee: ₹95,000
-Physiotherapy (in-patient, 3 sessions billed): ₹7,200
-Pharmacy & consumables (lump sum): ₹41,000
-Investigations (pre-op panel + X-ray): ₹9,800
-TOTAL BILLED SO FAR: ₹3,88,500`,
-    log: `Day 1: Admission, pre-op investigations (CBC, RFT, LFT, ECG, X-ray knee AP/Lat) — all done.
-Day 2: TKR surgery performed by Dr. Anil Menon. OT consumables issued: 1x cemented titanium implant, bone cement 2 packs, surgical drape kit, sterile gown set x4.
-Day 2 (post-op): 1 unit of physiotherapy session (bedside mobilisation).
-Day 3: Physiotherapy session #2 (standing/walker training). Pharmacy: IV antibiotics (3 doses), analgesics.
-Day 4: Physiotherapy session #3. Pharmacy: oral antibiotics, analgesics continued.
-Day 5: Physiotherapy session #4 (stair-climbing practice) — nursing notes confirm session done. Wound dressing change x2 (Day 3 and Day 5) — dressing kit charged separately per hospital tariff, not yet on bill.
-Discharge planned: Day 5 evening, TPA cashless case (Star Health), room-rent entitlement is Twin Sharing per policy.`,
-  },
-  cardiac: {
-    bill: `ICU/CCU charges (2 days @ ₹9,500/day): ₹19,000
-Drug-eluting stent (1x, imported): ₹65,000
-Cath lab / procedure charges: ₹1,10,000
-Cardiologist & anaesthetist professional fee: ₹45,000
-Medicines & investigations: ₹31,000
-TOTAL BILLED SO FAR: ₹2,70,000`,
-    log: `Day 1 (Emergency, 02:40 hrs): Admission, STEMI protocol, ECG + troponin x2, emergency PTCA performed same night — 1 DES stent (LAD).
-Cath lab consumables issued: 1x DES stent, 2x guiding catheters, 1x guidewire, 2x balloon catheters, contrast dye 100ml — only stent currently reflected in "cath lab/procedure charges" as a lump sum; guiding catheters and balloons not separately itemised on bill.
-Day 1 (post-procedure): Shifted to CCU, continuous cardiac monitoring.
-Day 2: Repeat troponin, ECG, stable — plan to shift to step-down room this evening, discharge tomorrow AM.
-Nursing note: 1 additional troponin repeat (Day 2 evening) not yet reflected in investigations line.
-Policy: Corporate GHI via Medi Assist, DES stent sub-limit ₹45,000 per policy schedule (patient/family informed verbally, not yet documented in file).`,
-  },
-};
+const FLAG_LABEL = { duplicate: 'Duplicate', inclusion: 'Package inclusion', nonpayable: 'Non-payable', overrent: 'Room-rent over entitlement', noimplantsticker: 'No implant sticker' };
+const FLAG_TAG = { duplicate: 'bad', inclusion: 'warn', nonpayable: 'warn', overrent: 'bad', noimplantsticker: 'bad' };
 
-function computeKPIs() {
-  const bill = document.getElementById('bill').value;
-  const log = document.getElementById('log').value;
-  const totalM = bill.match(/TOTAL BILLED SO FAR:\s*₹\s*([\d,]+)/);
-  const total = totalM ? parseInt(totalM[1].replace(/,/g, ''), 10) : 0;
-  const physioLogSessions = (log.match(/[Pp]hysiotherapy session #?\d/g) || []).length;
-  const physioBilledM = bill.match(/Physiotherapy.*?(\d+)\s*sessions? billed/i);
-  const physioBilled = physioBilledM ? parseInt(physioBilledM[1], 10) : null;
-  const dressingMentioned = /dressing.*not yet on bill|not yet reflected|not.*separately itemised/i.test(log);
-  const box = document.getElementById('kpis');
-  const rows = [
-    ['Bill total so far', Hub.inr(total)],
-    ['Physio sessions in log', physioLogSessions || '—'],
-    physioBilled !== null ? ['Physio sessions billed', physioBilled] : ['Items flagged unbilled', dressingMentioned ? '1+' : '0'],
-    ['Discharge readiness', 'Pending checks'],
-  ];
-  box.innerHTML = rows.map(([l, v]) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${v}</div></div>`).join('');
+function readiness(p) {
+  const rv = (st.get().reviews || {})[p.id];
+  if (rv && rv.status === 'approved') return 'Final bill ready';
+  if (p.exceptionCount === 0) return 'Ready for TPA final approval';
+  return 'Needs correction';
+}
+function readinessTag(r) { return r === 'Final bill ready' ? 'ok' : r === 'Ready for TPA final approval' ? 'ok' : 'bad'; }
+
+/* ---------- prompt & demo for the audit note ---------- */
+function auditPrompt(p) {
+  return JSON.stringify({
+    patient: p.id, initials: p.initials, age: p.age, sex: p.sex, dept: p.dept, procedure: p.procedure, doctor: p.doctor,
+    package: p.package, payer: p.payer, roomCategory: p.roomCategory, days: p.days,
+    billLines: p.billLines.map(l => ({ id: l.id, section: l.section, label: l.label, amount: l.amount, flag: l.flag, note: l.note || null })),
+    logEntries: p.logEntries.map(e => ({ id: e.id, day: e.day, section: e.section, label: e.label, unbilled: !!e.unbilled, estimatedAmount: e.estimatedAmount || null })),
+    computed: { billTotal: p.billTotal, leakage: p.leakage, overbilling: p.overbilling, patientPayable: p.patientPayable, complianceRisk: p.complianceRisk },
+  }, null, 1);
 }
 
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('bill').value = s.bill;
-  document.getElementById('log').value = s.log;
-  computeKPIs();
+function auditDemo(p) {
+  const unbilled = p.logEntries.filter(e => e.unbilled);
+  const dup = p.billLines.filter(l => l.flag === 'duplicate');
+  const inc = p.billLines.filter(l => l.flag === 'inclusion');
+  const nonpay = p.billLines.filter(l => l.flag === 'nonpayable');
+  const overrent = p.billLines.filter(l => l.flag === 'overrent');
+  const sticker = p.billLines.filter(l => l.flag === 'noimplantsticker');
+  const money = n => Hub.inr(Math.round(n));
+
+  const unbilledBlock = unbilled.length
+    ? unbilled.map(e => `- **${e.label}** (Day ${e.day}, ${e.section}) — in the clinical log but not on the interim bill. Add at the standard tariff rate: **${money(e.estimatedAmount)}**.`).join('\n')
+    : '- None — every service in the clinical log is reflected on the bill.';
+
+  const dupBlock = dup.length
+    ? dup.map(l => `- **${l.label}** appears twice (${l.note || 'duplicate line'}) — remove the duplicate line, worth **${money(l.amount)}**.`).join('\n')
+    : '- None detected.';
+
+  const incBlock = inc.length
+    ? inc.map(l => `- **${l.label}** (${money(l.amount)}) is listed in the ${p.package.name} inclusions — ${l.note || 'remove from the separate bill, it is already covered by the package price'}.`).join('\n')
+    : '- None — no package-covered item is billed separately.';
+
+  const nonpayBlock = nonpay.length
+    ? nonpay.map(l => `- **${l.label}** (${money(l.amount)}) — ${l.note || `${p.payer.name} will not pay this; collect from the patient/family and explain why.`}`).join('\n')
+    : '- None flagged for this payer.';
+
+  const overrentBlock = overrent.length
+    ? overrent.map(l => `- ${l.note || `Room-rent above entitlement, excess ${money(l.excessAmount)} to the patient.`}`).join('\n')
+    : '- Room category matches the payer entitlement — no proportionate deduction expected.';
+
+  const stickerBlock = sticker.length
+    ? sticker.map(l => `- **${l.label}** (${money(l.amount)}) — ${l.note || 'implant sticker/batch missing from the file; attach it before submission or the TPA will reject this line.'}`).join('\n')
+    : '- Implant documentation is complete (sticker and batch on file).';
+
+  const ready = p.exceptionCount === 0;
+  return `## Discharge bill audit — ${p.id}
+
+**Patient:** ${p.initials}, ${p.age}${p.sex} · **${p.procedure}** (${p.dept}) · ${p.doctor}
+**Payer:** ${p.payer.name}${p.payer.type !== 'Cash' ? ` (${p.payer.type})` : ''} · Room: ${p.roomCategory}, ${p.days} days · Package: ${p.package.name} (${money(p.package.price)})
+
+### Unbilled items to add
+${unbilledBlock}
+
+### Duplicate charges to remove
+${dupBlock}
+
+### Package inclusions wrongly billed separately
+${incBlock}
+
+### Patient-payable items to explain to the family
+${nonpayBlock}
+
+### Room-rent entitlement check
+${overrentBlock}
+
+### Implant documentation
+${stickerBlock}
+
+### ₹ impact summary
+| | Amount |
+|---|---|
+| Leakage caught (add to bill) | ${money(p.leakage)} |
+| Over-billing to correct (remove from bill) | ${money(p.overbilling)} |
+| Patient-payable (redirect from ${p.payer.type === 'Cash' ? 'n/a' : p.payer.name}) | ${money(p.patientPayable)} |
+
+### Readiness for TPA final approval
+**${ready ? 'Ready.' : 'Not ready.'}** ${ready ? 'No exceptions found — the bill can go to final TPA approval as it stands.' : 'Fix the items above first: add unbilled services, remove duplicates and package-inclusion lines, and get written acknowledgment from the patient/family for the payable amounts, before the final bill is generated.'}`;
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('bill').addEventListener('input', computeKPIs);
-document.getElementById('log').addEventListener('input', computeKPIs);
-loadScenario('ortho');
 
-const DEMO = {
-ortho: `## Unbilled items detected
-- **Physiotherapy: only 3 of 4 sessions billed** (₹7,200 for 3 sessions ≈ ₹2,400/session). Session #4 (Day 5, stair-climbing) is confirmed in nursing notes but missing from the bill — add ~₹2,400 before final invoice.
-- **Wound dressing changes x2 (Day 3, Day 5)** — explicitly noted in the log as "charged separately per hospital tariff, not yet on bill." Confirm hospital tariff rate and add both dressing charges.
+/* ---------- Discharge queue tab ---------- */
+function queue(el) {
+  el.innerHTML = `<div class="lt-summary" id="qsum"></div>
+    <div class="grid cols-2"><div class="card"><h2>Patients due for discharge</h2>
+      <div class="row" style="margin-bottom:8px"><button type="button" id="expQ">Export queue to Excel</button></div>
+      <div id="tbl"></div></div>
+    <div class="card"><h2>Selected patient</h2><div id="detail"><p class="small">Pick a patient from the queue.</p></div></div></div>`;
 
-## Duplicate charges
-- None detected in the current lines — implant, OT, professional fee and room rent each appear once and match the service log (1 surgery, 1 implant).
+  const totalLeak = DATA.patients.reduce((s, p) => s + p.leakage, 0);
+  const totalOver = DATA.patients.reduce((s, p) => s + p.overbilling, 0);
+  const withEx = DATA.patients.filter(p => p.exceptionCount > 0).length;
+  document.getElementById('qsum').innerHTML = `
+    <div><b>${DATA.patients.length}</b><span>Discharges due (next 24h)</span></div>
+    <div><b>${Math.round(100 * withEx / DATA.patients.length)}%</b><span>Bills with exceptions</span></div>
+    <div><b>${cr(totalLeak)}</b><span>₹ leakage found</span></div>
+    <div><b>${cr(totalOver)}</b><span>₹ over-billing found</span></div>`;
 
-## Package inclusions wrongly billed
-- No package-inclusion errors detected — pharmacy/consumables line is a lump sum; recommend itemising bone cement and drape/gown sets separately for insurer transparency, though this is a presentation issue, not an overbilling one.
-
-## TPA non-payables to collect from patient
-- **Room-rent proportionate deduction risk:** Patient is in a Private AC room but policy entitlement is Twin Sharing. Star Health will likely apply a proportionate deduction on room rent *and* related charges (OT, professional fees) — estimate the patient's out-of-pocket exposure (~₹15,000–20,000) and inform the family **before** discharge billing is finalised, not after.
-- Standard non-payables (surgical drape kit, gown sets) embedded in the pharmacy lump sum should be flagged as likely non-payable and collected from the patient if the TPA disallows them.
-
-## Final-approval readiness
-**Not ready.** Add the missing physiotherapy session and 2 dressing charges (~₹2,700–3,500 combined) to the bill, and get written (not verbal) confirmation to the family on the room-rent proportionate deduction exposure before submitting the final bill for TPA approval. Estimated delay to fix: 15–20 minutes.`,
-
-cardiac: `## Unbilled items detected
-- **Cath lab consumables under-itemised:** guiding catheters (2x), balloon catheters (2x), guidewire and contrast dye are issued per the log but only the stent appears distinctly — the rest are folded into a lump "cath lab/procedure charges" line. Itemise before submission; TPAs frequently query lump cath-lab lines and this delays discharge.
-- **Repeat troponin (Day 2 evening)** — confirmed in nursing note but not yet reflected in the investigations line. Add before finalising.
-
-## Duplicate charges
-- None detected — one stent, one procedure episode; ICU/CCU days (2) match the log's Day 1–Day 2 stay.
-
-## Package inclusions wrongly billed
-- No inclusion errors identified in current lines; however, confirm cath lab package definition with Medi Assist to ensure guiding catheters/balloons are payable separately and not deemed "included" in the procedure charge — a common ambiguity that causes post-approval disputes if not clarified now.
-
-## TPA non-payables to collect from patient
-- **DES stent sub-limit gap (highest priority):** Policy sub-limit is ₹45,000 but the stent costs ₹65,000 — a **₹20,000 shortfall** the patient/family must be informed of. The log notes this was communicated verbally only; **get written acknowledgment on file before discharge** to avoid a dispute at billing.
-- Contrast dye and non-DES consumables may be partially non-payable depending on Medi Assist's cath-lab schedule — flag for TPA desk confirmation.
-
-## Final-approval readiness
-**Not ready.** Complete itemisation of cath lab consumables, add the missing repeat troponin charge, and — most importantly — obtain a signed patient acknowledgment of the ₹20,000 stent sub-limit shortfall before discharge tomorrow morning. Estimated time to close: 20–30 minutes, should be done tonight, not at discharge.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const bill = document.getElementById('bill').value;
-  const log = document.getElementById('log').value;
-  computeKPIs();
-  const prompt = `You are checking a patient's interim IP bill against the clinical service log at VPS Lakeshore Hospital, Kochi before final discharge billing/TPA approval.
-
-Interim IP bill lines:
-${bill}
-
-Clinical service log:
-${log}
-
-Identify: (1) unbilled items (services in the log not reflected in the bill), (2) duplicate charges, (3) package inclusions wrongly billed separately, (4) TPA non-payables that must be collected from the patient, (5) an overall final-approval readiness verdict with what must be fixed first. Use ₹ formatting.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced IP billing auditor at a 350-bed Kerala hospital, expert in reconciling clinical service logs against discharge bills before TPA final approval.',
-    prompt, demo: DEMO[key], manualMinutes: 40,
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.patients.map(p => ({ id: p.id, patient: `${p.initials}, ${p.age}${p.sex}`, procedure: p.procedure, payer: p.payer.name, exceptions: p.exceptionCount, impact: p.leakage + p.overbilling, readiness: readiness(p) })),
+    search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'IP no.' }, { key: 'patient', label: 'Patient' }, { key: 'procedure', label: 'Procedure' }, { key: 'payer', label: 'Payer' },
+      { key: 'exceptions', label: 'Exceptions', num: true, render: r => r.exceptions ? `<span class="tag warn">${r.exceptions}</span>` : '<span class="tag ok">0</span>' },
+      { key: 'impact', label: '₹ impact', num: true, format: v => v > 0 ? Hub.inr(Math.round(v)) : '—' },
+      { key: 'readiness', label: 'Readiness', render: r => `<span class="tag ${readinessTag(r.readiness)}">${Hub.esc(r.readiness)}</span>` },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(DATA.patients.find(p => p.id === r.id)); },
   });
+  el.querySelector('#expQ').onclick = () => Hub.kit.exportXlsx(DATA.patients.map(p => ({
+    'IP no.': p.id, Patient: `${p.initials}, ${p.age}${p.sex}`, Dept: p.dept, Procedure: p.procedure, Payer: p.payer.name,
+    Room: p.roomCategory, Days: p.days, 'Bill total': p.billTotal, Exceptions: p.exceptionCount,
+    'Leakage ₹': p.leakage, 'Over-billing ₹': p.overbilling, 'Patient-payable ₹': p.patientPayable, Readiness: readiness(p),
+  })), 'discharge-queue.xlsx', 'Discharge queue');
+
+  let sel = DATA.patients.find(p => p.id === st.get().selected) || DATA.patients[0];
+  st.set({ selected: sel.id });
+  detail(sel);
+}
+
+function detail(p) {
+  const el = document.getElementById('detail');
+  const rv = st.get().reviews[p.id];
+  const stepIdx = rv ? (rv.status === 'approved' ? 3 : 2) : (p.exceptionCount === 0 ? 1 : 0);
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(p.initials)}, ${p.age}${p.sex}</b> · ${Hub.esc(p.procedure)} · ${Hub.esc(p.dept)} · ${Hub.esc(p.doctor)}<br>
+    <span class="small">${Hub.esc(p.payer.name)} (${Hub.esc(p.payer.type)}) · ${Hub.esc(p.roomCategory)}, ${p.days} days · discharge in ~${p.dischargeHours}h</span></p>
+    <p class="small"><b>Package:</b> ${Hub.esc(p.package.name)} — ${Hub.inr(p.package.price)}</p>
+    <ul class="inc-list">${p.package.inclusions.map(i => `<li>${Hub.esc(i)}</li>`).join('')}</ul>
+    <div class="lt-summary"><div><b>${Hub.inr(Math.round(p.billTotal))}</b><span>Interim bill total</span></div>
+      <div><b>${Hub.inr(Math.round(p.leakage))}</b><span>Leakage found</span></div>
+      <div><b>${Hub.inr(Math.round(p.overbilling))}</b><span>Over-billing found</span></div>
+      <div><b>${Hub.inr(Math.round(p.patientPayable))}</b><span>Patient-payable</span></div></div>
+    <h3>Bill vs clinical log</h3>
+    <div class="grid cols-2">
+      <div><h4 style="margin:6px 0">Interim bill lines</h4><div class="table-wrap"><table><thead><tr><th>Item</th><th>Section</th><th class="num">Amount</th><th>Tag</th></tr></thead>
+        <tbody>${p.billLines.map(l => `<tr><td>${Hub.esc(l.label)}${l.section === 'Implant' ? (l.sticker ? ` <span class="small">(sticker ${Hub.esc(l.batch)})</span>` : '') : ''}</td><td class="small">${Hub.esc(l.section)}</td><td class="num">${Hub.inr(l.amount)}</td>
+          <td class="lt-tags">${l.flag ? `<span class="tag ${FLAG_TAG[l.flag]}">${FLAG_LABEL[l.flag]}</span>` : '<span class="tag ok">ok</span>'}</td></tr>`).join('')}</tbody></table></div></div>
+      <div><h4 style="margin:6px 0">Clinical service log</h4><div class="table-wrap"><table><thead><tr><th>Day</th><th>Service</th><th>Tag</th></tr></thead>
+        <tbody>${p.logEntries.map(e => `<tr><td class="num">${e.day}</td><td>${Hub.esc(e.label)}${e.note ? `<div class="mini-note">${Hub.esc(e.note)}</div>` : ''}</td>
+          <td>${e.unbilled ? `<span class="tag bad">Unbilled — ${Hub.inr(e.estimatedAmount)}</span>` : '<span class="tag ok">billed</span>'}</td></tr>`).join('')}</tbody></table></div></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="primary" id="run">Run audit with Claude</button>
+      <button type="button" id="exportLines">Export bill lines to Excel</button></div>
+    <div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Interim bill', 'Claude audit', 'Maker/approver review', 'Final bill ready'], stepIdx);
+
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: p.id, title: `Discharge bill audit — ${p.id}` }, text: rv.text, st, docTitle: `Discharge bill audit ${p.id}`, onDecision: () => { detail(p); } });
+
+  el.querySelector('#exportLines').onclick = () => {
+    Hub.kit.exportXlsx(p.billLines.map(l => ({ Item: l.label, Section: l.section, Qty: l.qty, Rate: l.rate, Amount: l.amount, Flag: l.flag ? FLAG_LABEL[l.flag] : 'ok', Note: l.note || '' })), `${p.id}-bill-lines.xlsx`, 'Bill lines');
+    Hub.kit.log(SLUG, 'Exported bill lines to Excel', p.id);
+  };
+
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 35,
+      system: 'You are an experienced IP billing auditor at a 350-bed Kerala hospital, reconciling the interim discharge bill against the clinical service log, package inclusions and payer room-rent entitlement before final TPA/scheme approval. Be specific with line items and ₹ amounts.',
+      prompt: auditPrompt(p), demo: () => auditDemo(p),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted bill audit note', p.id);
+    Hub.kit.steps(el.querySelector('#steps'), ['Interim bill', 'Claude audit', 'Maker/approver review', 'Final bill ready'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: p.id, title: `Discharge bill audit — ${p.id}` }, text, st, docTitle: `Discharge bill audit ${p.id}`, onDecision: () => detail(p) });
+  };
+}
+
+/* ---------- Patient explanation tab ---------- */
+let expSelected = null;
+function explanation(el) {
+  el.innerHTML = `<div class="grid cols-2"><div class="card"><h2>Pick a patient</h2><div id="etbl"></div></div>
+    <div class="card"><h2>Bill explanation for the family</h2><div id="edetail"><p class="small">Pick a patient.</p></div></div></div>`;
+  Hub.kit.table(el.querySelector('#etbl'), {
+    rows: DATA.patients.map(p => ({ id: p.id, patient: `${p.initials}, ${p.age}${p.sex}`, procedure: p.procedure, payer: p.payer.name })),
+    search: true, selectedKey: expSelected,
+    columns: [{ key: 'id', label: 'IP no.' }, { key: 'patient', label: 'Patient' }, { key: 'procedure', label: 'Procedure' }, { key: 'payer', label: 'Payer' }],
+    onRowClick: r => { expSelected = r.id; expDetail(DATA.patients.find(p => p.id === r.id)); },
+  });
+  if (!expSelected) expSelected = (DATA.patients.find(p => p.id === st.get().selected) || DATA.patients[0]).id;
+  expDetail(DATA.patients.find(p => p.id === expSelected));
+}
+
+function expDemo(p) {
+  const nonpay = p.billLines.filter(l => l.flag === 'nonpayable');
+  const overrent = p.billLines.filter(l => l.flag === 'overrent');
+  const payableTotal = p.patientPayable;
+  const money = n => Hub.inr(Math.round(n));
+  const englishItems = [
+    ...nonpay.map(l => `- ${l.label} (${money(l.amount)}) — not covered by ${p.payer.name}; this is a standard exclusion, not a hospital error.`),
+    ...overrent.map(l => `- Room upgrade to ${p.roomCategory} beyond your policy's ${p.payer.roomEntitlement} entitlement — the extra room charge is payable directly by you.`),
+  ];
+  return `## Bill explanation — ${p.initials}, ${p.age}${p.sex} (${p.id})
+
+### In English
+Dear family,
+
+${p.initials} was admitted for **${p.procedure.toLowerCase()}** under ${p.doctor} and is being discharged after ${p.days} day(s) in ${p.roomCategory}. The total hospital bill is **${money(p.billTotal)}**, covered under ${p.payer.name}${p.payer.type !== 'Cash' ? ` (${p.payer.type})` : ''}.
+
+${payableTotal > 0 ? `A part of this bill, **${money(payableTotal)}**, is payable by you directly — not because of any error, but because these items fall outside what ${p.payer.type === 'Cash' ? 'was estimated' : p.payer.name + ' covers'}:\n${englishItems.join('\n')}` : `The full bill is covered under your policy/scheme — there is no amount payable by you beyond what was already discussed at admission.`}
+
+Please reach out to the billing desk if you have any questions before the final bill is prepared.
+
+### In Malayalam (short)
+പ്രിയപ്പെട്ടവരേ, ${p.initials} (${p.age} വയസ്സ്) ${p.doctor} മുഖേന ${p.procedure} ചികിത്സ കഴിഞ്ഞ് ${p.days} ദിവസത്തെ ${p.roomCategory} താമസത്തിന് ശേഷം ഡിസ്ചാർജ് ചെയ്യുന്നു. ആകെ ബിൽ ${money(p.billTotal)}, ${p.payer.name} വഴി പരിരക്ഷിക്കപ്പെടുന്നു. ${payableTotal > 0 ? `ഇതിൽ ${money(payableTotal)} നിങ്ങൾ നേരിട്ട് അടയ്‌ക്കേണ്ടതാണ്, കാരണം ചില ഇനങ്ങൾ പോളിസി/സ്കീമിന്റെ പരിധിക്ക് പുറത്താണ്.` : 'ഈ തുകയിൽ നിങ്ങൾ നേരിട്ട് അടയ്‌ക്കേണ്ട അധിക തുകയില്ല.'} സംശയങ്ങൾക്ക് ബില്ലിംഗ് ഡെസ്കിനെ ബന്ധപ്പെടുക.
+
+*(Machine-assisted Malayalam draft — have a native speaker review before it is given to the family.)*`;
+}
+
+function expDetail(p) {
+  const el = document.getElementById('edetail');
+  const rv = st.get().expReviews[p.id];
+  el.innerHTML = `<p><b>${Hub.esc(p.initials)}, ${p.age}${p.sex}</b> · ${Hub.esc(p.procedure)} · ${Hub.esc(p.payer.name)}</p>
+    <p class="small">Bill total ${Hub.inr(p.billTotal)}${p.patientPayable > 0 ? ` · patient-payable ${Hub.inr(Math.round(p.patientPayable))}` : ' · fully covered, nothing extra payable'}.</p>
+    <div class="row"><button class="primary" id="erun">Draft explanation with Claude</button></div>
+    <div class="claude-out" id="eout" style="margin-top:10px"></div><div id="erv"></div>`;
+  const expSt = { get: () => ({ reviews: st.get().expReviews }), set: patch => st.set(cur => ({ expReviews: (typeof patch === 'function' ? patch({ reviews: cur.expReviews }) : patch).reviews })) };
+  if (rv) Hub.kit.review(el.querySelector('#erv'), { slug: SLUG, item: { id: p.id, title: `Bill explanation — ${p.id}` }, text: rv.text, st: expSt, docTitle: `Bill explanation ${p.id}`, onDecision: () => expDetail(p) });
+  el.querySelector('#erun').onclick = async () => {
+    const text = await Hub.run({
+      out: '#eout', button: '#erun', manualMinutes: 15,
+      system: 'You write plain-language bill explanations for patient families at a Kerala hospital, in English and short Malayalam. Be warm but factual, and never imply the hospital made an error when an item is a standard payer exclusion.',
+      prompt: JSON.stringify({ patient: p.id, initials: p.initials, age: p.age, sex: p.sex, procedure: p.procedure, doctor: p.doctor, payer: p.payer, roomCategory: p.roomCategory, days: p.days, billTotal: p.billTotal, patientPayable: p.patientPayable, nonpayables: p.billLines.filter(l => l.flag === 'nonpayable'), overrent: p.billLines.filter(l => l.flag === 'overrent') }),
+      demo: () => expDemo(p),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Bill explanation drafted', p.id);
+    st.set(cur => ({ expReviews: { ...cur.expReviews, [p.id]: { status: 'draft', text } } }));
+    Hub.kit.review(el.querySelector('#erv'), { slug: SLUG, item: { id: p.id, title: `Bill explanation — ${p.id}` }, text, st: expSt, docTitle: `Bill explanation ${p.id}`, onDecision: () => expDetail(p) });
+  };
+}
+
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const ps = DATA.patients;
+  const withEx = ps.filter(p => p.exceptionCount > 0).length;
+  const totalLeak = ps.reduce((s, p) => s + p.leakage, 0);
+  const totalOver = ps.reduce((s, p) => s + p.overbilling, 0);
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Discharges due</div><div class="value">${ps.length}</div></div>
+    <div class="kpi"><div class="label">Bills with exceptions</div><div class="value">${Math.round(100 * withEx / ps.length)}%</div></div>
+    <div class="kpi"><div class="label">Leakage caught ₹</div><div class="value">${cr(totalLeak)}</div></div>
+    <div class="kpi"><div class="label">Over-billing corrected ₹</div><div class="value">${cr(totalOver)}</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>
+  <div class="card" id="c3" style="margin-top:16px"></div>`;
+
+  const byType = {};
+  ps.forEach(p => {
+    p.logEntries.filter(e => e.unbilled).forEach(() => byType['Unbilled item'] = (byType['Unbilled item'] || 0) + 1);
+    p.billLines.forEach(l => { if (l.flag) { const label = FLAG_LABEL[l.flag]; byType[label] = (byType[label] || 0) + 1; } });
+  });
+  Hub.chart.bar(el.querySelector('#c1'), { title: 'Exceptions by type', sub: 'Count across today\'s discharge queue', data: Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })) });
+
+  const byDept = {};
+  ps.forEach(p => { byDept[p.dept] = (byDept[p.dept] || 0) + p.leakage + p.overbilling; });
+  Hub.chart.hbar(el.querySelector('#c2'), { title: '₹ impact by department', sub: 'Leakage + over-billing found, by department', data: Object.entries(byDept).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), format: cr });
+
+  // synthetic but deterministic 14-day trend derived from the seeded dataset total
+  const days = Array.from({ length: 14 }, (_, i) => { const d = new Date('2026-09-28'); d.setDate(d.getDate() - (13 - i)); return d.toISOString().slice(5, 10); });
+  const base = totalLeak / 14;
+  const series = days.map((_, i) => Math.max(0, Math.round(base * (0.6 + 0.8 * Math.sin(i / 2.3) * Math.sin(i / 2.3) + (i % 5) * 0.05))));
+  Hub.chart.line(el.querySelector('#c3'), { title: 'Daily leakage caught (last 14 days)', sub: 'Sum of unbilled items detected and corrected before final billing', labels: days, series: [{ name: '₹ leakage caught', values: series }], format: cr });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The discharge queue', text: `${d.patients.length} inpatients due for discharge in the next 24 hours, each with an exception count and a ₹ impact figure computed from their bill and clinical log.` },
+      { sel: '.inc-list', title: 'Package inclusions', text: 'Each patient on a package shows what is already covered — anything on this list billed separately is an over-billing exception.' },
+      { sel: '.table-wrap', title: 'Bill vs clinical log, side by side', text: 'The interim bill lines on the left, the clinical service log on the right — every mismatch is tagged directly, not guessed.' },
+      { sel: '#run', title: 'Claude drafts the audit note', text: 'Unbilled items to add, duplicates and package inclusions to remove, and patient-payable amounts explained in plain language, plus a final-approval readiness verdict.' },
+      { sel: '#rv', title: 'Maker edits, approver approves', text: 'The billing executive edits the draft and submits; the billing manager approves — the patient then shows Final bill ready. Nothing is sent to any hospital system.' },
+      { sel: '#tabs', title: 'Patient explanation', text: 'For the same patient, Claude drafts a plain-language bill explanation for the relatives in English and short Malayalam.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Discharges due, exception rate, and ₹ leakage vs over-billing for the billing manager.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Discharge queue' }, { id: 'explain', label: 'Patient explanation' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ queue, explain: explanation, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

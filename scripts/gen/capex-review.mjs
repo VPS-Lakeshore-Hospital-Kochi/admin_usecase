@@ -234,7 +234,7 @@ FAMILIES.forEach((fam, fi) => {
     const quality = pick(['strong', 'strong', 'moderate', 'weak']);
     const justification = quality === 'weak' ? fam.weakJust
       : quality === 'strong' ? fam.strongJust.replace('{n}', n1).replace('{n2}', n2).replace('{rev}', int(20, 90))
-        : (fam.strongJust.replace('{n}', n1).replace('{n2}', n2).replace('{rev}', int(20, 90)).split('. ')[0] + '.');
+        : (fam.strongJust.replace('{n}', n1).replace('{n2}', n2).replace('{rev}', int(20, 90)).split('. ')[0].replace(/\.$/, '') + '.');
     const impact = quality === 'weak' ? fam.impactWeak : fam.impactStrong.replace('{n}', n1).replace('{n2}', n2).replace('{rev}', int(20, 90));
     const quotesCount = fam.budgetary ? 0 : Math.max(0, Math.min(3, fam.quotesTypical + (vi === 1 ? int(-1, 1) : 0)));
     const startOffset = int(0, 8);

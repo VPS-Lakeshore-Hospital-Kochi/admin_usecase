@@ -6,179 +6,381 @@
 <title>Capex request reviewer</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .kpis .kpi .value { font-size: 1.3rem; }
+  .checklist { list-style: none; margin: 8px 0; padding: 0; }
+  .checklist li { padding: 3px 0; font-size: 13.5px; }
+  .checklist li::before { content: '✓ '; color: var(--ok); }
+  .checklist li.miss::before { content: '✕ '; color: var(--bad); }
+  .fieldgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; margin: 8px 0 10px; font-size: 13.5px; }
+  .fieldgrid div span { color: var(--muted); }
+  .small-tags .tag { margin: 2px 4px 2px 0; }
+  .envwrap { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin: 8px 0 14px; }
+  .envwrap label { margin: 0 0 4px; }
+  .envwrap input { width: 140px; }
+  .cbar { height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; margin: 6px 0 4px; }
+  .cbar > div { height: 100%; background: var(--navy); }
+  .cbar.over > div { background: var(--bad); }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Capex request reviewer</h1>
-    <p>Screen FY26-27 capital expenditure requests for completeness, weak justifications and missing quotes before they go to the Capex Committee.</p>
+    <p>Screens FY 2026-27 capital expenditure requests for completeness and justification quality, prioritises the
+      portfolio against the year's budget envelope, and drafts the EC capex note — reviewed by the finance analyst
+      and approved by the CFO before anything moves forward.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample capex batch</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="q1">Q1 FY26-27 batch — ICU, Cath Lab, MRI, HIS, Dialysis</option>
-          <option value="q2">Q2 FY26-27 batch — Ambulance, Cafeteria, Fire safety, OT lights</option>
-        </select>
-      </div>
-      <label>Capex request lines (editable)</label>
-      <textarea id="lines" rows="16"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Synthetic capex data for demonstration only. Vendor and department names are illustrative.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · synthetic capex data, no real vendors or departments identifiable · nothing here is sent to any finance system.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'capex-review';
 Hub.mountHeader({ dept: 'Finance & Accounts', title: 'Capex request reviewer' });
+const st = Hub.kit.state(SLUG, { tab: 'requests', selected: null, reviews: {}, envelope: null, ecNote: null });
+let DATA;
 
-const SCENARIOS = {
-  q1: {
-    label: 'Q1 FY26-27 batch — ICU, Cath Lab, MRI, HIS, Dialysis',
-    lines: `1. Dept: Critical Care | Item: ICU complex renovation (12 beds, isolation bay) | Category: Civil + MEP | Qty: 1 lot | Cost: ₹2,25,00,000 | Pricing source: Single quote (Ferns Interiors) | Justification: "Existing ICU is old and needs upgrade" | Impact if not done: "Patients will complain" | Timeline: Q3 FY26-27
+/* ---------- computed fields ---------- */
+function completeness(r) {
+  let s = 0;
+  if (r.specs) s += 15;
+  if (r.purpose) s += 10;
+  if (r.impactIfNot) s += 10;
+  const words = (r.justification || '').split(/\s+/).length;
+  s += words >= 25 ? 20 : words >= 10 ? 10 : 3;
+  s += r.quotesCount >= 2 ? 20 : r.quotesCount === 1 ? 8 : 0;
+  if (r.revenueSavingsPerYear) s += 15;
+  if (r.maintenancePerYear) s += 10;
+  return Math.min(100, s);
+}
+function payback(r) { return r.revenueSavingsPerYear ? r.total / r.revenueSavingsPerYear : null; }
+function tagsFor(r) {
+  const t = [];
+  if (r.capexType === 'regulatory') t.push({ cls: 'ok', label: 'Regulatory' });
+  if (r.budgetaryEstimate) t.push({ cls: 'warn', label: 'Budgetary estimate' });
+  else if (r.quotesCount <= 1) t.push({ cls: 'warn', label: r.quotesCount === 1 ? 'Single quote' : 'No quotes' });
+  if (!r.revenueSavingsPerYear) t.push({ cls: 'warn', label: 'No savings stated' });
+  if (r.justificationQuality === 'weak') t.push({ cls: 'bad', label: 'Weak justification' });
+  return t;
+}
+function reqStatus(r) {
+  const rv = (st.get().reviews || {})[r.id];
+  if (!rv) return r.status;
+  return { draft: 'Reviewed', submitted: 'Recommended', approved: 'Approved', returned: 'Deferred' }[rv.status] || r.status;
+}
+const STEP_LABELS = ['Submitted', 'Reviewed', 'Recommended', 'Approved'];
+const STEP_IDX = { Submitted: 0, Reviewed: 1, Recommended: 2, Approved: 3, Deferred: 2 };
+const STATUS_TAG_CLS = { Approved: 'ok', Deferred: 'bad', Recommended: 'warn', Reviewed: 'warn', Submitted: 'warn' };
+const cr = v => Hub.chart.compact(v);
 
-2. Dept: Cardiology | Item: Cath Lab flat-panel detector upgrade | Category: Medical equipment | Qty: 1 | Cost: ₹1,85,00,000 | Pricing source: 3 quotes (Siemens, Philips, GE) attached | Justification: "Current detector is 9 yrs old, image quality degrading, OEM AMC ending, replacement parts scarce; enables higher case volume for structural heart programme" | Impact if not done: "Cath lab downtime risk within 6 months, cardiology referrals to competitor hospitals" | Timeline: Q2 FY26-27
-
-3. Dept: Radiology | Item: MRI coil (16-channel head/neck) | Category: Medical equipment accessory | Qty: 2 | Cost: ₹42,00,000 | Pricing source: OEM quote only (Siemens, no alternate vendor possible) | Justification: "Need better coil" | Impact if not done: "Some scans will be lower quality" | Timeline: Q1 FY26-27
-
-4. Dept: IT | Item: HIS application + DB servers (2x) | Category: IT infrastructure | Qty: 2 | Cost: ₹68,00,000 | Pricing source: 2 quotes (Dell, HPE) | Justification: "Current servers are out of warranty since 8 months, HIS response time degraded 40% during peak OPD hours per helpdesk logs, DR replication currently non-functional" | Impact if not done: "Risk of HIS downtime affecting billing, pharmacy and lab across all departments; no DR in case of hardware failure" | Timeline: Q1 FY26-27
-
-5. Dept: Nephrology | Item: Dialysis machines | Category: Medical equipment | Qty: 6 | Cost: ₹90,00,000 | Pricing source: Single quote (Fresenius, verbal negotiation only, no written comparison) | Justification: "Dialysis unit is expanding" | Impact if not done: "Cannot expand" | Timeline: Q3 FY26-27`,
-  },
-  q2: {
-    label: 'Q2 FY26-27 batch — Ambulance, Cafeteria, Fire safety, OT lights',
-    lines: `1. Dept: Emergency Services | Item: Advanced Life Support ambulance | Category: Vehicle | Qty: 1 | Cost: ₹38,00,000 | Pricing source: 2 quotes (Force, Tata Motors, body-builder separate) | Justification: "Existing 2 ambulances average 11 yrs old, repeated breakdowns (6 in last quarter per transport log), non-compliance with new MoHFW ALS ambulance norms" | Impact if not done: "Risk of transfer delays for critical patients, potential NABH non-conformance on emergency transport readiness" | Timeline: Q3 FY26-27
-
-2. Dept: Facilities | Item: Staff cafeteria renovation + kitchen equipment | Category: Civil + equipment | Qty: 1 lot | Cost: ₹55,00,000 | Pricing source: Single quote (local contractor, no comparison) | Justification: "Cafeteria looks outdated" | Impact if not done: "Staff will be unhappy" | Timeline: Q4 FY26-27
-
-3. Dept: Facilities / Safety | Item: Fire safety system upgrade (sprinklers, hydrants, panel) | Category: Safety/MEP | Qty: 1 lot | Cost: ₹1,10,00,000 | Pricing source: 3 quotes (Godrej, Zicom, local vendor) with fire-audit report attached | Justification: "External fire audit (Q4 FY25-26) flagged 14 non-conformances including non-functional hydrant pressure in West block; mandatory for NABH re-accreditation and fire NOC renewal due in 5 months" | Impact if not done: "Risk of fire NOC non-renewal, potential regulatory shutdown of West block, NABH non-conformance" | Timeline: Q2 FY26-27 (urgent)
-
-4. Dept: Surgery | Item: OT LED shadowless lights (replacement, 3 OTs) | Category: Medical equipment | Qty: 3 | Cost: ₹36,00,000 | Pricing source: 2 quotes (Skanray, Mindray) | Justification: "Existing lights flickering intermittently during procedures per OT nursing incident log (4 reports in 2 months); OEM confirms parts discontinued" | Impact if not done: "Patient safety risk during long-duration procedures, potential case postponement" | Timeline: Q2 FY26-27`,
-  },
-};
-
-const KPI_LABELS = ['Total requested', 'Lines with single quote', 'Weak justification (heuristic)', 'Urgent/safety flagged'];
-
-function computeKPIs(text) {
-  const blocks = text.split(/\n\s*\n/).filter(b => b.trim());
-  let total = 0, single = 0, weak = 0, urgent = 0;
-  blocks.forEach(b => {
-    const costM = b.match(/Cost:\s*₹\s*([\d,]+)/);
-    if (costM) total += parseInt(costM[1].replace(/,/g, ''), 10);
-    if (/Single quote/i.test(b)) single++;
-    const justM = b.match(/Justification:\s*"([^"]*)"/);
-    if (justM && justM[1].split(/\s+/).length <= 8) weak++;
-    if (/urgent|NABH|fire NOC|regulatory/i.test(b)) urgent++;
+/* ---------- Requests tab ---------- */
+function requests(el) {
+  el.innerHTML = `<div class="row" style="justify-content:flex-end;margin-bottom:8px"><button type="button" id="exportReq">Export to Excel</button></div>
+    <div class="grid cols-2"><div class="card"><h2>Requests queue</h2><div id="tbl"></div></div>
+    <div class="card"><h2>Selected request</h2><div id="detail"><p class="small">Pick a row.</p></div></div></div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.requests, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'description', label: 'Request' },
+      { key: 'dept', label: 'Dept' },
+      { key: 'total', label: 'Total', num: true, format: v => Hub.inr(v) },
+      { key: 'completeness', label: 'Complete', num: true, render: r => { const c = completeness(r); return `<span class="tag ${c >= 75 ? 'ok' : c >= 50 ? 'warn' : 'bad'}">${c}/100</span>`; } },
+      { key: 'payback', label: 'Payback', num: true, render: r => { const p = payback(r); return p ? `${p.toFixed(1)} yrs` : '—'; } },
+      { key: 'status', label: 'Status', render: r => { const s = reqStatus(r); return `<span class="tag ${STATUS_TAG_CLS[s] || 'warn'}">${Hub.esc(s)}</span>`; } },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); requestDetail(r); },
   });
-  return { total, single, weak, urgent, n: blocks.length };
+  let sel = DATA.requests.find(r => r.id === st.get().selected);
+  if (!sel) { sel = DATA.requests[0]; st.set({ selected: sel.id }); }
+  requestDetail(sel);
+  el.querySelector('#exportReq').onclick = () => {
+    const rows = DATA.requests.map(r => ({
+      ID: r.id, Department: r.dept, 'Asset category': r.assetCategory, 'Sub-category': r.subCategory,
+      Description: r.description, Qty: r.qty, 'Equipment (₹)': r.costs.equipment, 'Installation (₹)': r.costs.installation,
+      'Other (₹)': r.costs.other, 'Total (₹)': r.total, 'Capex type': r.capexType, Location: r.location,
+      Quotes: r.quotesCount, 'Budgetary estimate': r.budgetaryEstimate ? 'Yes' : 'No',
+      'Timeline start': r.timelineStart, 'Timeline end': r.timelineEnd, 'Month put to use': r.monthPutToUse,
+      'Maintenance/yr (₹)': r.maintenancePerYear, 'Revenue/savings per yr (₹)': r.revenueSavingsPerYear || '',
+      'Payback (yrs)': payback(r) ? payback(r).toFixed(1) : '', Completeness: completeness(r), Status: reqStatus(r),
+      Justification: r.justification,
+    }));
+    Hub.kit.exportXlsx(rows, 'capex-requests-fy26-27.xlsx', 'Capex requests');
+    Hub.kit.log(SLUG, 'Exported requests queue to Excel', `${rows.length} requests`);
+  };
 }
-function renderKPIs(text) {
-  const k = computeKPIs(text);
-  const box = document.getElementById('kpis');
-  const vals = [Hub.inr(k.total), `${k.single}/${k.n}`, `${k.weak}/${k.n}`, `${k.urgent}/${k.n}`];
-  box.innerHTML = KPI_LABELS.map((l, i) => `<div class="kpi"><div class="label">${Hub.esc(l)}</div><div class="value">${vals[i]}</div></div>`).join('');
+
+function checklistFor(r) {
+  const items = [
+    { ok: !!r.specs, label: 'Specifications documented' },
+    { ok: !!r.purpose, label: 'Purpose stated' },
+    { ok: !!r.impactIfNot, label: 'Impact of non-investment stated' },
+    { ok: (r.justification || '').split(/\s+/).length >= 25, label: 'Justification gives quantified evidence' },
+    { ok: r.quotesCount >= 2, label: 'At least 2 quotes on file' },
+    { ok: !!r.revenueSavingsPerYear, label: 'Revenue/savings per year stated' },
+    { ok: !!r.maintenancePerYear, label: 'Operating/maintenance cost stated' },
+  ];
+  return `<ul class="checklist">${items.map(i => `<li class="${i.ok ? '' : 'miss'}">${Hub.esc(i.label)}</li>`).join('')}</ul>`;
 }
 
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('lines').value = s.lines;
-  renderKPIs(s.lines);
+function requestDetail(r) {
+  const el = document.getElementById('detail');
+  const done = st.get().reviews[r.id];
+  const s = reqStatus(r);
+  const p = payback(r);
+  el.innerHTML = `<div id="steps"></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <p style="margin:2px 0"><b>${Hub.esc(r.description)}</b> · ${Hub.esc(r.id)} · ${Hub.esc(r.dept)}</p>
+      <span class="tag ${STATUS_TAG_CLS[s] || 'warn'}">${Hub.esc(s)}</span>
+    </div>
+    <div class="fieldgrid">
+      <div><span>Asset category:</span> ${Hub.esc(r.assetCategory)} — ${Hub.esc(r.subCategory)}</div>
+      <div><span>Capex type:</span> ${Hub.esc(r.capexType)}</div>
+      <div><span>Location:</span> ${Hub.esc(r.location)}</div>
+      <div><span>Qty:</span> ${r.qty} ${Hub.esc(r.unitLabel)}</div>
+      <div><span>Timeline:</span> ${Hub.esc(r.timelineStart)} to ${Hub.esc(r.timelineEnd)}</div>
+      <div><span>Month put to use:</span> ${Hub.esc(r.monthPutToUse)}</div>
+      <div><span>Equipment / installation / other:</span> ${Hub.inr(r.costs.equipment)} / ${Hub.inr(r.costs.installation)} / ${Hub.inr(r.costs.other)}</div>
+      <div><span>Total:</span> ${Hub.inr(r.total)}</div>
+      <div><span>Pricing source:</span> ${r.budgetaryEstimate ? 'Budgetary estimate' : `${r.quotesCount} quote${r.quotesCount === 1 ? '' : 's'} on file`}</div>
+      <div><span>Maintenance/operating cost per year:</span> ${Hub.inr(r.maintenancePerYear)}</div>
+      <div><span>Expected revenue/savings per year:</span> ${r.revenueSavingsPerYear ? Hub.inr(r.revenueSavingsPerYear) : 'Not stated'}</div>
+      <div><span>Simple payback:</span> ${p ? p.toFixed(1) + ' years' : '— (no revenue/savings stated)'}</div>
+    </div>
+    <p class="small"><b>Purpose:</b> ${Hub.esc(r.purpose)}</p>
+    <p class="small"><b>Specs:</b> ${Hub.esc(r.specs)}</p>
+    <p class="small"><b>Impact if not invested:</b> ${Hub.esc(r.impactIfNot)}</p>
+    <p class="small"><b>Justification (as submitted):</b> "${Hub.esc(r.justification)}"</p>
+    <h3 style="margin-top:12px">Completeness checklist</h3>
+    ${checklistFor(r)}
+    <div class="small-tags">${tagsFor(r).map(t => `<span class="tag ${t.cls}">${Hub.esc(t.label)}</span>`).join('')}</div>
+    <button class="primary" id="run">Run with Claude — review this request</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv" style="margin-top:10px"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), STEP_LABELS, STEP_IDX[s] ?? 0);
+  if (done) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: `Capex review — ${r.id}` }, text: done.text, st, docTitle: `Capex review — ${r.description}`, onDecision: () => requestDetail(r) });
+
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 45,
+      system: 'You are a finance analyst at VPS Lakeshore Hospital, Kochi, screening a capital expenditure request before it goes to the Capex Committee and CFO. Be specific, cite the figures given, and do not invent facts not in the record.',
+      prompt: JSON.stringify({ request: r, completenessScore: completeness(r), simplePaybackYears: p }),
+      demo: () => demoReview(r, p),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude review drafted', r.id);
+    st.set(s2 => ({ reviews: { ...(s2.reviews || {}), [r.id]: { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps'), STEP_LABELS, STEP_IDX['Reviewed']);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: `Capex review — ${r.id}` }, text, st, docTitle: `Capex review — ${r.description}`, onDecision: () => requestDetail(r) });
+  };
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('lines').addEventListener('input', e => renderKPIs(e.target.value));
-loadScenario('q1');
 
-const DEMO = {
-q1: `## Line-by-line completeness & quality score
+function demoReview(r, p) {
+  const c = completeness(r);
+  const gaps = [];
+  if (r.budgetaryEstimate) gaps.push('Pricing is a budgetary estimate only — no firm quote is on file yet.');
+  else if (r.quotesCount < 2) gaps.push(`Only ${r.quotesCount} quote${r.quotesCount === 1 ? '' : 's'} on file for a ${Hub.inr(r.total)} request — the committee will expect at least 2 comparable quotes, or a documented sole-source reason.`);
+  if (!r.revenueSavingsPerYear) gaps.push('No revenue or savings figure has been stated, so a payback or NPV view cannot be built from the record as filed.');
+  if (r.justificationQuality === 'weak') gaps.push('The justification text gives no measurable operational, clinical or safety basis — it reads as an opinion, not a business case.');
+  if (!gaps.length) gaps.push('No material evidence gaps found on the fields as filed.');
 
-| # | Item | Score /10 | Key gap |
-|---|---|---|---|
-| 1 | ICU complex renovation | 4 | Single quote only; justification and impact both vague, no bed-occupancy or NABH-linked rationale |
-| 2 | Cath Lab detector upgrade | 9 | Well documented — 3 quotes, AMC/parts-scarcity evidence, revenue linkage |
-| 3 | MRI coil | 3 | Justification ("need better coil") gives no clinical or utilisation basis; OEM-only pricing needs a documented sole-source waiver |
-| 4 | HIS servers | 8 | Good quantified justification (40% response-time degradation, DR gap); only 2 quotes, acceptable for IT infra |
-| 5 | Dialysis machines | 3 | Verbal-only pricing, no written comparison; justification doesn't state incremental patient volume or current utilisation % |
+  const firstClaim = r.justification.split(/[.;]/)[0].trim();
+  const questions = [
+    `What data supports "${firstClaim}"? Please attach the underlying log, audit or utilisation figures referenced.`,
+    r.budgetaryEstimate || r.quotesCount < 2
+      ? `Can two more comparable quotes be obtained before this goes to committee, or is there a documented reason for single/no-quote sourcing (sole OEM, proprietary interface, etc.)?`
+      : `Are all quotes on a like-for-like scope — installation, warranty period and AMC/CMC terms included the same way across vendors?`,
+    r.revenueSavingsPerYear
+      ? `Is the ${Hub.inr(r.revenueSavingsPerYear)}/year revenue or savings figure independently verifiable, and what case-volume or utilisation assumption sits behind it?`
+      : `Can the department put a ₹ figure — even directional — on the annual revenue or cost-avoidance this investment is expected to enable?`,
+  ];
 
-## Weak justifications flagged
-- **Line 1 (ICU renovation)** — "existing ICU is old" is not a business case for ₹2.25 cr. Needs: current bed utilisation/turnaway data, NABH space-norm gap, infection-control rationale.
-- **Line 3 (MRI coil)** — "need better coil" has no scan-volume or diagnostic-yield data attached.
-- **Line 5 (Dialysis machines)** — "unit is expanding" needs current vs projected session volume, waitlist data, and current machine utilisation %.
+  const paybackNote = p
+    ? `At the stated ${Hub.inr(r.revenueSavingsPerYear)}/year, simple payback on ${Hub.inr(r.total)} is **${p.toFixed(1)} years**, before any escalation or discounting. ${p <= 3 ? 'This is a fast payback if the revenue/savings assumption holds — worth a light NPV check but not a blocker.' : p <= 6 ? 'A moderate payback — worth sense-checking the underlying volume/utilisation assumption before relying on it in the EC note.' : 'A long payback on the stated assumption — this request likely needs to stand on regulatory, safety or clinical-continuity grounds rather than a financial return case.'}`
+    : `No revenue/savings figure is stated, so payback cannot be computed. ${r.capexType === 'regulatory' ? 'That is acceptable here since this is a regulatory/compliance-driven request — the case rests on the compliance risk, not ROI.' : 'For a request of this size, ask the HoD for at least a directional ₹ figure so the committee can weigh it against payback-driven requests in the same batch.'}`;
 
-## Missing quotes / pricing evidence
-- Line 1: only one contractor quote for a ₹2.25 cr civil package — Capex Committee will likely ask for 2 more comparable quotes or a documented reason for single-sourcing.
-- Line 3: OEM-only pricing is acceptable **only** with a signed sole-source justification (proprietary coil compatibility) — not currently attached.
-- Line 5: negotiation was verbal; a written comparative quote (even from 1 alternate vendor) should be obtained before committee submission.
+  const recommend = r.capexType === 'regulatory' || (c >= 55 && r.justificationQuality !== 'weak' && (r.quotesCount >= 1 || r.budgetaryEstimate === false));
+  const verdict = recommend
+    ? `**Recommend** taking this forward to the Capex Committee${c < 75 ? ', subject to closing the gaps noted above before final sign-off' : ''}.`
+    : `**Recommend deferring** this request back to ${r.dept} until the gaps above are closed — as filed, the record does not give the committee enough to evaluate it against the FY 2026-27 envelope.`;
 
-## ROI / payback questions to raise
-1. **Cath Lab (Line 2):** What incremental PTCA/structural-heart case volume is assumed, and over what payback period does the ₹1.85 cr investment recover through case-volume growth vs AMC/downtime cost avoidance?
-2. **HIS servers (Line 4):** Quantify cost of one HIS downtime hour (billing/pharmacy/lab blocked) to justify urgency vs a lower-cost interim fix.
-3. **Dialysis (Line 5):** What is current machine utilisation (sessions/machine/day) — does adding 6 machines match realistic demand growth, or would 3-4 suffice initially?
+  return `## Claude review — ${r.id}: ${r.description}
+**Department:** ${r.dept} · **Total:** ${Hub.inr(r.total)} · **Completeness score:** ${c}/100
 
-## Suggested prioritisation
-1. **HIS servers** — urgent, out-of-warranty + no DR, well justified (approve).
-2. **Cath Lab detector** — strong ROI case, approve subject to final quote negotiation.
-3. **Fire/safety-linked or regulatory items** — none in this batch, but ICU renovation should be re-justified with NABH space-norm/infection-control data before resubmission.
-4. **MRI coil, Dialysis machines, ICU renovation** — return to originating departments for stronger justification and additional quotes before committee places these on the agenda.`,
+### Quality of justification
+${r.justificationQuality === 'strong' ? `Well documented — the justification ties directly to a named log, audit or utilisation figure and the impact statement is concrete.` : r.justificationQuality === 'weak' ? `Weak. "${firstClaim}" is an opinion, not evidence — there is nothing here a committee member could independently check.` : `Adequate but thin — the justification gestures at real evidence without fully quantifying it.`}
 
-q2: `## Line-by-line completeness & quality score
+### Missing evidence
+${gaps.map(g => `- ${g}`).join('\n')}
 
-| # | Item | Score /10 | Key gap |
-|---|---|---|---|
-| 1 | ALS ambulance | 8 | Good data (breakdown log, MoHFW norm reference); 2 quotes but body-builder cost not itemised separately |
-| 2 | Cafeteria renovation | 2 | Single quote, no comparison; justification purely subjective, no staff-satisfaction data or safety/hygiene driver |
-| 3 | Fire safety upgrade | 9 | Strong — audit report, 3 quotes, explicit regulatory deadline (fire NOC) |
-| 4 | OT LED lights | 8 | Good — incident log evidence, parts-discontinuation confirmed by OEM, only 2 quotes |
+### Questions for the HoD
+${questions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
 
-## Weak justifications flagged
-- **Line 2 (Cafeteria)** — "looks outdated" and "staff will be unhappy" are not capex-committee-grade justifications for ₹55 lakh. No hygiene/safety driver, no comparison against a phased/lower-cost refresh.
+### Payback / NPV sense-check
+${paybackNote}
 
-## Missing quotes / pricing evidence
-- Line 2: only one local-contractor quote for a ₹55 lakh civil + equipment package — needs at least 2 more comparative quotes before submission.
-- Line 1: ambulance chassis and body-fabrication costs should be itemised separately in the quote comparison, not bundled.
-- Line 4: 2 quotes is workable but a 3rd (e.g. Stryker or Trumpf) would strengthen the file given OT-safety criticality.
+### Recommendation
+${verdict}
 
-## ROI / payback questions to raise
-1. **Fire safety (Line 3):** What is the cost of NOC non-renewal / potential regulatory closure of West block versus the ₹1.10 cr spend — frame as risk-avoidance, not discretionary ROI.
-2. **Ambulance (Line 1):** What is annual repair/downtime cost of the two 11-year-old units, and how many patient-transfer delays occurred in the last year attributable to breakdowns?
-3. **Cafeteria (Line 2):** Is a phased refresh (kitchen equipment first, civil work later) possible to reduce FY26-27 outlay, and is there any linkage to a hygiene/food-safety audit finding?
+*This is a draft for the finance analyst to edit before it goes to the CFO for approval. Nothing here has been submitted to the Capex Committee.*`;
+}
 
-## Suggested prioritisation
-1. **Fire safety upgrade** — regulatory deadline, safety-critical, fully documented — approve on priority.
-2. **OT LED lights** — patient-safety risk, well documented — approve.
-3. **ALS ambulance** — approve, request itemised chassis/body cost split before final sign-off.
-4. **Cafeteria renovation** — defer; return to Facilities for comparative quotes and a stronger, ideally phased, justification.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const lines = document.getElementById('lines').value;
-  renderKPIs(lines);
-  const prompt = `You are reviewing a batch of FY26-27 capital expenditure (capex) requests for VPS Lakeshore Hospital, Kochi before Capex Committee submission.
-
-Capex request lines:
-${lines}
-
-For each line provide: a completeness/quality score out of 10, flag weak or vague justifications, flag missing quotes/pricing evidence, raise ROI/payback questions where relevant, and end with a suggested prioritisation order for the committee. Use ₹ lakh/crore formatting.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced hospital finance controller at a 350-bed Kerala hospital, expert in capex governance and committee reviews.',
-    prompt, demo: DEMO[key], manualMinutes: 120,
+/* ---------- Portfolio tab ---------- */
+function envelope() { return st.get().envelope || DATA.budgetEnvelopeDefault; }
+function prioritised() {
+  const notDeferred = DATA.requests.filter(r => reqStatus(r) !== 'Deferred');
+  const reg = notDeferred.filter(r => r.capexType === 'regulatory').sort((a, b) => b.total - a.total);
+  const rest = notDeferred.filter(r => r.capexType !== 'regulatory').sort((a, b) => {
+    const pa = payback(a), pb = payback(b);
+    if (pa == null && pb == null) return b.total - a.total;
+    if (pa == null) return 1;
+    if (pb == null) return -1;
+    return pa - pb;
   });
+  return [...reg, ...rest];
+}
+function portfolio(el) {
+  const env = envelope();
+  const list = prioritised();
+  let cum = 0;
+  const rows = list.map(r => { cum += r.total; return { r, cum, within: cum <= env }; });
+  const recommended = rows.filter(x => x.within);
+  const holdBack = rows.filter(x => !x.within);
+  const total = list.reduce((a, r) => a + r.total, 0);
+
+  el.innerHTML = `<div class="card">
+    <h2>Portfolio prioritisation — FY 2026-27</h2>
+    <div class="envwrap">
+      <span><label for="env">Budget envelope (₹)</label><input id="env" type="number" step="100000" value="${env}"></span>
+      <span class="small" style="max-width:420px">Regulatory/compliance requests are prioritised first, then the rest ranked by fastest simple payback. Requests without a stated payback rank last within their group. Deferred requests are excluded.</span>
+    </div>
+    <div class="cbar ${cum <= env ? '' : 'over'}" style="width:100%"><div style="width:${Math.min(100, total ? (Math.min(cum, total) / env * 100) : 0)}%"></div></div>
+    <p class="small">Cumulative total across ${rows.length} active requests: ${Hub.inr(cum > 0 ? rows[rows.length - 1].cum : 0)} of ${Hub.inr(env)} envelope · ${recommended.length} recommended within envelope, ${holdBack.length} held back.</p>
+    <div id="ptbl"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2>EC capex note</h2>
+    <p class="small" style="margin:0 0 8px">Claude drafts a note to the Executive Committee summarising recommended vs deferred requests and ₹ totals, based on the prioritisation above.</p>
+    <button class="primary" id="ecRun">Run with Claude — draft EC capex note</button>
+    <div class="claude-out" id="ecOut" style="margin-top:10px"></div>
+    <div id="ecRv" style="margin-top:10px"></div>
+  </div>`;
+
+  const tbl = el.querySelector('#ptbl');
+  tbl.innerHTML = `<div class="table-wrap"><table><thead><tr>
+    <th>Rank</th><th>ID</th><th>Request</th><th>Dept</th><th class="num">Total</th><th>Type</th><th class="num">Payback</th><th class="num">Running total</th><th>Within envelope?</th>
+  </tr></thead><tbody>${rows.map((x, i) => `<tr>
+    <td>${i + 1}</td><td>${Hub.esc(x.r.id)}</td><td>${Hub.esc(x.r.description)}</td><td>${Hub.esc(x.r.dept)}</td>
+    <td class="num">${Hub.inr(x.r.total)}</td><td>${Hub.esc(x.r.capexType)}</td>
+    <td class="num">${payback(x.r) ? payback(x.r).toFixed(1) + ' yrs' : '—'}</td>
+    <td class="num">${Hub.inr(x.cum)}</td>
+    <td><span class="tag ${x.within ? 'ok' : 'warn'}">${x.within ? 'Recommended' : 'Hold back'}</span></td>
+  </tr>`).join('')}</tbody></table></div>`;
+
+  el.querySelector('#env').onchange = e => { st.set({ envelope: Math.max(0, Number(e.target.value) || DATA.budgetEnvelopeDefault) }); portfolio(el); };
+
+  const note = st.get().ecNote;
+  if (note) Hub.kit.review(el.querySelector('#ecRv'), { slug: SLUG, item: { id: 'ec-note', title: 'EC capex note — FY 2026-27' }, text: note.text, st, docTitle: 'EC capex note — FY 2026-27', onDecision: () => portfolio(el) });
+
+  el.querySelector('#ecRun').onclick = async () => {
+    const text = await Hub.run({
+      out: '#ecOut', button: '#ecRun', manualMinutes: 60,
+      system: 'You are a finance analyst at VPS Lakeshore Hospital, Kochi, drafting a capex prioritisation note for the Executive Committee.',
+      prompt: JSON.stringify({ envelope: env, recommended: recommended.map(x => ({ id: x.r.id, description: x.r.description, dept: x.r.dept, total: x.r.total, capexType: x.r.capexType })), holdBack: holdBack.map(x => ({ id: x.r.id, description: x.r.description, dept: x.r.dept, total: x.r.total, capexType: x.r.capexType })) }),
+      demo: () => demoEcNote(env, recommended, holdBack),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'EC capex note drafted');
+    st.set({ ecNote: { text } });
+    Hub.kit.review(el.querySelector('#ecRv'), { slug: SLUG, item: { id: 'ec-note', title: 'EC capex note — FY 2026-27' }, text, st, docTitle: 'EC capex note — FY 2026-27', onDecision: () => portfolio(el) });
+  };
+}
+
+function demoEcNote(env, recommended, holdBack) {
+  const recTotal = recommended.reduce((a, x) => a + x.r.total, 0);
+  const holdTotal = holdBack.reduce((a, x) => a + x.r.total, 0);
+  const regCount = recommended.filter(x => x.r.capexType === 'regulatory').length;
+  return `## Capex prioritisation note — FY 2026-27
+**To:** Executive Committee, VPS Lakeshore Hospital, Kochi
+**Budget envelope:** ${Hub.inr(env)}
+
+### Summary
+${recommended.length} requests totalling ${Hub.inr(recTotal)} are recommended for approval within the FY 2026-27 envelope, including ${regCount} regulatory/compliance-driven item${regCount === 1 ? '' : 's'} prioritised ahead of discretionary spend. ${holdBack.length} requests totalling ${Hub.inr(holdTotal)} are held back for a later cycle or pending stronger justification.
+
+### Recommended (within envelope)
+| ID | Request | Dept | ₹ | Type |
+|---|---|---|---|---|
+${recommended.slice(0, 12).map(x => `| ${x.r.id} | ${x.r.description} | ${x.r.dept} | ${Hub.inr(x.r.total)} | ${x.r.capexType} |`).join('\n')}
+${recommended.length > 12 ? `\n*(+${recommended.length - 12} more within envelope — see full portfolio table)*` : ''}
+
+### Held back this cycle
+| ID | Request | Dept | ₹ | Type |
+|---|---|---|---|---|
+${holdBack.slice(0, 12).map(x => `| ${x.r.id} | ${x.r.description} | ${x.r.dept} | ${Hub.inr(x.r.total)} | ${x.r.capexType} |`).join('\n')}
+${holdBack.length > 12 ? `\n*(+${holdBack.length - 12} more held back)*` : ''}
+
+### Basis for prioritisation
+Regulatory and compliance-driven requests (fire safety, IT security, biomedical waste) are placed first regardless of payback, since the risk they cover is non-financial. The remaining requests are ranked by simple payback where a revenue or savings figure has been stated; requests without one rank last within their group and should be asked to provide at least a directional figure before the next cycle.
+
+### Recommendation to the EC
+Approve the recommended list above against the ${Hub.inr(env)} envelope. Requests held back should be returned to their departments with the specific evidence gaps noted in the individual Claude reviews, for resubmission once addressed.
+
+*Prepared by the Finance & Accounts team. Figures are demo/synthetic and for internal discussion only — nothing here has been submitted to the Executive Committee.*`;
+}
+
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const n = DATA.requests.length;
+  const totalAsk = DATA.requests.reduce((a, r) => a + r.total, 0);
+  const recommendedTotal = DATA.requests.filter(r => ['Recommended', 'Approved'].includes(reqStatus(r))).reduce((a, r) => a + r.total, 0);
+  const avgComplete = Math.round(DATA.requests.reduce((a, r) => a + completeness(r), 0) / n);
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Requests this cycle</div><div class="value">${n}</div></div>
+    <div class="kpi"><div class="label">Total asked</div><div class="value">${(totalAsk / 1e7).toFixed(2)} Cr</div></div>
+    <div class="kpi"><div class="label">Recommended so far</div><div class="value">${(recommendedTotal / 1e7).toFixed(2)} Cr</div></div>
+    <div class="kpi"><div class="label">Avg completeness</div><div class="value">${avgComplete}/100</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>
+  <div class="grid cols-2" style="margin-top:16px"><div class="card" id="c3"></div><div class="card" id="c4"></div></div>`;
+
+  const byDept = {};
+  DATA.requests.forEach(r => byDept[r.dept] = (byDept[r.dept] || 0) + r.total);
+  Hub.chart.hbar(el.querySelector('#c1'), { title: '₹ requested by department', data: Object.entries(byDept).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), format: cr });
+
+  const byCat = { new: 0, replacement: 0, renovation: 0, regulatory: 0 };
+  DATA.requests.forEach(r => byCat[r.capexType] = (byCat[r.capexType] || 0) + r.total);
+  Hub.chart.bar(el.querySelector('#c2'), { title: '₹ by capex category', data: Object.entries(byCat).map(([label, value]) => ({ label, value })), format: cr });
+
+  const byStatus = { Submitted: 0, Reviewed: 0, Recommended: 0, Approved: 0, Deferred: 0 };
+  DATA.requests.forEach(r => byStatus[reqStatus(r)] = (byStatus[reqStatus(r)] || 0) + 1);
+  Hub.chart.bar(el.querySelector('#c3'), { title: 'Requests by status', data: Object.entries(byStatus).map(([label, value]) => ({ label, value })), format: v => String(v) });
+
+  Hub.chart.line(el.querySelector('#c4'), { title: 'Requests submitted by month', labels: DATA.months, series: [{ name: 'Requests', values: DATA.submissionsByMonth }], format: v => String(v) });
+}
+
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The requests queue', text: '45 capex requests for FY 2026-27, each with a computed completeness score and simple payback where revenue or savings is stated.' },
+      { sel: '.checklist', title: 'Completeness checklist', text: 'Specs, purpose, impact, quotes and a stated revenue/savings figure — the same checks a Capex Committee member would run by eye.' },
+      { sel: '#run', title: 'Run with Claude', text: 'Claude checks the justification quality, flags missing evidence, raises questions for the HoD, sense-checks the payback, and recommends or defers.' },
+      { sel: '#rv', title: 'Analyst edits, CFO approves', text: 'The finance analyst edits the draft and submits it; the CFO approves or returns it. Switch roles from the toolbar above.' },
+      { sel: '#tabs', title: 'Portfolio tab', text: 'Ranks every active request — regulatory first, then fastest payback — against an editable budget envelope.' },
+      { sel: '#ecRun', title: 'EC capex note', text: 'Claude drafts the note to the Executive Committee summarising recommended vs deferred requests and ₹ totals.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'KPIs and ₹/category/status/month views across the whole FY 2026-27 batch.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'requests', label: 'Requests' },
+    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ requests, portfolio, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

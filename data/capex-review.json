@@ -56,7 +56,7 @@
       "specs": "Renovation of a 1-bed ICU/isolation bay complex: modular OT-grade flooring, HEPA-filtered isolation rooms, upgraded bed-head panels, centralised gas manifold and nurse-station redesign per NABH ICU space norms.",
       "maintenancePerYear": 519500,
       "revenueSavingsPerYear": 3826400,
-      "justification": "NABH pre-survey gap analysis (Aug 2026) flagged ICU bed-spacing and isolation-bay shortfall as a major non-conformance; current occupancy has averaged 96% over the last two quarters with a documented turnaway log of 6 referrals redirected to other facilities in the last 90 days..",
+      "justification": "NABH pre-survey gap analysis (Aug 2026) flagged ICU bed-spacing and isolation-bay shortfall as a major non-conformance; current occupancy has averaged 96% over the last two quarters with a documented turnaway log of 6 referrals redirected to other facilities in the last 90 days.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -86,7 +86,7 @@
       "specs": "Renovation of a 1-bed ICU/isolation bay complex: modular OT-grade flooring, HEPA-filtered isolation rooms, upgraded bed-head panels, centralised gas manifold and nurse-station redesign per NABH ICU space norms.",
       "maintenancePerYear": 386200,
       "revenueSavingsPerYear": 6474700,
-      "justification": "NABH pre-survey gap analysis (Aug 2026) flagged ICU bed-spacing and isolation-bay shortfall as a major non-conformance; current occupancy has averaged 96% over the last two quarters with a documented turnaway log of 14 referrals redirected to other facilities in the last 90 days..",
+      "justification": "NABH pre-survey gap analysis (Aug 2026) flagged ICU bed-spacing and isolation-bay shortfall as a major non-conformance; current occupancy has averaged 96% over the last two quarters with a documented turnaway log of 14 referrals redirected to other facilities in the last 90 days.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -146,7 +146,7 @@
       "specs": "Flat-panel detector replacement for the existing cath lab, 1 unit, compatible with current C-arm gantry; includes new detector, image-processing software licence and 2-year comprehensive warranty.",
       "maintenancePerYear": 1685900,
       "revenueSavingsPerYear": 9519000,
-      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 13% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput..",
+      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 13% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -176,7 +176,7 @@
       "specs": "Flat-panel detector replacement for the existing cath lab, 1 unit, compatible with current C-arm gantry; includes new detector, image-processing software licence and 2-year comprehensive warranty.",
       "maintenancePerYear": 1286900,
       "revenueSavingsPerYear": 7533200,
-      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 2% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput..",
+      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 2% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput.",
       "justificationQuality": "moderate",
       "status": "Recommended"
     },
@@ -206,7 +206,7 @@
       "specs": "Flat-panel detector replacement for the existing cath lab, 1 unit, compatible with current C-arm gantry; includes new detector, image-processing software licence and 2-year comprehensive warranty.",
       "maintenancePerYear": 1087400,
       "revenueSavingsPerYear": null,
-      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 9% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput..",
+      "justification": "Current flat-panel detector is 9 years old; OEM has confirmed AMC and spare-part support end within 6 months, and image-quality logs from the cath lab show a 9% rise in repeat-exposure rate over the last 2 quarters, directly affecting PTCA and EP case throughput.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -596,7 +596,7 @@
       "specs": "1x ALS-configured ambulance (chassis + body fabrication), cardiac monitor/defibrillator mount, oxygen manifold and stretcher-lift system, compliant with current MoHFW ALS ambulance norms.",
       "maintenancePerYear": 347400,
       "revenueSavingsPerYear": null,
-      "justification": "The existing unit(s) average 14 years old with 24 breakdowns logged by the transport desk in the last quarter alone, and the current fit-out does not meet the revised MoHFW ALS ambulance specification issued this year..",
+      "justification": "The existing unit(s) average 14 years old with 24 breakdowns logged by the transport desk in the last quarter alone, and the current fit-out does not meet the revised MoHFW ALS ambulance specification issued this year.",
       "justificationQuality": "moderate",
       "status": "Approved"
     },
@@ -626,7 +626,7 @@
       "specs": "2x ALS-configured ambulance (chassis + body fabrication), cardiac monitor/defibrillator mount, oxygen manifold and stretcher-lift system, compliant with current MoHFW ALS ambulance norms.",
       "maintenancePerYear": 545000,
       "revenueSavingsPerYear": null,
-      "justification": "The existing unit(s) average 9 years old with 33 breakdowns logged by the transport desk in the last quarter alone, and the current fit-out does not meet the revised MoHFW ALS ambulance specification issued this year..",
+      "justification": "The existing unit(s) average 9 years old with 33 breakdowns logged by the transport desk in the last quarter alone, and the current fit-out does not meet the revised MoHFW ALS ambulance specification issued this year.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -716,7 +716,7 @@
       "specs": "1x automated washer-disinfector for the central sterile supply department, validated cycle logging and integration with the existing tracking system.",
       "maintenancePerYear": 464600,
       "revenueSavingsPerYear": null,
-      "justification": "The existing unit has logged 5 unplanned stoppages in the last quarter per the CSSD maintenance register, each forcing manual reprocessing that adds 25-30 minutes per cycle and puts same-day OT instrument turnaround at risk..",
+      "justification": "The existing unit has logged 5 unplanned stoppages in the last quarter per the CSSD maintenance register, each forcing manual reprocessing that adds 25-30 minutes per cycle and puts same-day OT instrument turnaround at risk.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -776,7 +776,7 @@
       "specs": "Renovation of the staff cafeteria seating area and replacement of ageing kitchen equipment (griddles, exhaust hoods, cold storage) for the in-house catering team.",
       "maintenancePerYear": 160700,
       "revenueSavingsPerYear": null,
-      "justification": "The last food-safety audit noted the exhaust hood and two cold-storage units as due for replacement, and staff-survey feedback (n=6 responses) ranked cafeteria condition as a recurring concern..",
+      "justification": "The last food-safety audit noted the exhaust hood and two cold-storage units as due for replacement, and staff-survey feedback (n=6 responses) ranked cafeteria condition as a recurring concern.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -926,7 +926,7 @@
       "specs": "Upgrade of sprinkler coverage, hydrant pressure and the central fire panel across the named block, per the external fire-audit findings.",
       "maintenancePerYear": 318500,
       "revenueSavingsPerYear": null,
-      "justification": "The external fire audit (Q4 FY25-26) flagged 10 non-conformances including non-functional hydrant pressure in the named block; this work is mandatory for NABH re-accreditation and the fire NOC renewal due within 5 months..",
+      "justification": "The external fire audit (Q4 FY25-26) flagged 10 non-conformances including non-functional hydrant pressure in the named block; this work is mandatory for NABH re-accreditation and the fire NOC renewal due within 5 months.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
@@ -1046,7 +1046,7 @@
       "specs": "1x industrial washer-extractor for the central laundry, replacing a unit past its rated duty-cycle life, sized to current linen-processing volume.",
       "maintenancePerYear": 226700,
       "revenueSavingsPerYear": 1346100,
-      "justification": "The current unit has exceeded its rated duty-cycle life by 2 months and logged 19 breakdown call-outs in the last quarter, each forcing linen to be sent to an external laundry at a documented per-kg premium..",
+      "justification": "The current unit has exceeded its rated duty-cycle life by 2 months and logged 19 breakdown call-outs in the last quarter, each forcing linen to be sent to an external laundry at a documented per-kg premium.",
       "justificationQuality": "moderate",
       "status": "Deferred"
     },
@@ -1286,7 +1286,7 @@
       "specs": "Rooftop solar installation (5 kWp) plus one additional diesel generator set to cover peak-load growth and reduce grid/diesel dependence.",
       "maintenancePerYear": 149900,
       "revenueSavingsPerYear": null,
-      "justification": "Facility load studies show peak demand has grown 5% over two years against a backup capacity that is now within 36% of its rated ceiling; diesel consumption records show a clear payback case for the solar addition within the stated years..",
+      "justification": "Facility load studies show peak demand has grown 5% over two years against a backup capacity that is now within 36% of its rated ceiling; diesel consumption records show a clear payback case for the solar addition within the stated years.",
       "justificationQuality": "moderate",
       "status": "Submitted"
     },
