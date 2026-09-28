@@ -384,9 +384,11 @@ function knowledgeBase(el) {
       demo: suggestFaqDemo,
     });
     if (!text) return;
+    const rv = document.getElementById('kbRv'); // tab may have switched while Claude was writing
+    if (!rv) return;
     Hub.kit.log(SLUG, 'Claude suggested FAQ entries from unresolved conversations');
     st.set({ kbReview: { status: 'draft', text } });
-    reviewKb(el.querySelector('#kbRv'), st.get().kbReview);
+    reviewKb(rv, st.get().kbReview);
   };
 }
 function reviewKb(el, rec) {
