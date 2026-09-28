@@ -28,3 +28,5 @@ jobs:
         run: node --test tests/worker.test.mjs
       - name: Run smoke test
         run: node tests/smoke.mjs
+      - name: Flagship stress test
+        run: node tests/flagships.mjs
