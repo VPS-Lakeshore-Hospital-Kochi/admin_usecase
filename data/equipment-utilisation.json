@@ -1,0 +1,3457 @@
+{
+ "generatedAt": "2026-09-28",
+ "hospital": "VPS Lakeshore Hospital, Kochi",
+ "months": [
+  "2025-10",
+  "2025-11",
+  "2025-12",
+  "2026-01",
+  "2026-02",
+  "2026-03",
+  "2026-04",
+  "2026-05",
+  "2026-06",
+  "2026-07",
+  "2026-08",
+  "2026-09"
+ ],
+ "monthLabels": [
+  "Oct 25",
+  "Nov 25",
+  "Dec 25",
+  "Jan 26",
+  "Feb 26",
+  "Mar 26",
+  "Apr 26",
+  "May 26",
+  "Jun 26",
+  "Jul 26",
+  "Aug 26",
+  "Sept 26"
+ ],
+ "assets": [
+  {
+   "id": "EQ-01",
+   "name": "Surgical robot",
+   "category": "Surgery",
+   "oem": "Solera Surgical Systems",
+   "model": "Helios X1",
+   "installYear": 2021,
+   "capitalCostCr": 21.5,
+   "amcAnnual": 20430000,
+   "amcRenewalDate": "2026-11-15",
+   "availableHoursMonth": 250,
+   "slaUptimePct": 92,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 74.1,
+     "cases": 22,
+     "revenueLakh": 41.9,
+     "downtimeHours": 4.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.2,
+      "pm": 1.5,
+      "awaitingPart": 1.1
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 83.3,
+     "cases": 27,
+     "revenueLakh": 47.1,
+     "downtimeHours": 3.2,
+     "downtimeBreakdown": {
+      "breakdown": 1.6,
+      "pm": 1.2,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 79.1,
+     "cases": 28,
+     "revenueLakh": 40.5,
+     "downtimeHours": 8.4,
+     "downtimeBreakdown": {
+      "breakdown": 4.2,
+      "pm": 2.1,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 76.4,
+     "cases": 24,
+     "revenueLakh": 44.6,
+     "downtimeHours": 8.6,
+     "downtimeBreakdown": {
+      "breakdown": 4.9,
+      "pm": 2.9,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 79.5,
+     "cases": 26,
+     "revenueLakh": 46.7,
+     "downtimeHours": 4.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 1.5,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 79.8,
+     "cases": 27,
+     "revenueLakh": 45.1,
+     "downtimeHours": 4.4,
+     "downtimeBreakdown": {
+      "breakdown": 2,
+      "pm": 1.2,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 81.2,
+     "cases": 25,
+     "revenueLakh": 43,
+     "downtimeHours": 5.7,
+     "downtimeBreakdown": {
+      "breakdown": 2.5,
+      "pm": 1.9,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 87.5,
+     "cases": 27,
+     "revenueLakh": 47.8,
+     "downtimeHours": 6.1,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 83.5,
+     "cases": 29,
+     "revenueLakh": 45.6,
+     "downtimeHours": 8.1,
+     "downtimeBreakdown": {
+      "breakdown": 4.2,
+      "pm": 3.1,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 80.2,
+     "cases": 27,
+     "revenueLakh": 46.6,
+     "downtimeHours": 6.7,
+     "downtimeBreakdown": {
+      "breakdown": 3.9,
+      "pm": 2.4,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 91,
+     "cases": 31,
+     "revenueLakh": 53,
+     "downtimeHours": 5.4,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 1.9,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 95.1,
+     "cases": 27,
+     "revenueLakh": 51.9,
+     "downtimeHours": 2.5,
+     "downtimeBreakdown": {
+      "breakdown": 1.1,
+      "pm": 0.8,
+      "awaitingPart": 0.6
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-02",
+   "name": "Cath lab 1",
+   "category": "Cardiology",
+   "oem": "Kestrel Diagnostics",
+   "model": "CardioFlow 512",
+   "installYear": 2019,
+   "capitalCostCr": 7.8,
+   "amcAnnual": 6630000,
+   "amcRenewalDate": "2026-10-05",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 189.6,
+     "cases": 136,
+     "revenueLakh": 65,
+     "downtimeHours": 11.4,
+     "downtimeBreakdown": {
+      "breakdown": 6.6,
+      "pm": 3.6,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 194.7,
+     "cases": 153,
+     "revenueLakh": 66.3,
+     "downtimeHours": 13.5,
+     "downtimeBreakdown": {
+      "breakdown": 6.9,
+      "pm": 4,
+      "awaitingPart": 2.6
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 189.7,
+     "cases": 132,
+     "revenueLakh": 63.4,
+     "downtimeHours": 7.3,
+     "downtimeBreakdown": {
+      "breakdown": 3.8,
+      "pm": 2.6,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 194.9,
+     "cases": 153,
+     "revenueLakh": 60.4,
+     "downtimeHours": 9.6,
+     "downtimeBreakdown": {
+      "breakdown": 4.1,
+      "pm": 3.5,
+      "awaitingPart": 2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 201.1,
+     "cases": 166,
+     "revenueLakh": 67.8,
+     "downtimeHours": 11.1,
+     "downtimeBreakdown": {
+      "breakdown": 5.1,
+      "pm": 3.8,
+      "awaitingPart": 2.2
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 198.4,
+     "cases": 157,
+     "revenueLakh": 66.3,
+     "downtimeHours": 9.7,
+     "downtimeBreakdown": {
+      "breakdown": 4.1,
+      "pm": 2.6,
+      "awaitingPart": 3
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 203.9,
+     "cases": 154,
+     "revenueLakh": 67.9,
+     "downtimeHours": 11,
+     "downtimeBreakdown": {
+      "breakdown": 6.5,
+      "pm": 3.2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 208.6,
+     "cases": 145,
+     "revenueLakh": 64.2,
+     "downtimeHours": 14.5,
+     "downtimeBreakdown": {
+      "breakdown": 6.9,
+      "pm": 5.5,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 201.7,
+     "cases": 145,
+     "revenueLakh": 69.6,
+     "downtimeHours": 8.9,
+     "downtimeBreakdown": {
+      "breakdown": 4.7,
+      "pm": 3.5,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 198.3,
+     "cases": 135,
+     "revenueLakh": 69.9,
+     "downtimeHours": 14.5,
+     "downtimeBreakdown": {
+      "breakdown": 6.5,
+      "pm": 5,
+      "awaitingPart": 3
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 193.8,
+     "cases": 146,
+     "revenueLakh": 68.6,
+     "downtimeHours": 12.7,
+     "downtimeBreakdown": {
+      "breakdown": 7.4,
+      "pm": 5.1,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 192,
+     "cases": 141,
+     "revenueLakh": 61.9,
+     "downtimeHours": 13.7,
+     "downtimeBreakdown": {
+      "breakdown": 7.3,
+      "pm": 3.5,
+      "awaitingPart": 2.9
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-03",
+   "name": "Cath lab 2",
+   "category": "Cardiology",
+   "oem": "Kestrel Diagnostics",
+   "model": "CardioFlow 512",
+   "installYear": 2022,
+   "capitalCostCr": 8.1,
+   "amcAnnual": 6890000,
+   "amcRenewalDate": "2027-01-20",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 127.3,
+     "cases": 88,
+     "revenueLakh": 36,
+     "downtimeHours": 2.7,
+     "downtimeBreakdown": {
+      "breakdown": 1.4,
+      "pm": 1,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 123.8,
+     "cases": 86,
+     "revenueLakh": 37.3,
+     "downtimeHours": 4.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 1.9,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 133.5,
+     "cases": 96,
+     "revenueLakh": 41,
+     "downtimeHours": 6.8,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.2,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 128.8,
+     "cases": 88,
+     "revenueLakh": 40.8,
+     "downtimeHours": 7.3,
+     "downtimeBreakdown": {
+      "breakdown": 3.8,
+      "pm": 2.2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 125.5,
+     "cases": 82,
+     "revenueLakh": 36.7,
+     "downtimeHours": 3.1,
+     "downtimeBreakdown": {
+      "breakdown": 1.5,
+      "pm": 1.1,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 127.7,
+     "cases": 97,
+     "revenueLakh": 40.1,
+     "downtimeHours": 8.1,
+     "downtimeBreakdown": {
+      "breakdown": 3.4,
+      "pm": 2.9,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 143.2,
+     "cases": 107,
+     "revenueLakh": 45.8,
+     "downtimeHours": 3.1,
+     "downtimeBreakdown": {
+      "breakdown": 1.7,
+      "pm": 1.3,
+      "awaitingPart": 0.1
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 142.2,
+     "cases": 91,
+     "revenueLakh": 43.1,
+     "downtimeHours": 6.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.1,
+      "awaitingPart": 1.7
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 143.4,
+     "cases": 100,
+     "revenueLakh": 42.5,
+     "downtimeHours": 5.8,
+     "downtimeBreakdown": {
+      "breakdown": 3.4,
+      "pm": 1.7,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 140.6,
+     "cases": 93,
+     "revenueLakh": 39.9,
+     "downtimeHours": 7.8,
+     "downtimeBreakdown": {
+      "breakdown": 3.4,
+      "pm": 2,
+      "awaitingPart": 2.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 129.3,
+     "cases": 92,
+     "revenueLakh": 41.9,
+     "downtimeHours": 4,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 1.1,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 146.8,
+     "cases": 95,
+     "revenueLakh": 46.9,
+     "downtimeHours": 7.1,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.8,
+      "awaitingPart": 1.2
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-04",
+   "name": "MRI 3T",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "Aurora 3T",
+   "installYear": 2020,
+   "capitalCostCr": 14.2,
+   "amcAnnual": 12780000,
+   "amcRenewalDate": "2026-12-01",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 229.1,
+     "cases": 225,
+     "revenueLakh": 42.9,
+     "downtimeHours": 5.6,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 2.2,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 239.1,
+     "cases": 261,
+     "revenueLakh": 47.8,
+     "downtimeHours": 12.1,
+     "downtimeBreakdown": {
+      "breakdown": 5.1,
+      "pm": 4.3,
+      "awaitingPart": 2.7
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 241.6,
+     "cases": 252,
+     "revenueLakh": 42.4,
+     "downtimeHours": 7.1,
+     "downtimeBreakdown": {
+      "breakdown": 4.2,
+      "pm": 2,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 246.2,
+     "cases": 278,
+     "revenueLakh": 44.1,
+     "downtimeHours": 5.6,
+     "downtimeBreakdown": {
+      "breakdown": 2.9,
+      "pm": 1.5,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 246.7,
+     "cases": 279,
+     "revenueLakh": 49.8,
+     "downtimeHours": 10.6,
+     "downtimeBreakdown": {
+      "breakdown": 4.8,
+      "pm": 3.8,
+      "awaitingPart": 2
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 237.2,
+     "cases": 227,
+     "revenueLakh": 41.9,
+     "downtimeHours": 7.7,
+     "downtimeBreakdown": {
+      "breakdown": 3.9,
+      "pm": 2.3,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 237.1,
+     "cases": 268,
+     "revenueLakh": 43.6,
+     "downtimeHours": 7.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.3,
+      "pm": 2.3,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 234.2,
+     "cases": 245,
+     "revenueLakh": 42.8,
+     "downtimeHours": 8.3,
+     "downtimeBreakdown": {
+      "breakdown": 4.2,
+      "pm": 2.9,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 233.6,
+     "cases": 251,
+     "revenueLakh": 42.9,
+     "downtimeHours": 11.9,
+     "downtimeBreakdown": {
+      "breakdown": 7.1,
+      "pm": 3.9,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 249.1,
+     "cases": 267,
+     "revenueLakh": 46.2,
+     "downtimeHours": 7.4,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.8,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 248.1,
+     "cases": 267,
+     "revenueLakh": 43.9,
+     "downtimeHours": 12.6,
+     "downtimeBreakdown": {
+      "breakdown": 6.4,
+      "pm": 4.1,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 235.1,
+     "cases": 261,
+     "revenueLakh": 46.8,
+     "downtimeHours": 7.6,
+     "downtimeBreakdown": {
+      "breakdown": 4,
+      "pm": 2.2,
+      "awaitingPart": 1.4
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-05",
+   "name": "MRI 1.5T",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "Aurora 1.5T",
+   "installYear": 2017,
+   "capitalCostCr": 8.4,
+   "amcAnnual": 6720000,
+   "amcRenewalDate": "2027-04-10",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 93,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 173.1,
+     "cases": 194,
+     "revenueLakh": 23.3,
+     "downtimeHours": 15.1,
+     "downtimeBreakdown": {
+      "breakdown": 6,
+      "pm": 4.9,
+      "awaitingPart": 4.2
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 175.8,
+     "cases": 204,
+     "revenueLakh": 25.2,
+     "downtimeHours": 16.1,
+     "downtimeBreakdown": {
+      "breakdown": 8.6,
+      "pm": 6.4,
+      "awaitingPart": 1.1
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 167.8,
+     "cases": 174,
+     "revenueLakh": 22.7,
+     "downtimeHours": 12.8,
+     "downtimeBreakdown": {
+      "breakdown": 7.6,
+      "pm": 3.4,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 181.9,
+     "cases": 218,
+     "revenueLakh": 25.2,
+     "downtimeHours": 14.4,
+     "downtimeBreakdown": {
+      "breakdown": 5.9,
+      "pm": 3.8,
+      "awaitingPart": 4.7
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 171,
+     "cases": 185,
+     "revenueLakh": 22.5,
+     "downtimeHours": 13.3,
+     "downtimeBreakdown": {
+      "breakdown": 7.2,
+      "pm": 3.6,
+      "awaitingPart": 2.5
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 170.5,
+     "cases": 187,
+     "revenueLakh": 22.9,
+     "downtimeHours": 15.1,
+     "downtimeBreakdown": {
+      "breakdown": 9,
+      "pm": 4.4,
+      "awaitingPart": 1.7
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 171.7,
+     "cases": 182,
+     "revenueLakh": 22.8,
+     "downtimeHours": 16.8,
+     "downtimeBreakdown": {
+      "breakdown": 8.7,
+      "pm": 5.8,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 169.1,
+     "cases": 204,
+     "revenueLakh": 21.9,
+     "downtimeHours": 5.5,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 1.4,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 175.7,
+     "cases": 205,
+     "revenueLakh": 23.8,
+     "downtimeHours": 10.5,
+     "downtimeBreakdown": {
+      "breakdown": 5.4,
+      "pm": 4.1,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 169.6,
+     "cases": 181,
+     "revenueLakh": 24.5,
+     "downtimeHours": 8.4,
+     "downtimeBreakdown": {
+      "breakdown": 3.8,
+      "pm": 3.2,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 185.7,
+     "cases": 221,
+     "revenueLakh": 25.4,
+     "downtimeHours": 17.3,
+     "downtimeBreakdown": {
+      "breakdown": 7.4,
+      "pm": 6.3,
+      "awaitingPart": 3.6
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 182.9,
+     "cases": 221,
+     "revenueLakh": 23.7,
+     "downtimeHours": 14.9,
+     "downtimeBreakdown": {
+      "breakdown": 6.6,
+      "pm": 5.6,
+      "awaitingPart": 2.7
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-06",
+   "name": "CT scanner 1",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "Vantage CT128",
+   "installYear": 2021,
+   "capitalCostCr": 6.6,
+   "amcAnnual": 5280000,
+   "amcRenewalDate": "2026-10-22",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 237.1,
+     "cases": 383,
+     "revenueLakh": 28.5,
+     "downtimeHours": 6.6,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 1.8,
+      "awaitingPart": 2
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 255.6,
+     "cases": 407,
+     "revenueLakh": 29.9,
+     "downtimeHours": 5.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.5,
+      "pm": 2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 249.5,
+     "cases": 422,
+     "revenueLakh": 30.2,
+     "downtimeHours": 5.6,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 2,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 253.2,
+     "cases": 386,
+     "revenueLakh": 32.2,
+     "downtimeHours": 5.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.5,
+      "pm": 2.2,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 250.3,
+     "cases": 402,
+     "revenueLakh": 33.1,
+     "downtimeHours": 4.2,
+     "downtimeBreakdown": {
+      "breakdown": 2,
+      "pm": 1.5,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 263.6,
+     "cases": 427,
+     "revenueLakh": 30.6,
+     "downtimeHours": 9.5,
+     "downtimeBreakdown": {
+      "breakdown": 4.1,
+      "pm": 3.1,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 262.2,
+     "cases": 419,
+     "revenueLakh": 31.7,
+     "downtimeHours": 4.4,
+     "downtimeBreakdown": {
+      "breakdown": 1.9,
+      "pm": 1.5,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 247.7,
+     "cases": 434,
+     "revenueLakh": 29.9,
+     "downtimeHours": 4.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.7,
+      "pm": 1.2,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 261.1,
+     "cases": 411,
+     "revenueLakh": 31.1,
+     "downtimeHours": 6.7,
+     "downtimeBreakdown": {
+      "breakdown": 3.8,
+      "pm": 2.4,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 263.9,
+     "cases": 432,
+     "revenueLakh": 33.1,
+     "downtimeHours": 6.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.9,
+      "pm": 1.9,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 250.3,
+     "cases": 420,
+     "revenueLakh": 29.4,
+     "downtimeHours": 4.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.7,
+      "pm": 1.4,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 264.3,
+     "cases": 410,
+     "revenueLakh": 30.9,
+     "downtimeHours": 9.2,
+     "downtimeBreakdown": {
+      "breakdown": 4.9,
+      "pm": 3,
+      "awaitingPart": 1.3
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-07",
+   "name": "CT scanner 2",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "Vantage CT64",
+   "installYear": 2016,
+   "capitalCostCr": 4.9,
+   "amcAnnual": 4170000,
+   "amcRenewalDate": "2027-02-14",
+   "availableHoursMonth": 300,
+   "slaUptimePct": 92,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 145.4,
+     "cases": 210,
+     "revenueLakh": 16.6,
+     "downtimeHours": 9.5,
+     "downtimeBreakdown": {
+      "breakdown": 3.9,
+      "pm": 3.4,
+      "awaitingPart": 2.2
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 163.8,
+     "cases": 266,
+     "revenueLakh": 17.6,
+     "downtimeHours": 16.3,
+     "downtimeBreakdown": {
+      "breakdown": 8.5,
+      "pm": 5.9,
+      "awaitingPart": 1.9
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 159.9,
+     "cases": 248,
+     "revenueLakh": 17.8,
+     "downtimeHours": 16,
+     "downtimeBreakdown": {
+      "breakdown": 6.4,
+      "pm": 5.5,
+      "awaitingPart": 4.1
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 163.3,
+     "cases": 251,
+     "revenueLakh": 17.2,
+     "downtimeHours": 8.6,
+     "downtimeBreakdown": {
+      "breakdown": 5,
+      "pm": 2.4,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 157.4,
+     "cases": 260,
+     "revenueLakh": 17.3,
+     "downtimeHours": 16.8,
+     "downtimeBreakdown": {
+      "breakdown": 8.9,
+      "pm": 6.1,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 154.8,
+     "cases": 214,
+     "revenueLakh": 17.7,
+     "downtimeHours": 20.5,
+     "downtimeBreakdown": {
+      "breakdown": 9.2,
+      "pm": 7.8,
+      "awaitingPart": 3.5
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 163.1,
+     "cases": 247,
+     "revenueLakh": 16.6,
+     "downtimeHours": 18.6,
+     "downtimeBreakdown": {
+      "breakdown": 8.4,
+      "pm": 5.1,
+      "awaitingPart": 5.1
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 157.6,
+     "cases": 235,
+     "revenueLakh": 16.2,
+     "downtimeHours": 8,
+     "downtimeBreakdown": {
+      "breakdown": 4.6,
+      "pm": 2.1,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 160.4,
+     "cases": 254,
+     "revenueLakh": 18.6,
+     "downtimeHours": 20.7,
+     "downtimeBreakdown": {
+      "breakdown": 9.7,
+      "pm": 7.8,
+      "awaitingPart": 3.2
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 159.2,
+     "cases": 253,
+     "revenueLakh": 17.3,
+     "downtimeHours": 12.4,
+     "downtimeBreakdown": {
+      "breakdown": 5.3,
+      "pm": 3.2,
+      "awaitingPart": 3.9
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 165.4,
+     "cases": 272,
+     "revenueLakh": 18,
+     "downtimeHours": 15.5,
+     "downtimeBreakdown": {
+      "breakdown": 7.4,
+      "pm": 4.7,
+      "awaitingPart": 3.4
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 168.3,
+     "cases": 251,
+     "revenueLakh": 17.3,
+     "downtimeHours": 7.1,
+     "downtimeBreakdown": {
+      "breakdown": 2.9,
+      "pm": 2.2,
+      "awaitingPart": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-08",
+   "name": "PET-CT",
+   "category": "Imaging",
+   "oem": "Northgate Molecular",
+   "model": "IsoTrace 700",
+   "installYear": 2022,
+   "capitalCostCr": 16.8,
+   "amcAnnual": 16800000,
+   "amcRenewalDate": "2027-01-05",
+   "availableHoursMonth": 190,
+   "slaUptimePct": 90,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 68.7,
+     "cases": 32,
+     "revenueLakh": 30.4,
+     "downtimeHours": 4.1,
+     "downtimeBreakdown": {
+      "breakdown": 1.7,
+      "pm": 1.3,
+      "awaitingPart": 1.1
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 75.6,
+     "cases": 39,
+     "revenueLakh": 33.5,
+     "downtimeHours": 2.4,
+     "downtimeBreakdown": {
+      "breakdown": 1.3,
+      "pm": 0.8,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 70.1,
+     "cases": 33,
+     "revenueLakh": 30.8,
+     "downtimeHours": 4.9,
+     "downtimeBreakdown": {
+      "breakdown": 2,
+      "pm": 1.9,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 69,
+     "cases": 34,
+     "revenueLakh": 29.9,
+     "downtimeHours": 3,
+     "downtimeBreakdown": {
+      "breakdown": 1.7,
+      "pm": 0.9,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 79.5,
+     "cases": 39,
+     "revenueLakh": 34,
+     "downtimeHours": 2.1,
+     "downtimeBreakdown": {
+      "breakdown": 0.9,
+      "pm": 0.8,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 71.9,
+     "cases": 34,
+     "revenueLakh": 28.8,
+     "downtimeHours": 4.6,
+     "downtimeBreakdown": {
+      "breakdown": 1.9,
+      "pm": 1.5,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 75.6,
+     "cases": 35,
+     "revenueLakh": 31.8,
+     "downtimeHours": 3.5,
+     "downtimeBreakdown": {
+      "breakdown": 1.7,
+      "pm": 1.3,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 80.7,
+     "cases": 40,
+     "revenueLakh": 33.1,
+     "downtimeHours": 2.5,
+     "downtimeBreakdown": {
+      "breakdown": 1.5,
+      "pm": 0.7,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 77.3,
+     "cases": 41,
+     "revenueLakh": 30.2,
+     "downtimeHours": 4.3,
+     "downtimeBreakdown": {
+      "breakdown": 2.2,
+      "pm": 1.5,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 83.4,
+     "cases": 44,
+     "revenueLakh": 32.4,
+     "downtimeHours": 2.7,
+     "downtimeBreakdown": {
+      "breakdown": 1.2,
+      "pm": 0.8,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 78,
+     "cases": 38,
+     "revenueLakh": 31.7,
+     "downtimeHours": 1.9,
+     "downtimeBreakdown": {
+      "breakdown": 1.1,
+      "pm": 0.5,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 79.3,
+     "cases": 42,
+     "revenueLakh": 35.9,
+     "downtimeHours": 1.7,
+     "downtimeBreakdown": {
+      "breakdown": 0.7,
+      "pm": 0.5,
+      "awaitingPart": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-09",
+   "name": "Linear accelerator",
+   "category": "Oncology",
+   "oem": "Zenith Radiotherapy",
+   "model": "ApexBeam 6",
+   "installYear": 2020,
+   "capitalCostCr": 19.5,
+   "amcAnnual": 18530000,
+   "amcRenewalDate": "2026-11-30",
+   "availableHoursMonth": 280,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 173,
+     "cases": 191,
+     "revenueLakh": 38.8,
+     "downtimeHours": 5.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.9,
+      "pm": 1.5,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 179.5,
+     "cases": 192,
+     "revenueLakh": 38.2,
+     "downtimeHours": 11.1,
+     "downtimeBreakdown": {
+      "breakdown": 5.3,
+      "pm": 3.3,
+      "awaitingPart": 2.5
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 175.9,
+     "cases": 176,
+     "revenueLakh": 35.3,
+     "downtimeHours": 8,
+     "downtimeBreakdown": {
+      "breakdown": 3.6,
+      "pm": 2.5,
+      "awaitingPart": 1.9
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 183.4,
+     "cases": 207,
+     "revenueLakh": 39.8,
+     "downtimeHours": 6.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.6,
+      "pm": 2.5,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 180.6,
+     "cases": 183,
+     "revenueLakh": 37.4,
+     "downtimeHours": 7.2,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 172.9,
+     "cases": 207,
+     "revenueLakh": 37.6,
+     "downtimeHours": 11.4,
+     "downtimeBreakdown": {
+      "breakdown": 5.6,
+      "pm": 2.9,
+      "awaitingPart": 2.9
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 179.8,
+     "cases": 186,
+     "revenueLakh": 38.4,
+     "downtimeHours": 4.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.5,
+      "pm": 1.3,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 174.7,
+     "cases": 182,
+     "revenueLakh": 38.9,
+     "downtimeHours": 7.6,
+     "downtimeBreakdown": {
+      "breakdown": 4.1,
+      "pm": 2.2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 169.7,
+     "cases": 187,
+     "revenueLakh": 38.3,
+     "downtimeHours": 10,
+     "downtimeBreakdown": {
+      "breakdown": 4.7,
+      "pm": 3.7,
+      "awaitingPart": 1.6
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 182.9,
+     "cases": 214,
+     "revenueLakh": 39,
+     "downtimeHours": 6.1,
+     "downtimeBreakdown": {
+      "breakdown": 3.5,
+      "pm": 2.2,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 185.7,
+     "cases": 193,
+     "revenueLakh": 36.8,
+     "downtimeHours": 6,
+     "downtimeBreakdown": {
+      "breakdown": 3.6,
+      "pm": 2.2,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 177.3,
+     "cases": 180,
+     "revenueLakh": 39.2,
+     "downtimeHours": 4.9,
+     "downtimeBreakdown": {
+      "breakdown": 2,
+      "pm": 1.3,
+      "awaitingPart": 1.6
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-10",
+   "name": "Lithotripter",
+   "category": "Urology",
+   "oem": "Solera Surgical Systems",
+   "model": "ClearWave L2",
+   "installYear": 2018,
+   "capitalCostCr": 3.1,
+   "amcAnnual": 2480000,
+   "amcRenewalDate": "2027-03-18",
+   "availableHoursMonth": 180,
+   "slaUptimePct": 90,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 21,
+     "cases": 10,
+     "revenueLakh": 3.5,
+     "downtimeHours": 9.2,
+     "downtimeBreakdown": {
+      "breakdown": 3.9,
+      "pm": 3.1,
+      "awaitingPart": 2.2
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 24.2,
+     "cases": 11,
+     "revenueLakh": 3.8,
+     "downtimeHours": 4.1,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 1.2,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 26,
+     "cases": 13,
+     "revenueLakh": 3.8,
+     "downtimeHours": 4.4,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 1.4,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 26.4,
+     "cases": 13,
+     "revenueLakh": 4.5,
+     "downtimeHours": 3.8,
+     "downtimeBreakdown": {
+      "breakdown": 2.2,
+      "pm": 1.2,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 25,
+     "cases": 13,
+     "revenueLakh": 3.9,
+     "downtimeHours": 7.9,
+     "downtimeBreakdown": {
+      "breakdown": 4.5,
+      "pm": 2.8,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 26.4,
+     "cases": 12,
+     "revenueLakh": 4.4,
+     "downtimeHours": 6.2,
+     "downtimeBreakdown": {
+      "breakdown": 2.7,
+      "pm": 2.2,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 30,
+     "cases": 14,
+     "revenueLakh": 5,
+     "downtimeHours": 3.3,
+     "downtimeBreakdown": {
+      "breakdown": 1.6,
+      "pm": 1.1,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 28.7,
+     "cases": 14,
+     "revenueLakh": 4.8,
+     "downtimeHours": 7.7,
+     "downtimeBreakdown": {
+      "breakdown": 4.1,
+      "pm": 2.5,
+      "awaitingPart": 1.1
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 29.1,
+     "cases": 13,
+     "revenueLakh": 4.5,
+     "downtimeHours": 5.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 2.2,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 27.6,
+     "cases": 13,
+     "revenueLakh": 4.4,
+     "downtimeHours": 5.7,
+     "downtimeBreakdown": {
+      "breakdown": 2.4,
+      "pm": 1.9,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 30.6,
+     "cases": 15,
+     "revenueLakh": 4.8,
+     "downtimeHours": 6.7,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.4,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 25.1,
+     "cases": 11,
+     "revenueLakh": 3.7,
+     "downtimeHours": 3.7,
+     "downtimeBreakdown": {
+      "breakdown": 1.9,
+      "pm": 1.4,
+      "awaitingPart": 0.4
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-11",
+   "name": "Dialysis stations (30, pooled)",
+   "category": "Nephrology",
+   "oem": "Riverline Renal Care",
+   "model": "FlowCare D30",
+   "installYear": 2019,
+   "capitalCostCr": 4.4,
+   "amcAnnual": 3080000,
+   "amcRenewalDate": "2026-12-15",
+   "availableHoursMonth": 7200,
+   "slaUptimePct": 96,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 5006.5,
+     "cases": 1730,
+     "revenueLakh": 128.7,
+     "downtimeHours": 184.2,
+     "downtimeBreakdown": {
+      "breakdown": 75.1,
+      "pm": 67.4,
+      "awaitingPart": 41.7
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 5161.7,
+     "cases": 1841,
+     "revenueLakh": 124.6,
+     "downtimeHours": 133.9,
+     "downtimeBreakdown": {
+      "breakdown": 66.3,
+      "pm": 52.9,
+      "awaitingPart": 14.7
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 5439.7,
+     "cases": 1994,
+     "revenueLakh": 136.4,
+     "downtimeHours": 211.7,
+     "downtimeBreakdown": {
+      "breakdown": 117.6,
+      "pm": 73.9,
+      "awaitingPart": 20.2
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 5489.9,
+     "cases": 1893,
+     "revenueLakh": 134.4,
+     "downtimeHours": 141.5,
+     "downtimeBreakdown": {
+      "breakdown": 66.8,
+      "pm": 40.8,
+      "awaitingPart": 33.9
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 5148.2,
+     "cases": 1918,
+     "revenueLakh": 115.2,
+     "downtimeHours": 104.7,
+     "downtimeBreakdown": {
+      "breakdown": 51.8,
+      "pm": 27.7,
+      "awaitingPart": 25.2
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 5537.9,
+     "cases": 1915,
+     "revenueLakh": 131.4,
+     "downtimeHours": 247.6,
+     "downtimeBreakdown": {
+      "breakdown": 118.6,
+      "pm": 72.9,
+      "awaitingPart": 56.1
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 5380.3,
+     "cases": 1745,
+     "revenueLakh": 128.1,
+     "downtimeHours": 132.7,
+     "downtimeBreakdown": {
+      "breakdown": 73,
+      "pm": 42.8,
+      "awaitingPart": 16.9
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 5188.7,
+     "cases": 1750,
+     "revenueLakh": 124.5,
+     "downtimeHours": 134.5,
+     "downtimeBreakdown": {
+      "breakdown": 68.7,
+      "pm": 40,
+      "awaitingPart": 25.8
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 5287.9,
+     "cases": 1864,
+     "revenueLakh": 129.7,
+     "downtimeHours": 308.1,
+     "downtimeBreakdown": {
+      "breakdown": 179.5,
+      "pm": 85.4,
+      "awaitingPart": 43.2
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 5200.2,
+     "cases": 1761,
+     "revenueLakh": 116.1,
+     "downtimeHours": 325.6,
+     "downtimeBreakdown": {
+      "breakdown": 153.9,
+      "pm": 106.3,
+      "awaitingPart": 65.4
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 5210.8,
+     "cases": 1938,
+     "revenueLakh": 129.2,
+     "downtimeHours": 292.2,
+     "downtimeBreakdown": {
+      "breakdown": 124.6,
+      "pm": 97.8,
+      "awaitingPart": 69.8
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 5180.6,
+     "cases": 1643,
+     "revenueLakh": 128.8,
+     "downtimeHours": 125,
+     "downtimeBreakdown": {
+      "breakdown": 72.5,
+      "pm": 33.1,
+      "awaitingPart": 19.4
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-12",
+   "name": "ECMO (fleet of 4)",
+   "category": "Critical care",
+   "oem": "Northgate Molecular",
+   "model": "LifeFlow ECMO-4",
+   "installYear": 2021,
+   "capitalCostCr": 2.6,
+   "amcAnnual": 2860000,
+   "amcRenewalDate": "2027-05-01",
+   "availableHoursMonth": 2880,
+   "slaUptimePct": 98,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 171.3,
+     "cases": 3,
+     "revenueLakh": 14.7,
+     "downtimeHours": 54.6,
+     "downtimeBreakdown": {
+      "breakdown": 25.8,
+      "pm": 15,
+      "awaitingPart": 13.8
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 298.1,
+     "cases": 6,
+     "revenueLakh": 25.7,
+     "downtimeHours": 74.2,
+     "downtimeBreakdown": {
+      "breakdown": 37.2,
+      "pm": 19,
+      "awaitingPart": 18
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 347,
+     "cases": 7,
+     "revenueLakh": 30.9,
+     "downtimeHours": 45.3,
+     "downtimeBreakdown": {
+      "breakdown": 25.3,
+      "pm": 15.6,
+      "awaitingPart": 4.4
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 265.4,
+     "cases": 5,
+     "revenueLakh": 24.7,
+     "downtimeHours": 48.5,
+     "downtimeBreakdown": {
+      "breakdown": 23.6,
+      "pm": 12.8,
+      "awaitingPart": 12.1
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 276.4,
+     "cases": 6,
+     "revenueLakh": 24.1,
+     "downtimeHours": 82.2,
+     "downtimeBreakdown": {
+      "breakdown": 48.1,
+      "pm": 23.5,
+      "awaitingPart": 10.6
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 345.7,
+     "cases": 7,
+     "revenueLakh": 29.3,
+     "downtimeHours": 87.6,
+     "downtimeBreakdown": {
+      "breakdown": 41.1,
+      "pm": 26.4,
+      "awaitingPart": 20.1
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 356.2,
+     "cases": 7,
+     "revenueLakh": 29.7,
+     "downtimeHours": 37.2,
+     "downtimeBreakdown": {
+      "breakdown": 15.3,
+      "pm": 9.7,
+      "awaitingPart": 12.2
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 232.3,
+     "cases": 5,
+     "revenueLakh": 19.4,
+     "downtimeHours": 80.2,
+     "downtimeBreakdown": {
+      "breakdown": 38.4,
+      "pm": 27.8,
+      "awaitingPart": 14
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 356.6,
+     "cases": 8,
+     "revenueLakh": 30.3,
+     "downtimeHours": 31.4,
+     "downtimeBreakdown": {
+      "breakdown": 17.8,
+      "pm": 9.6,
+      "awaitingPart": 4
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 319.3,
+     "cases": 6,
+     "revenueLakh": 28.6,
+     "downtimeHours": 45.6,
+     "downtimeBreakdown": {
+      "breakdown": 21.1,
+      "pm": 13.3,
+      "awaitingPart": 11.2
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 242.7,
+     "cases": 5,
+     "revenueLakh": 23.1,
+     "downtimeHours": 94.5,
+     "downtimeBreakdown": {
+      "breakdown": 52.7,
+      "pm": 33.8,
+      "awaitingPart": 8
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 279.6,
+     "cases": 6,
+     "revenueLakh": 24.8,
+     "downtimeHours": 47.5,
+     "downtimeBreakdown": {
+      "breakdown": 26.9,
+      "pm": 14.4,
+      "awaitingPart": 6.2
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-13",
+   "name": "OT integration suite",
+   "category": "Surgery",
+   "oem": "Vantage OR Systems",
+   "model": "IntegraSuite Pro",
+   "installYear": 2020,
+   "capitalCostCr": 3.4,
+   "amcAnnual": 3060000,
+   "amcRenewalDate": "2027-02-28",
+   "availableHoursMonth": 420,
+   "slaUptimePct": 94,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 272,
+     "cases": 110,
+     "revenueLakh": 15.3,
+     "downtimeHours": 10.9,
+     "downtimeBreakdown": {
+      "breakdown": 5.6,
+      "pm": 4,
+      "awaitingPart": 1.3
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 300.8,
+     "cases": 116,
+     "revenueLakh": 17.2,
+     "downtimeHours": 13.9,
+     "downtimeBreakdown": {
+      "breakdown": 8,
+      "pm": 4.4,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 288.5,
+     "cases": 107,
+     "revenueLakh": 16.5,
+     "downtimeHours": 10.1,
+     "downtimeBreakdown": {
+      "breakdown": 4.9,
+      "pm": 3.8,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 287,
+     "cases": 107,
+     "revenueLakh": 17.4,
+     "downtimeHours": 12.1,
+     "downtimeBreakdown": {
+      "breakdown": 7,
+      "pm": 4.4,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 287,
+     "cases": 126,
+     "revenueLakh": 16.4,
+     "downtimeHours": 8.3,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.3,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 284.9,
+     "cases": 124,
+     "revenueLakh": 16.1,
+     "downtimeHours": 12.1,
+     "downtimeBreakdown": {
+      "breakdown": 5.3,
+      "pm": 4.8,
+      "awaitingPart": 2
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 306.7,
+     "cases": 130,
+     "revenueLakh": 17.1,
+     "downtimeHours": 12,
+     "downtimeBreakdown": {
+      "breakdown": 6.6,
+      "pm": 3.1,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 293.5,
+     "cases": 117,
+     "revenueLakh": 18.5,
+     "downtimeHours": 13,
+     "downtimeBreakdown": {
+      "breakdown": 6.1,
+      "pm": 4.1,
+      "awaitingPart": 2.8
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 299.6,
+     "cases": 129,
+     "revenueLakh": 17.5,
+     "downtimeHours": 16.3,
+     "downtimeBreakdown": {
+      "breakdown": 8.5,
+      "pm": 4.6,
+      "awaitingPart": 3.2
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 297.5,
+     "cases": 112,
+     "revenueLakh": 16.6,
+     "downtimeHours": 8.4,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.8,
+      "awaitingPart": 1.9
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 291.2,
+     "cases": 106,
+     "revenueLakh": 16.2,
+     "downtimeHours": 8.3,
+     "downtimeBreakdown": {
+      "breakdown": 4.2,
+      "pm": 3.1,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 292,
+     "cases": 109,
+     "revenueLakh": 17.7,
+     "downtimeHours": 15.6,
+     "downtimeBreakdown": {
+      "breakdown": 6.5,
+      "pm": 5,
+      "awaitingPart": 4.1
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-14",
+   "name": "Digital radiography 1",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "ClearRay DR200",
+   "installYear": 2018,
+   "capitalCostCr": 1.3,
+   "amcAnnual": 910000,
+   "amcRenewalDate": "2027-06-10",
+   "availableHoursMonth": 320,
+   "slaUptimePct": 93,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 226.1,
+     "cases": 535,
+     "revenueLakh": 6.7,
+     "downtimeHours": 16.6,
+     "downtimeBreakdown": {
+      "breakdown": 7.9,
+      "pm": 4.7,
+      "awaitingPart": 4
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 233.4,
+     "cases": 476,
+     "revenueLakh": 6.5,
+     "downtimeHours": 7.8,
+     "downtimeBreakdown": {
+      "breakdown": 4.5,
+      "pm": 2.2,
+      "awaitingPart": 1.1
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 222.2,
+     "cases": 536,
+     "revenueLakh": 6.1,
+     "downtimeHours": 14.5,
+     "downtimeBreakdown": {
+      "breakdown": 7.4,
+      "pm": 5,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 228.2,
+     "cases": 459,
+     "revenueLakh": 6.9,
+     "downtimeHours": 11.8,
+     "downtimeBreakdown": {
+      "breakdown": 6.4,
+      "pm": 3.3,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 234.1,
+     "cases": 510,
+     "revenueLakh": 6.1,
+     "downtimeHours": 16.8,
+     "downtimeBreakdown": {
+      "breakdown": 6.9,
+      "pm": 4.5,
+      "awaitingPart": 5.4
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 239.1,
+     "cases": 553,
+     "revenueLakh": 6.9,
+     "downtimeHours": 5.7,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 2.1,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 229.7,
+     "cases": 507,
+     "revenueLakh": 6.1,
+     "downtimeHours": 8.8,
+     "downtimeBreakdown": {
+      "breakdown": 5,
+      "pm": 3,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 234.2,
+     "cases": 501,
+     "revenueLakh": 6.6,
+     "downtimeHours": 6.5,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.3,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 234.5,
+     "cases": 530,
+     "revenueLakh": 6.9,
+     "downtimeHours": 16.4,
+     "downtimeBreakdown": {
+      "breakdown": 9,
+      "pm": 6,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 241.2,
+     "cases": 544,
+     "revenueLakh": 6.6,
+     "downtimeHours": 17.6,
+     "downtimeBreakdown": {
+      "breakdown": 7.3,
+      "pm": 6.8,
+      "awaitingPart": 3.5
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 235.3,
+     "cases": 510,
+     "revenueLakh": 6.3,
+     "downtimeHours": 15.8,
+     "downtimeBreakdown": {
+      "breakdown": 7.5,
+      "pm": 4.3,
+      "awaitingPart": 4
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 238.2,
+     "cases": 487,
+     "revenueLakh": 6.2,
+     "downtimeHours": 6.1,
+     "downtimeBreakdown": {
+      "breakdown": 3.5,
+      "pm": 2.5,
+      "awaitingPart": 0.1
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-15",
+   "name": "Digital radiography 2",
+   "category": "Imaging",
+   "oem": "Meridian Imaging",
+   "model": "ClearRay DR200",
+   "installYear": 2023,
+   "capitalCostCr": 1.4,
+   "amcAnnual": 840000,
+   "amcRenewalDate": "2027-07-01",
+   "availableHoursMonth": 320,
+   "slaUptimePct": 95,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 139.5,
+     "cases": 322,
+     "revenueLakh": 3.9,
+     "downtimeHours": 5.2,
+     "downtimeBreakdown": {
+      "breakdown": 2.2,
+      "pm": 1.6,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 155,
+     "cases": 293,
+     "revenueLakh": 4.4,
+     "downtimeHours": 2.1,
+     "downtimeBreakdown": {
+      "breakdown": 1,
+      "pm": 0.8,
+      "awaitingPart": 0.3
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 160.5,
+     "cases": 364,
+     "revenueLakh": 4.2,
+     "downtimeHours": 6.4,
+     "downtimeBreakdown": {
+      "breakdown": 2.7,
+      "pm": 2.2,
+      "awaitingPart": 1.5
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 149.5,
+     "cases": 332,
+     "revenueLakh": 3.9,
+     "downtimeHours": 5.6,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 1.9,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 154.6,
+     "cases": 323,
+     "revenueLakh": 4.1,
+     "downtimeHours": 2.5,
+     "downtimeBreakdown": {
+      "breakdown": 1.5,
+      "pm": 0.8,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 152.2,
+     "cases": 322,
+     "revenueLakh": 4.3,
+     "downtimeHours": 6.2,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 2.4,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 149.8,
+     "cases": 328,
+     "revenueLakh": 4.4,
+     "downtimeHours": 2.4,
+     "downtimeBreakdown": {
+      "breakdown": 1.1,
+      "pm": 0.9,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 148.2,
+     "cases": 335,
+     "revenueLakh": 3.8,
+     "downtimeHours": 2.2,
+     "downtimeBreakdown": {
+      "breakdown": 1.3,
+      "pm": 0.7,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 163.5,
+     "cases": 311,
+     "revenueLakh": 4.4,
+     "downtimeHours": 6,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.3,
+      "awaitingPart": 0.6
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 162.9,
+     "cases": 322,
+     "revenueLakh": 4.3,
+     "downtimeHours": 6.3,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 2.1,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 168.2,
+     "cases": 362,
+     "revenueLakh": 4.9,
+     "downtimeHours": 6.5,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 2.5,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 158.5,
+     "cases": 365,
+     "revenueLakh": 4.3,
+     "downtimeHours": 2.6,
+     "downtimeBreakdown": {
+      "breakdown": 1.2,
+      "pm": 0.9,
+      "awaitingPart": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-16",
+   "name": "Mammography",
+   "category": "Imaging",
+   "oem": "Northgate Molecular",
+   "model": "ClearView Mammo3D",
+   "installYear": 2019,
+   "capitalCostCr": 2.1,
+   "amcAnnual": 1680000,
+   "amcRenewalDate": "2026-10-28",
+   "availableHoursMonth": 260,
+   "slaUptimePct": 93,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 100.1,
+     "cases": 126,
+     "revenueLakh": 4.4,
+     "downtimeHours": 6.1,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 2,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 107.8,
+     "cases": 134,
+     "revenueLakh": 4.4,
+     "downtimeHours": 8.6,
+     "downtimeBreakdown": {
+      "breakdown": 3.6,
+      "pm": 2.9,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 100.8,
+     "cases": 119,
+     "revenueLakh": 4.3,
+     "downtimeHours": 7.9,
+     "downtimeBreakdown": {
+      "breakdown": 4.6,
+      "pm": 2.1,
+      "awaitingPart": 1.2
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 103.1,
+     "cases": 144,
+     "revenueLakh": 4.6,
+     "downtimeHours": 8.9,
+     "downtimeBreakdown": {
+      "breakdown": 4.5,
+      "pm": 2.3,
+      "awaitingPart": 2.1
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 108.5,
+     "cases": 139,
+     "revenueLakh": 4.2,
+     "downtimeHours": 5.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.2,
+      "pm": 1.7,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 112.6,
+     "cases": 158,
+     "revenueLakh": 4.6,
+     "downtimeHours": 8.9,
+     "downtimeBreakdown": {
+      "breakdown": 3.7,
+      "pm": 2.4,
+      "awaitingPart": 2.8
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 112.1,
+     "cases": 141,
+     "revenueLakh": 4.9,
+     "downtimeHours": 9.1,
+     "downtimeBreakdown": {
+      "breakdown": 5,
+      "pm": 2.5,
+      "awaitingPart": 1.6
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 102.5,
+     "cases": 143,
+     "revenueLakh": 4.6,
+     "downtimeHours": 11.3,
+     "downtimeBreakdown": {
+      "breakdown": 5.8,
+      "pm": 3.6,
+      "awaitingPart": 1.9
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 113.1,
+     "cases": 149,
+     "revenueLakh": 4.6,
+     "downtimeHours": 6.3,
+     "downtimeBreakdown": {
+      "breakdown": 2.8,
+      "pm": 1.7,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 102.5,
+     "cases": 120,
+     "revenueLakh": 4,
+     "downtimeHours": 12.7,
+     "downtimeBreakdown": {
+      "breakdown": 7.5,
+      "pm": 5,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 104.9,
+     "cases": 146,
+     "revenueLakh": 4.4,
+     "downtimeHours": 4.4,
+     "downtimeBreakdown": {
+      "breakdown": 2.2,
+      "pm": 1.2,
+      "awaitingPart": 1
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 103.2,
+     "cases": 144,
+     "revenueLakh": 4.3,
+     "downtimeHours": 11.4,
+     "downtimeBreakdown": {
+      "breakdown": 5.5,
+      "pm": 4.3,
+      "awaitingPart": 1.6
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-17",
+   "name": "Fibroscan",
+   "category": "Gastroenterology",
+   "oem": "Riverline Renal Care",
+   "model": "HepaScan F500",
+   "installYear": 2022,
+   "capitalCostCr": 0.65,
+   "amcAnnual": 460000,
+   "amcRenewalDate": "2027-03-05",
+   "availableHoursMonth": 220,
+   "slaUptimePct": 90,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 62.6,
+     "cases": 91,
+     "revenueLakh": 1.9,
+     "downtimeHours": 2.6,
+     "downtimeBreakdown": {
+      "breakdown": 1.2,
+      "pm": 1,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 79.1,
+     "cases": 139,
+     "revenueLakh": 2.7,
+     "downtimeHours": 3.3,
+     "downtimeBreakdown": {
+      "breakdown": 1.6,
+      "pm": 1.2,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 81.9,
+     "cases": 127,
+     "revenueLakh": 2.6,
+     "downtimeHours": 4.2,
+     "downtimeBreakdown": {
+      "breakdown": 1.8,
+      "pm": 1.7,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 77.8,
+     "cases": 129,
+     "revenueLakh": 2.5,
+     "downtimeHours": 4.9,
+     "downtimeBreakdown": {
+      "breakdown": 2.9,
+      "pm": 1.8,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 77.5,
+     "cases": 130,
+     "revenueLakh": 2.5,
+     "downtimeHours": 4.3,
+     "downtimeBreakdown": {
+      "breakdown": 2.5,
+      "pm": 1.1,
+      "awaitingPart": 0.7
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 78.7,
+     "cases": 129,
+     "revenueLakh": 2.7,
+     "downtimeHours": 4.2,
+     "downtimeBreakdown": {
+      "breakdown": 1.7,
+      "pm": 1.1,
+      "awaitingPart": 1.4
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 76.3,
+     "cases": 112,
+     "revenueLakh": 2.3,
+     "downtimeHours": 2.3,
+     "downtimeBreakdown": {
+      "breakdown": 1,
+      "pm": 0.9,
+      "awaitingPart": 0.4
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 74.7,
+     "cases": 118,
+     "revenueLakh": 2.2,
+     "downtimeHours": 2.9,
+     "downtimeBreakdown": {
+      "breakdown": 1.5,
+      "pm": 1.2,
+      "awaitingPart": 0.2
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 83.3,
+     "cases": 138,
+     "revenueLakh": 2.7,
+     "downtimeHours": 4,
+     "downtimeBreakdown": {
+      "breakdown": 1.8,
+      "pm": 1.3,
+      "awaitingPart": 0.9
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 73.7,
+     "cases": 128,
+     "revenueLakh": 2.3,
+     "downtimeHours": 4.1,
+     "downtimeBreakdown": {
+      "breakdown": 1.9,
+      "pm": 1.4,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 79.2,
+     "cases": 115,
+     "revenueLakh": 2.7,
+     "downtimeHours": 2.4,
+     "downtimeBreakdown": {
+      "breakdown": 1.2,
+      "pm": 0.7,
+      "awaitingPart": 0.5
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 77,
+     "cases": 117,
+     "revenueLakh": 2.6,
+     "downtimeHours": 4.1,
+     "downtimeBreakdown": {
+      "breakdown": 2.3,
+      "pm": 1.3,
+      "awaitingPart": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "id": "EQ-18",
+   "name": "Bone densitometry (DEXA)",
+   "category": "Imaging",
+   "oem": "Vantage OR Systems",
+   "model": "BoneMetric D2",
+   "installYear": 2017,
+   "capitalCostCr": 0.95,
+   "amcAnnual": 710000,
+   "amcRenewalDate": "2026-11-08",
+   "availableHoursMonth": 220,
+   "slaUptimePct": 90,
+   "months": [
+    {
+     "month": "2025-10",
+     "usedHours": 56.9,
+     "cases": 98,
+     "revenueLakh": 1,
+     "downtimeHours": 11.4,
+     "downtimeBreakdown": {
+      "breakdown": 4.8,
+      "pm": 3.9,
+      "awaitingPart": 2.7
+     }
+    },
+    {
+     "month": "2025-11",
+     "usedHours": 63.7,
+     "cases": 123,
+     "revenueLakh": 1.2,
+     "downtimeHours": 9.8,
+     "downtimeBreakdown": {
+      "breakdown": 4.5,
+      "pm": 3.6,
+      "awaitingPart": 1.7
+     }
+    },
+    {
+     "month": "2025-12",
+     "usedHours": 64.5,
+     "cases": 119,
+     "revenueLakh": 1.1,
+     "downtimeHours": 11.6,
+     "downtimeBreakdown": {
+      "breakdown": 5.4,
+      "pm": 3.9,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-01",
+     "usedHours": 62,
+     "cases": 109,
+     "revenueLakh": 1.2,
+     "downtimeHours": 9.8,
+     "downtimeBreakdown": {
+      "breakdown": 4.5,
+      "pm": 3.1,
+      "awaitingPart": 2.2
+     }
+    },
+    {
+     "month": "2026-02",
+     "usedHours": 62.5,
+     "cases": 119,
+     "revenueLakh": 1.1,
+     "downtimeHours": 12.2,
+     "downtimeBreakdown": {
+      "breakdown": 7,
+      "pm": 3.4,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-03",
+     "usedHours": 64.9,
+     "cases": 107,
+     "revenueLakh": 1.2,
+     "downtimeHours": 4.6,
+     "downtimeBreakdown": {
+      "breakdown": 2.3,
+      "pm": 1.5,
+      "awaitingPart": 0.8
+     }
+    },
+    {
+     "month": "2026-04",
+     "usedHours": 65.6,
+     "cases": 117,
+     "revenueLakh": 1.1,
+     "downtimeHours": 11,
+     "downtimeBreakdown": {
+      "breakdown": 4.4,
+      "pm": 3.8,
+      "awaitingPart": 2.8
+     }
+    },
+    {
+     "month": "2026-05",
+     "usedHours": 65.4,
+     "cases": 119,
+     "revenueLakh": 1.3,
+     "downtimeHours": 10.4,
+     "downtimeBreakdown": {
+      "breakdown": 5.3,
+      "pm": 2.8,
+      "awaitingPart": 2.3
+     }
+    },
+    {
+     "month": "2026-06",
+     "usedHours": 63.4,
+     "cases": 124,
+     "revenueLakh": 1.2,
+     "downtimeHours": 12.7,
+     "downtimeBreakdown": {
+      "breakdown": 6.9,
+      "pm": 3.4,
+      "awaitingPart": 2.4
+     }
+    },
+    {
+     "month": "2026-07",
+     "usedHours": 57.4,
+     "cases": 107,
+     "revenueLakh": 1,
+     "downtimeHours": 7.4,
+     "downtimeBreakdown": {
+      "breakdown": 3.1,
+      "pm": 2.5,
+      "awaitingPart": 1.8
+     }
+    },
+    {
+     "month": "2026-08",
+     "usedHours": 59.6,
+     "cases": 99,
+     "revenueLakh": 1,
+     "downtimeHours": 8.2,
+     "downtimeBreakdown": {
+      "breakdown": 3.6,
+      "pm": 3,
+      "awaitingPart": 1.6
+     }
+    },
+    {
+     "month": "2026-09",
+     "usedHours": 60.6,
+     "cases": 114,
+     "revenueLakh": 1.1,
+     "downtimeHours": 11.1,
+     "downtimeBreakdown": {
+      "breakdown": 5,
+      "pm": 4,
+      "awaitingPart": 2.1
+     }
+    }
+   ]
+  }
+ ],
+ "tickets": [
+  {
+   "id": "TCK-008",
+   "assetId": "EQ-04",
+   "assetName": "MRI 3T",
+   "openedDate": "2025-10-16",
+   "closedDate": "2025-10-28",
+   "reason": "Awaiting part",
+   "description": "Component swap pending part arrival",
+   "hoursDown": 1.1,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "MERIDIAN-58125"
+  },
+  {
+   "id": "TCK-035",
+   "assetId": "EQ-14",
+   "assetName": "Digital radiography 1",
+   "openedDate": "2025-11-16",
+   "closedDate": "2025-11-19",
+   "reason": "Breakdown",
+   "description": "Unplanned stoppage during a case",
+   "hoursDown": 2.7,
+   "status": "Closed",
+   "engineer": "Vishnu Nair",
+   "oemRef": "MERIDIAN-48703"
+  },
+  {
+   "id": "TCK-029",
+   "assetId": "EQ-12",
+   "assetName": "ECMO (fleet of 4)",
+   "openedDate": "2025-11-21",
+   "closedDate": "2025-11-21",
+   "reason": "Breakdown",
+   "description": "Power/console fault reported by user",
+   "hoursDown": 20.5,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "NORTHGATE-99746"
+  },
+  {
+   "id": "TCK-041",
+   "assetId": "EQ-18",
+   "assetName": "Bone densitometry (DEXA)",
+   "openedDate": "2025-12-07",
+   "closedDate": "2025-12-07",
+   "reason": "Breakdown",
+   "description": "Power/console fault reported by user",
+   "hoursDown": 4.2,
+   "status": "Closed",
+   "engineer": "Vishnu Nair",
+   "oemRef": "VANTAGE-99677"
+  },
+  {
+   "id": "TCK-023",
+   "assetId": "EQ-10",
+   "assetName": "Lithotripter",
+   "openedDate": "2025-12-08",
+   "closedDate": "2025-12-09",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 1.3,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "SOLERA-46899"
+  },
+  {
+   "id": "TCK-039",
+   "assetId": "EQ-16",
+   "assetName": "Mammography",
+   "openedDate": "2025-12-10",
+   "closedDate": "2025-12-15",
+   "reason": "Awaiting part",
+   "description": "Part backordered by OEM regional depot",
+   "hoursDown": 2.2,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "NORTHGATE-25567"
+  },
+  {
+   "id": "TCK-006",
+   "assetId": "EQ-03",
+   "assetName": "Cath lab 2",
+   "openedDate": "2025-12-13",
+   "closedDate": "2025-12-16",
+   "reason": "Awaiting part",
+   "description": "Component swap pending part arrival",
+   "hoursDown": 4,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "KESTREL-97866"
+  },
+  {
+   "id": "TCK-005",
+   "assetId": "EQ-02",
+   "assetName": "Cath lab 1",
+   "openedDate": "2025-12-22",
+   "closedDate": "2025-12-22",
+   "reason": "Breakdown",
+   "description": "Intermittent fault reported over two shifts",
+   "hoursDown": 2.4,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "KESTREL-41802"
+  },
+  {
+   "id": "TCK-043",
+   "assetId": "EQ-18",
+   "assetName": "Bone densitometry (DEXA)",
+   "openedDate": "2026-01-03",
+   "closedDate": "2026-01-03",
+   "reason": "Breakdown",
+   "description": "Power/console fault reported by user",
+   "hoursDown": 2,
+   "status": "Closed",
+   "engineer": "Vishnu Nair",
+   "oemRef": "VANTAGE-56668"
+  },
+  {
+   "id": "TCK-032",
+   "assetId": "EQ-13",
+   "assetName": "OT integration suite",
+   "openedDate": "2026-01-20",
+   "closedDate": "2026-01-21",
+   "reason": "PM",
+   "description": "Scheduled preventive maintenance visit",
+   "hoursDown": 4.7,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "VANTAGE-37777"
+  },
+  {
+   "id": "TCK-021",
+   "assetId": "EQ-09",
+   "assetName": "Linear accelerator",
+   "openedDate": "2026-02-02",
+   "closedDate": "2026-02-06",
+   "reason": "Breakdown",
+   "description": "Fault code triggered mid-shift",
+   "hoursDown": 4,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "ZENITH-91760"
+  },
+  {
+   "id": "TCK-019",
+   "assetId": "EQ-08",
+   "assetName": "PET-CT",
+   "openedDate": "2026-02-16",
+   "closedDate": "2026-02-18",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 2.6,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "NORTHGATE-12704"
+  },
+  {
+   "id": "TCK-013",
+   "assetId": "EQ-05",
+   "assetName": "MRI 1.5T",
+   "openedDate": "2026-02-21",
+   "closedDate": "2026-02-22",
+   "reason": "Breakdown",
+   "description": "Unplanned stoppage during a case",
+   "hoursDown": 3,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "MERIDIAN-65270"
+  },
+  {
+   "id": "TCK-038",
+   "assetId": "EQ-16",
+   "assetName": "Mammography",
+   "openedDate": "2026-03-03",
+   "closedDate": "2026-03-05",
+   "reason": "PM",
+   "description": "Annual PM as per AMC schedule",
+   "hoursDown": 3.8,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "NORTHGATE-28336"
+  },
+  {
+   "id": "TCK-027",
+   "assetId": "EQ-12",
+   "assetName": "ECMO (fleet of 4)",
+   "openedDate": "2026-03-09",
+   "closedDate": "2026-03-09",
+   "reason": "Breakdown",
+   "description": "Unplanned stoppage during a case",
+   "hoursDown": 40,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "NORTHGATE-65651"
+  },
+  {
+   "id": "TCK-030",
+   "assetId": "EQ-13",
+   "assetName": "OT integration suite",
+   "openedDate": "2026-03-11",
+   "closedDate": "2026-03-13",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 5.5,
+   "status": "Closed",
+   "engineer": "Vishnu Nair",
+   "oemRef": "VANTAGE-66656"
+  },
+  {
+   "id": "TCK-001",
+   "assetId": "EQ-01",
+   "assetName": "Surgical robot",
+   "openedDate": "2026-03-21",
+   "closedDate": "2026-03-23",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 2,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "SOLERA-10657"
+  },
+  {
+   "id": "TCK-037",
+   "assetId": "EQ-16",
+   "assetName": "Mammography",
+   "openedDate": "2026-04-06",
+   "closedDate": "2026-04-09",
+   "reason": "Awaiting part",
+   "description": "Component swap pending part arrival",
+   "hoursDown": 3.3,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "NORTHGATE-93931"
+  },
+  {
+   "id": "TCK-022",
+   "assetId": "EQ-10",
+   "assetName": "Lithotripter",
+   "openedDate": "2026-04-12",
+   "closedDate": "2026-04-16",
+   "reason": "Breakdown",
+   "description": "Unplanned stoppage during a case",
+   "hoursDown": 1.2,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "SOLERA-73730"
+  },
+  {
+   "id": "TCK-036",
+   "assetId": "EQ-15",
+   "assetName": "Digital radiography 2",
+   "openedDate": "2026-04-13",
+   "closedDate": "2026-04-16",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 2.9,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "MERIDIAN-95332"
+  },
+  {
+   "id": "TCK-010",
+   "assetId": "EQ-04",
+   "assetName": "MRI 3T",
+   "openedDate": "2026-04-17",
+   "closedDate": "2026-04-19",
+   "reason": "PM",
+   "description": "Annual PM as per AMC schedule",
+   "hoursDown": 2.3,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "MERIDIAN-19958"
+  },
+  {
+   "id": "TCK-018",
+   "assetId": "EQ-07",
+   "assetName": "CT scanner 2",
+   "openedDate": "2026-04-23",
+   "closedDate": "2026-04-24",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 5.2,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "MERIDIAN-99049"
+  },
+  {
+   "id": "TCK-028",
+   "assetId": "EQ-12",
+   "assetName": "ECMO (fleet of 4)",
+   "openedDate": "2026-05-09",
+   "closedDate": "2026-05-09",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 22.9,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "NORTHGATE-86028"
+  },
+  {
+   "id": "TCK-034",
+   "assetId": "EQ-14",
+   "assetName": "Digital radiography 1",
+   "openedDate": "2026-05-09",
+   "closedDate": "2026-05-13",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 1.6,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "MERIDIAN-95952"
+  },
+  {
+   "id": "TCK-014",
+   "assetId": "EQ-06",
+   "assetName": "CT scanner 1",
+   "openedDate": "2026-05-13",
+   "closedDate": "2026-05-14",
+   "reason": "PM",
+   "description": "Scheduled preventive maintenance visit",
+   "hoursDown": 3,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "MERIDIAN-21977"
+  },
+  {
+   "id": "TCK-015",
+   "assetId": "EQ-06",
+   "assetName": "CT scanner 1",
+   "openedDate": "2026-06-06",
+   "closedDate": "2026-06-06",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 2.3,
+   "status": "Closed",
+   "engineer": "Vishnu Nair",
+   "oemRef": "MERIDIAN-52476"
+  },
+  {
+   "id": "TCK-011",
+   "assetId": "EQ-05",
+   "assetName": "MRI 1.5T",
+   "openedDate": "2026-06-08",
+   "closedDate": "2026-06-08",
+   "reason": "Breakdown",
+   "description": "Unplanned stoppage during a case",
+   "hoursDown": 3.9,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "MERIDIAN-77581"
+  },
+  {
+   "id": "TCK-016",
+   "assetId": "EQ-07",
+   "assetName": "CT scanner 2",
+   "openedDate": "2026-06-11",
+   "closedDate": "2026-06-19",
+   "reason": "Awaiting part",
+   "description": "Import clearance delay on replacement part",
+   "hoursDown": 5.5,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "MERIDIAN-21402"
+  },
+  {
+   "id": "TCK-017",
+   "assetId": "EQ-07",
+   "assetName": "CT scanner 2",
+   "openedDate": "2026-06-16",
+   "closedDate": "2026-06-17",
+   "reason": "Breakdown",
+   "description": "Intermittent fault reported over two shifts",
+   "hoursDown": 5,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "MERIDIAN-15944"
+  },
+  {
+   "id": "TCK-042",
+   "assetId": "EQ-18",
+   "assetName": "Bone densitometry (DEXA)",
+   "openedDate": "2026-07-09",
+   "closedDate": "2026-07-17",
+   "reason": "Awaiting part",
+   "description": "Part backordered by OEM regional depot",
+   "hoursDown": 1.9,
+   "status": "Closed",
+   "engineer": "Rahul Pillai",
+   "oemRef": "VANTAGE-53722"
+  },
+  {
+   "id": "TCK-009",
+   "assetId": "EQ-04",
+   "assetName": "MRI 3T",
+   "openedDate": "2026-07-16",
+   "closedDate": "2026-07-20",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 2.1,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "MERIDIAN-45134"
+  },
+  {
+   "id": "TCK-031",
+   "assetId": "EQ-13",
+   "assetName": "OT integration suite",
+   "openedDate": "2026-07-16",
+   "closedDate": "2026-07-26",
+   "reason": "Awaiting part",
+   "description": "Part backordered by OEM regional depot",
+   "hoursDown": 2.2,
+   "status": "Closed",
+   "engineer": "Sneha Thomas",
+   "oemRef": "VANTAGE-65743"
+  },
+  {
+   "id": "TCK-020",
+   "assetId": "EQ-09",
+   "assetName": "Linear accelerator",
+   "openedDate": "2026-07-24",
+   "closedDate": "2026-07-24",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 3.9,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "ZENITH-36676"
+  },
+  {
+   "id": "TCK-026",
+   "assetId": "EQ-11",
+   "assetName": "Dialysis stations (30, pooled)",
+   "openedDate": "2026-07-25",
+   "closedDate": "2026-07-29",
+   "reason": "Breakdown",
+   "description": "Intermittent fault reported over two shifts",
+   "hoursDown": 40,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "RIVERLINE-25443"
+  },
+  {
+   "id": "TCK-033",
+   "assetId": "EQ-14",
+   "assetName": "Digital radiography 1",
+   "openedDate": "2026-08-04",
+   "closedDate": "2026-08-05",
+   "reason": "PM",
+   "description": "Software/firmware update during PM window",
+   "hoursDown": 5.2,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "MERIDIAN-16328"
+  },
+  {
+   "id": "TCK-025",
+   "assetId": "EQ-11",
+   "assetName": "Dialysis stations (30, pooled)",
+   "openedDate": "2026-08-05",
+   "closedDate": null,
+   "reason": "Breakdown",
+   "description": "Fault code triggered mid-shift",
+   "hoursDown": 40,
+   "status": "Open",
+   "engineer": "Divya Menon",
+   "oemRef": "RIVERLINE-59000"
+  },
+  {
+   "id": "TCK-040",
+   "assetId": "EQ-17",
+   "assetName": "Fibroscan",
+   "openedDate": "2026-08-12",
+   "closedDate": "2026-08-21",
+   "reason": "Awaiting part",
+   "description": "Component swap pending part arrival",
+   "hoursDown": 3.1,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "RIVERLINE-46272"
+  },
+  {
+   "id": "TCK-007",
+   "assetId": "EQ-03",
+   "assetName": "Cath lab 2",
+   "openedDate": "2026-08-14",
+   "closedDate": "2026-08-17",
+   "reason": "PM",
+   "description": "Annual PM as per AMC schedule",
+   "hoursDown": 2.4,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "KESTREL-18442"
+  },
+  {
+   "id": "TCK-004",
+   "assetId": "EQ-02",
+   "assetName": "Cath lab 1",
+   "openedDate": "2026-09-02",
+   "closedDate": "2026-09-06",
+   "reason": "Awaiting part",
+   "description": "Import clearance delay on replacement part",
+   "hoursDown": 6.2,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "KESTREL-40805"
+  },
+  {
+   "id": "TCK-012",
+   "assetId": "EQ-05",
+   "assetName": "MRI 1.5T",
+   "openedDate": "2026-09-04",
+   "closedDate": "2026-09-09",
+   "reason": "Awaiting part",
+   "description": "Spare part ordered from OEM, awaiting delivery",
+   "hoursDown": 5,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "MERIDIAN-71955"
+  },
+  {
+   "id": "TCK-003",
+   "assetId": "EQ-02",
+   "assetName": "Cath lab 1",
+   "openedDate": "2026-09-13",
+   "closedDate": "2026-09-13",
+   "reason": "PM",
+   "description": "Quarterly calibration and safety check",
+   "hoursDown": 6,
+   "status": "Closed",
+   "engineer": "Divya Menon",
+   "oemRef": "KESTREL-98765"
+  },
+  {
+   "id": "TCK-024",
+   "assetId": "EQ-11",
+   "assetName": "Dialysis stations (30, pooled)",
+   "openedDate": "2026-09-22",
+   "closedDate": "2026-09-30",
+   "reason": "Awaiting part",
+   "description": "Import clearance delay on replacement part",
+   "hoursDown": 40,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "RIVERLINE-62990"
+  },
+  {
+   "id": "TCK-002",
+   "assetId": "EQ-01",
+   "assetName": "Surgical robot",
+   "openedDate": "2026-09-23",
+   "closedDate": "2026-09-23",
+   "reason": "PM",
+   "description": "Annual PM as per AMC schedule",
+   "hoursDown": 1.6,
+   "status": "Closed",
+   "engineer": "Anoop Varghese",
+   "oemRef": "SOLERA-29908"
+  }
+ ]
+}

@@ -1,0 +1,273 @@
+#!/usr/bin/env node
+// Generates data/board-papers.json — synthetic Board/Committee meeting desk for the
+// Company Secretary at Lakeshore Hospital & Research Centre Ltd (LHRC), Kochi.
+// Seeded, reproducible. Synthetic only: no real directors, figures for illustration.
+import { writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const OUT = join(dirname(fileURLToPath(import.meta.url)), '../../data/board-papers.json');
+const TODAY = '2026-09-28';
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rnd = mulberry32(143028);
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+
+/* ---------- meetings ---------- */
+const MEETINGS = [
+  { id: 'BM-143', kind: 'Board', label: 'Board Meeting No. 143', date: '2026-10-15', time: '11:00 AM', venue: 'Boardroom, Corporate Office, Kochi', chair: 'Chairman', quorumRule: '2 directors or 1/3rd of total directors, whichever is higher, with at least 1 independent director' },
+  { id: 'AC-Q2', kind: 'Audit Committee', label: 'Audit Committee Meeting', date: '2026-10-08', time: '3:00 PM', venue: 'Conference Room 2, Corporate Office, Kochi', chair: 'Audit Committee Chairman (Independent Director)', quorumRule: '2 members or 1/3rd of members, whichever is higher, with at least 2 independent directors present' },
+  { id: 'CSR-H2', kind: 'CSR Committee', label: 'CSR Committee Meeting', date: '2026-10-10', time: '10:30 AM', venue: 'Conference Room 1, Corporate Office, Kochi', chair: 'CSR Committee Chairman', quorumRule: '2 members present in person or by video conference' },
+];
+
+const STATUSES = ['Inputs received', 'Paper drafted', 'Reviewed', 'Circulated'];
+
+/* ---------- agenda items ---------- */
+const ITEMS = [
+  {
+    meetingId: 'BM-143', itemNo: 1,
+    title: 'Adoption of unaudited financial results for Q2 FY27',
+    type: 'noting', sponsor: 'Chief Financial Officer', resolutionType: 'board',
+    bullets: [
+      'Revenue for Q2 FY27: ₹94.6 crore, up 7.2% over Q1 FY27 (₹88.2 crore) and 11.4% YoY.',
+      'EBITDA margin at 19.8%, marginally ahead of the 19.2% budgeted for the quarter.',
+      'Occupied bed-days up 5.1% QoQ; robotics and transplant programme revenue up 22% YoY.',
+      'Statutory auditor has completed limited review; no qualifications noted.',
+      'To be placed before the Audit Committee on 8 Oct 2026 prior to Board adoption.',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 2,
+    title: 'Approval of capital expenditure — ICU Complex, Phase 2 (4th Floor, East Wing)',
+    type: 'approval', sponsor: 'Chief Operating Officer', resolutionType: 'board',
+    bullets: [
+      'Scope: 20-bed ICU/critical-care complex — 4 ventilator-ready isolation bays, central nursing station, dedicated dialysis bay.',
+      'Estimated capex: ₹18.5 crore (civil + MEP ₹7.2 cr, medical equipment ₹9.8 cr, contingency ₹1.5 cr).',
+      'Rationale: existing ICU averaged 92% occupancy over the last two quarters; 6-8 critical referrals/month turned away.',
+      'Funding: ₹12 cr term loan (in-principle bank sanction obtained) + ₹6.5 cr internal accruals.',
+      'Timeline: 14 months construction + commissioning; targeted go-live Q4 FY28.',
+      'Expected impact: ~₹6.2 cr/yr additional ICU revenue at 75% steady-state occupancy; de-bottlenecks Cath Lab and transplant programme.',
+      'Exceeds ₹10 crore Delegation of Powers threshold — requires specific Board approval under Section 179(3)(d).',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 3,
+    title: 'Proposed Operations & Management (O&M) agreement — 150-bed facility, Calicut',
+    type: 'approval', sponsor: 'Managing Director', resolutionType: 'board',
+    bullets: [
+      'LHRC to manage clinical operations, quality/NABH systems and the "VPS Lakeshore" brand; owner retains asset ownership and capex.',
+      'Term: 10 years, renewable; management fee of 6% of gross revenue + 2% of EBITDA as performance incentive.',
+      'Strategic rationale: extends the brand into the North Kerala/Malabar catchment without capex; feeds tertiary referrals to Kochi.',
+      'Risks flagged by management: brand/reputation risk if owner underinvests; clear quality-control and exit rights needed in the agreement.',
+      'Financial impact: estimated ₹3.5-4.2 crore/yr fee income at steady state (Year 2 onward); near-zero capex from LHRC.',
+      'Approval sought: in-principle approval to proceed to definitive agreement; authorise MD to finalise terms within outlined parameters.',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 4,
+    title: 'Related-party transaction — lease of diagnostic imaging equipment from a promoter-group entity',
+    type: 'approval', sponsor: 'Company Secretary', resolutionType: 'ordinary',
+    bullets: [
+      'Counterparty: a promoter-group leasing entity (related party under Section 2(76)).',
+      'Subject matter: operating lease of one MRI (1.5T) and one CT (128-slice) system for the new diagnostics block.',
+      'Annual lease value: ₹4.8 crore, 5-year term — exceeds 10% of turnover threshold under Section 188 read with Rule 15, so shareholder approval by ordinary resolution is also required.',
+      'Audit Committee to confirm the transaction is on arm\'s length terms and in the ordinary course of business before Board approval.',
+      'Independent valuer\'s lease-rental benchmarking report obtained and annexed.',
+      'Interested directors to abstain from voting on this item as required under Section 184.',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 5,
+    title: 'Enhancement of borrowing limit under Section 180(1)(c)',
+    type: 'approval', sponsor: 'Chief Financial Officer', resolutionType: 'special',
+    bullets: [
+      'Current shareholder-approved borrowing limit: ₹150 crore (aggregate of paid-up capital, free reserves and securities premium plus this limit).',
+      'Proposed enhanced limit: ₹225 crore, to accommodate the ICU capex term loan, the Calicut mobilisation facility and normal working-capital headroom.',
+      'Requires a special resolution of shareholders under Section 180(1)(c); Board to recommend the resolution for the next general meeting.',
+      'No change proposed to the existing charge/mortgage authorisation under Section 180(1)(a).',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 6,
+    title: 'Appointment of internal auditor for FY27',
+    type: 'approval', sponsor: 'Audit Committee Chairman', resolutionType: 'board',
+    bullets: [
+      'Incumbent internal auditor\'s three-year term concludes with FY26; re-appointment or fresh appointment required under Section 138 read with Rule 13.',
+      'Audit Committee shortlisted two firms and recommends Firm B on scope coverage (clinical revenue assurance, procurement, IT general controls) and fee.',
+      'Proposed annual fee: ₹42 lakh, quarterly reporting directly to the Audit Committee.',
+      'Term: FY27, renewable annually up to a maximum of three years by mutual consent.',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 7,
+    title: 'Noting of secretarial and other compliance certificates for Q2 FY27',
+    type: 'noting', sponsor: 'Company Secretary', resolutionType: 'board',
+    bullets: [
+      'Quarterly secretarial compliance report confirms no material non-compliance for the quarter.',
+      'Statutory registers, minutes books and disclosure of interest forms (Form MBP-1) updated and current.',
+      'Annual filing calendar for FY26 (AOC-4, MGT-7, DIR-3 KYC) completed within due dates; no ROC penalties or additional fees incurred.',
+      'CSR spending certificate for FY26 obtained from statutory auditor and placed on record.',
+    ],
+  },
+  {
+    meetingId: 'BM-143', itemNo: 8,
+    title: 'Adoption of the revised Risk Management Policy',
+    type: 'approval', sponsor: 'Chief Risk Officer', resolutionType: 'board',
+    bullets: [
+      'Policy last revised FY24; revision brings in cyber-security and clinical-data-breach risk categories, and a DPDP Act 2023 compliance risk register.',
+      'Risk Management Committee has reviewed and recommends adoption without further change.',
+      'No material change to the existing risk appetite statement or escalation matrix.',
+    ],
+  },
+  {
+    meetingId: 'AC-Q2', itemNo: 1,
+    title: 'Review of unaudited financial results for Q2 FY27 before Board adoption',
+    type: 'discussion', sponsor: 'Chief Financial Officer', resolutionType: 'board',
+    bullets: [
+      'Statutory auditor\'s limited review report tabled; no qualifications, no key audit matters flagged.',
+      'Revenue ₹94.6 crore (up 7.2% QoQ); EBITDA margin 19.8% against 19.2% budget.',
+      'Provision for doubtful TPA receivables reviewed — no material change to methodology.',
+      'Committee to recommend the results for adoption by the Board at Meeting No. 143.',
+    ],
+  },
+  {
+    meetingId: 'AC-Q2', itemNo: 2,
+    title: 'Omnibus approval of related-party transactions for FY27',
+    type: 'approval', sponsor: 'Company Secretary', resolutionType: 'ordinary',
+    bullets: [
+      'Estimated aggregate value of repetitive/ordinary-course RPTs for FY27: ₹11.4 crore (equipment lease, facility O&M support services, promoter-entity guest-house usage).',
+      'Includes the ₹4.8 crore/yr diagnostic-equipment lease from the promoter-group entity placed before the Board separately given its size.',
+      'Omnibus approval sought under Section 177(4)(iv) read with Rule 6A, subject to quarterly review of actuals against the omnibus limit.',
+      'All transactions confirmed to be on arm\'s length basis and in the ordinary course of business.',
+    ],
+  },
+  {
+    meetingId: 'AC-Q2', itemNo: 3,
+    title: 'Recommendation on appointment of internal auditor for FY27',
+    type: 'discussion', sponsor: 'Audit Committee Chairman', resolutionType: 'board',
+    bullets: [
+      'Two firms evaluated on scope, sector experience (NABH-accredited hospitals) and fee competitiveness.',
+      'Firm A quoted ₹38 lakh with a narrower scope (financial controls only); Firm B quoted ₹42 lakh covering clinical revenue assurance, procurement and IT general controls.',
+      'Committee recommends Firm B to the Board for FY27 appointment under Section 138.',
+    ],
+  },
+  {
+    meetingId: 'AC-Q2', itemNo: 4,
+    title: 'Noting of the statutory auditor\'s limited review report and management letter',
+    type: 'noting', sponsor: 'Statutory Auditor', resolutionType: 'board',
+    bullets: [
+      'No qualifications or emphasis of matter in the limited review report for Q2 FY27.',
+      'Management letter flags two minor observations: ageing of consumable inventory reconciliation and vendor master data hygiene — both already under remediation.',
+      'No matters requiring escalation to the Board outside the normal course.',
+    ],
+  },
+  {
+    meetingId: 'CSR-H2', itemNo: 1,
+    title: 'Approval of the CSR Annual Action Plan for FY27',
+    type: 'approval', sponsor: 'Head — CSR & Community Health', resolutionType: 'board',
+    bullets: [
+      'Statutory CSR obligation for FY27 (2% of average net profit of preceding 3 years): ₹2.86 crore.',
+      'Proposed allocation: ₹1.35 cr rural mobile health camps and screening, ₹0.75 cr free/subsidised paediatric cardiac surgeries, ₹0.5 cr school health and nutrition programme, ₹0.26 cr disaster-preparedness and blood-donation drives.',
+      'Implementation: directly and through one registered implementing agency for the school health programme, per Section 135(5) and Schedule VII.',
+      'Impact-assessment threshold (CSR spend > ₹10 crore in the immediately preceding FY, or project outlay > ₹1 crore) not triggered this year; simplified reporting applies.',
+      'To be recommended to the Board for approval and disclosure in the Directors\' Report.',
+    ],
+  },
+  {
+    meetingId: 'CSR-H2', itemNo: 2,
+    title: 'Expansion of mobile health camps to rural clusters in Malappuram and Wayanad',
+    type: 'discussion', sponsor: 'Head — CSR & Community Health', resolutionType: 'board',
+    bullets: [
+      'Proposal to extend the existing mobile health camp programme (currently 6 panchayats in Ernakulam district) to 4 additional rural clusters.',
+      'Estimated incremental annual cost: ₹42 lakh (2 additional mobile units, staffing, consumables), within the overall FY27 CSR allocation.',
+      'Partnership discussions underway with 2 local self-government bodies for venue and outreach support.',
+      'Committee to review outcomes from the Ernakulam pilot (patients screened, referral conversion) before recommending scale-up.',
+    ],
+  },
+];
+
+// spread statuses across items in a plausible, seeded pattern
+ITEMS.forEach((it, i) => {
+  it.id = `${it.meetingId}-${it.itemNo}`;
+  const weights = [0.15, 0.35, 0.30, 0.20]; // received, drafted, reviewed, circulated
+  let r = rnd(), acc = 0, idx = 0;
+  for (let w = 0; w < weights.length; w++) { acc += weights[w]; if (r <= acc) { idx = w; break; } idx = w; }
+  it.status = STATUSES[idx];
+});
+// ensure at least one of each status exists for a convincing dashboard
+['Inputs received', 'Paper drafted', 'Reviewed', 'Circulated'].forEach((s, i) => { ITEMS[i].status = s; });
+
+/* ---------- rough meeting notes (for the Minutes tab) ---------- */
+const MINUTES_NOTES = [
+  {
+    id: 'notes-ec-sep',
+    title: 'EC meeting, 24 September 2026',
+    meetingLabel: 'Executive Committee meeting',
+    date: '2026-09-24', venue: 'Boardroom',
+    present: ['Managing Director', 'Chief Financial Officer', 'Chief Operating Officer', 'Medical Director'],
+    inAttendance: ['Company Secretary (recording)'],
+    roughNotes: `Meeting: EC meeting, 24 Sept 2026, 4pm, boardroom. Present: MD, CFO, COO, Medical Director, CS (recording).
+- CFO walked through Aug MIS. Revenue up 6% MoM, EBITDA margin steady at 19%. Robotics program contributing more than expected.
+- Discussed ICU capex proposal - CFO said funding plan looks fine, wants one more round with the bank on interest rate before board.
+- COO raised staffing gap in critical care nursing - 8 vacancies, agreed to fast-track recruitment via 2 agencies, review in 4 weeks.
+- Medical Director gave update on transplant program - 2 more successful cases this month, NABH surveyor visit scheduled first week of Nov, prep committee to be formed.
+- CS to circulate NABH prep committee terms of reference by 3 Oct.
+- Approved: renewal of biomedical waste management contract with existing vendor for 1 more year, same commercial terms.
+- Next EC meeting: 22 Oct 2026.`,
+  },
+  {
+    id: 'notes-ac-jun',
+    title: 'Audit Committee meeting, 9 July 2026',
+    meetingLabel: 'Audit Committee meeting',
+    date: '2026-07-09', venue: 'Conference Room 2',
+    present: ['Audit Committee Chairman (Independent Director)', 'Independent Director', 'CFO (invitee)'],
+    inAttendance: ['Statutory Auditor (invitee)', 'Company Secretary (recording)'],
+    roughNotes: `Meeting: Audit Committee, 9 July 2026, 3pm, conference room 2. Present: AC Chairman (ID), another ID, CFO (invitee). Statutory auditor joined for first part. CS recording.
+- Statutory auditor presented Q1 FY27 limited review - clean, no qualifications. One observation on TPA receivable ageing beyond 120 days going up a bit, CFO to track monthly.
+- Internal auditor presented Q1 report - flagged a gap in biomedical waste segregation compliance at 2 satellite OPD centres, corrective action plan agreed, to close by end Aug.
+- Related party transactions for the quarter reviewed against omnibus limit - within limit, nothing flagged.
+- Discussed whistleblower complaints - 1 received during quarter, related to procurement vendor selection, investigated by internal audit, no wrongdoing found, closed.
+- AC chairman asked for a cyber-security readiness update at next meeting given DPDP Act enforcement.
+- CFO to also bring related party omnibus limit renewal proposal for FY27 to next meeting.
+- Next Audit Committee meeting: 8 Oct 2026, ahead of Q2 results.`,
+  },
+];
+
+/* ---------- compliance checklist per meeting ---------- */
+function checklistFor(m) {
+  const base = [
+    { id: 'notice', label: `Notice of meeting sent at least 7 days in advance (Section 173(3); SS-1)`, category: 'Notice & agenda' },
+    { id: 'agenda', label: 'Agenda and notes on agenda circulated with the notice (SS-1 para 1.3)', category: 'Notice & agenda' },
+    { id: 'quorum', label: `Quorum confirmed: ${m.quorumRule}`, category: 'Quorum' },
+    { id: 'id-present', label: 'Attendance of at least one independent director confirmed where required', category: 'Quorum' },
+    { id: 'interest', label: 'Directors\' disclosure of interest (Form MBP-1) on record and updated for the year', category: 'Disclosure' },
+    { id: 'rpt-flag', label: 'Interested directors identified for related-party items and abstention noted in the draft agenda', category: 'Disclosure' },
+    { id: 'annexures', label: 'All supporting annexures (financials, valuation reports, legal opinions) attached to agenda notes', category: 'Papers' },
+    { id: 'dop-check', label: 'Delegation of Powers thresholds checked for every approval item', category: 'Papers' },
+    { id: 'draft-resolutions', label: 'Draft resolutions reviewed for correct Companies Act 2013 section references', category: 'Papers' },
+    { id: 'video-conf', label: 'Video-conferencing facility tested for any director attending remotely (Rule 3, Companies (Meetings of Board) Rules)', category: 'Logistics' },
+    { id: 'minutes-timeline', label: 'Draft minutes plan in place to circulate within 15 days of the meeting (SS-1 para 9.1)', category: 'Post-meeting' },
+    { id: 'signing', label: 'Chairman/authorised signatory identified for signing the minutes within 30 days (Section 118)', category: 'Post-meeting' },
+  ];
+  return base;
+}
+const COMPLIANCE = {};
+MEETINGS.forEach(m => {
+  const items = checklistFor(m);
+  const ticks = {};
+  items.forEach(it => { ticks[it.id] = rnd() < 0.62; });
+  // keep at least the notice/quorum basics ticked for a meeting less than 10 days out
+  COMPLIANCE[m.id] = { items, ticks };
+});
+
+const OUTPUT = { today: TODAY, meetings: MEETINGS, items: ITEMS, minutesNotes: MINUTES_NOTES, compliance: COMPLIANCE };
+writeFileSync(OUT, JSON.stringify(OUTPUT, null, 2));
+console.log(`Wrote ${OUT} — ${MEETINGS.length} meetings, ${ITEMS.length} agenda items, ${MINUTES_NOTES.length} rough-notes sets.`);
