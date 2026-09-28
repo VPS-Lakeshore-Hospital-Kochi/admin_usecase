@@ -266,8 +266,10 @@
   }
 
   function wireUploads() {
-    document.querySelectorAll('.card textarea').forEach((ta, i) => {
-      if (ta.dataset.upload === 'off' || ta.previousElementSibling?.classList.contains('hub-upload')) return;
+    document.querySelectorAll('.card textarea').forEach(ta => {
+      if (ta.dataset.upload === 'off' || ta.dataset.hubUpload || ta.previousElementSibling?.classList.contains('hub-upload')) return;
+      ta.dataset.hubUpload = '1';
+      const i = wireUploads.n = (wireUploads.n || 0) + 1;
       const row = document.createElement('div');
       row.className = 'row hub-upload';
       row.style.margin = '4px 0';
@@ -290,7 +292,14 @@
       };
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireUploads); else setTimeout(wireUploads);
+  function startUploads() {
+    wireUploads();
+    // pages that render text boxes later (after loading data, on tab switches) get upload controls too
+    let pending = 0;
+    new MutationObserver(() => { cancelAnimationFrame(pending); pending = requestAnimationFrame(wireUploads); })
+      .observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startUploads); else setTimeout(startUploads);
 
   /* ---------- branded Word export ---------- */
   const NAVY = '001E5F', MAGENTA = 'D81054', CREAM = 'FDFAE7', GREY = 'D9DDE8', INK = '162A54', SLATE = '5C6480', FONT = 'DM Sans';

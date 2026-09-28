@@ -6,300 +6,352 @@
 <title>Content studio — Marketing & Comms</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .chk { display:flex; align-items:center; gap:6px; font-weight:400; color:var(--text); font-size:14px; }
-  .chk input { width:auto; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .scenario-btn { flex:1; min-width:140px; text-align:left; }
-  .scenario-btn.active { border-color:var(--navy); background:var(--accent-soft); }
+  .tagrow { display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 10px; }
+  .chiptag { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; background:var(--accent-soft); color:var(--muted); }
+  .vc-list { list-style:none; margin:6px 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .vc-list li { display:flex; gap:8px; align-items:flex-start; font-size:13.5px; }
+  .vc-icon { flex:none; width:1.2em; }
+  .vc-ok .vc-icon { color:var(--ok); } .vc-bad .vc-icon { color:var(--magenta); }
+  .compliance-row { display:flex; align-items:center; gap:8px; font-size:14px; margin:4px 0; }
+  .compliance-row input { width:auto; }
+  .compliance-row.na { opacity:.55; }
+  .meta-line { color:var(--muted); font-size:13px; margin:2px 0 10px; }
+  .kicker { text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--muted); margin:0 0 2px; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Content studio</h1>
-    <p>Turn a one-line brief into ready-to-post copy in the "In good hands" voice — plain, observed, warm, no clichés or unverifiable claims — across every channel, plus a compliance check before it goes out.</p>
+    <p>The October content calendar for Marketing &amp; Comms — brief to draft to sign-off, one item at a time, with a brand voice and compliance check built in before anything is scheduled.</p>
   </section>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>1. Pick a scenario</h2>
-      <div class="chips" id="scenarioBtns"></div>
-
-      <label for="brief">Brief</label>
-      <textarea id="brief"></textarea>
-
-      <label for="audience">Audience</label>
-      <input id="audience" value="">
-
-      <label>Channels</label>
-      <div class="row" id="channels"></div>
-
-      <label for="lang">Language</label>
-      <select id="lang">
-        <option value="English">English</option>
-        <option value="Malayalam">Malayalam</option>
-        <option value="Arabic">Arabic</option>
-        <option value="Dhivehi">Dhivehi</option>
-      </select>
-
-      <div class="row" style="margin-top:14px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-
-      <div class="kpis" style="margin-top:16px">
-        <div class="kpi"><div class="label">Channels selected</div><div class="value" id="kpiChannels">0</div></div>
-        <div class="kpi"><div class="label">Brief length</div><div class="value" id="kpiWords">0 words</div></div>
-        <div class="kpi"><div class="label">Compliance flags to check</div><div class="value" id="kpiFlags">3</div></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>2. Claude's draft pack</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Prototype for internal discussion · sample data only · all names and figures fictional · content must clear Corporate Comms + Medical Superintendent sign-off before publishing (NMC/ASCI advertising norms).</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · sample data only · all names, figures and quotes fictional · nothing here is posted or sent anywhere — content still needs Corporate Comms + Medical Superintendent sign-off (NMC/ASCI norms) before it goes live.</p>
 </main>
-
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'marketing-studio';
 Hub.mountHeader({ dept: 'Marketing & Comms', title: 'Content studio' });
+const st = Hub.kit.state(SLUG, { tab: 'calendar', selected: null, edits: {}, compliance: {}, reviews: {}, voiceText: '' });
+let DATA;
 
-const CHANNELS = ['Instagram', 'LinkedIn', 'Facebook', 'WhatsApp broadcast', 'Press note', 'Doctor profile'];
+/* ---------- brand voice rule check (local, no Claude) ---------- */
+function voiceCheck(text) {
+  const t = String(text || '');
+  const lower = t.toLowerCase();
+  const banned = DATA.meta.bannedPhrases.filter(p => lower.includes(p));
+  const claims = DATA.meta.claimKeywords.filter(p => lower.includes(p));
+  const wl = new Set(DATA.meta.allcapsWhitelist);
+  const capWords = [...new Set((t.match(/\b[A-Z]{4,}\b/g) || []).filter(w => !wl.has(w)))];
+  const goodHandsCount = (lower.match(/in good hands/g) || []).length;
+  return { banned, claims, capWords, goodHandsCount, clean: !banned.length && !claims.length && !capWords.length };
+}
 
-const SCENARIOS = {
-  robotic: {
-    label: '500th robotic surgery',
-    brief: 'VPS Lakeshore has completed its 500th robotic surgery (da Vinci platform), spanning urology, gynaecology, GI and cardiac cases over 4 years. Milestone crossed this week with a robotic-assisted nephrectomy performed by Dr. Arjun Menon\'s team. Want to mark the milestone across channels — tone should be measured, credit the team, avoid overclaiming outcomes.',
-    audience: 'Existing patients, referring doctors, Kochi general public, prospective international patients',
-    channels: ['Instagram', 'LinkedIn', 'Press note', 'Doctor profile'],
-    lang: 'English',
-  },
-  heart: {
-    label: 'World Heart Day screening camp',
-    brief: 'World Heart Day (29 Sept) — VPS Lakeshore is running a free cardiac screening camp on 29-30 Sept at the hospital atrium: BP check, ECG, lipid profile at concessional rate, and a consult with a cardiologist for those flagged. Slots limited to 200/day, registration via phone or WhatsApp. Want to drive footfall from Kochi residents 40+ and their families.',
-    audience: 'Kochi residents aged 40+, their adult children, corporate HR wellness contacts',
-    channels: ['Instagram', 'Facebook', 'WhatsApp broadcast', 'Press note'],
-    lang: 'English',
-  },
-  lounge: {
-    label: 'International patient lounge for Maldives',
-    brief: 'New International Patient Lounge opening next month — dedicated waiting area near the international patient desk with Dhivehi-speaking coordinator, prayer room access, tea/refreshments, and assistance with visa extension letters and currency exchange guidance. Aimed at patients travelling from Maldives for cardiology, orthopaedics and fertility treatment. Want warm, reassuring tone, not a hard sell.',
-    audience: 'Maldivian patients and families, Male\' referral clinics, medical travel facilitators',
-    channels: ['Instagram', 'WhatsApp broadcast', 'Press note'],
-    lang: 'Dhivehi',
-  },
+function renderVoiceChecklist(v) {
+  const row = (ok, label, detail) => `<li class="${ok ? 'vc-ok' : 'vc-bad'}"><span class="vc-icon">${ok ? '✓' : '⚠'}</span><span>${label}${detail ? ` — <b>${Hub.esc(detail)}</b>` : ''}</span></li>`;
+  return `<ul class="vc-list">
+    ${row(!v.banned.length, 'Banned phrases (world-class, state-of-the-art, compassionate care, patient-centric, miracle, best-in-class, cutting-edge)', v.banned.join(', '))}
+    ${row(!v.claims.length, 'Unverifiable claim keywords (guaranteed, 100%, risk-free…)', v.claims.join(', '))}
+    ${row(!v.capWords.length, 'Uppercase shouting', v.capWords.slice(0, 6).join(', '))}
+    ${row(v.goodHandsCount <= 1, '"In good hands" used sparingly, only where earned', v.goodHandsCount > 1 ? `used ${v.goodHandsCount} times` : '')}
+  </ul>`;
+}
+
+/* ---------- localisation + draft copy, computed from the selected record ---------- */
+function firstSentences(text, n) {
+  return String(text || '').split(/(?<=[.!?])\s+/).slice(0, n).join(' ').trim();
+}
+const CATEGORY_LINE = {
+  milestone: 'A milestone worth marking, quietly.', awareness: 'A plain fact worth knowing.',
+  camp: 'Free screening, plainly explained.', doctor: 'Meet the doctor.',
+  lounge: 'One less thing to navigate.', promo: 'A seasonal package, priced plainly.',
+  csr: 'What we did, and who helped.', greeting: 'A short note, not a sales pitch.',
 };
-
-let current = 'robotic';
-
-function loadScenario(key) {
-  current = key;
-  const s = SCENARIOS[key];
-  document.getElementById('brief').value = s.brief;
-  document.getElementById('audience').value = s.audience;
-  document.getElementById('lang').value = s.lang;
-  document.querySelectorAll('#channels input').forEach(cb => { cb.checked = s.channels.includes(cb.value); });
-  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.toggle('active', b.dataset.key === key));
-  updateKpis();
-}
-
-function renderChannelChecks() {
-  document.getElementById('channels').innerHTML = CHANNELS.map(c => `
-    <label class="chk"><input type="checkbox" value="${c}"> ${c}</label>`).join('');
-  document.querySelectorAll('#channels input').forEach(cb => cb.addEventListener('change', updateKpis));
-}
-
-function updateKpis() {
-  const n = document.querySelectorAll('#channels input:checked').length;
-  document.getElementById('kpiChannels').textContent = n;
-  const words = document.getElementById('brief').value.trim().split(/\s+/).filter(Boolean).length;
-  document.getElementById('kpiWords').textContent = words + ' words';
-}
-
-document.getElementById('scenarioBtns').innerHTML = Object.entries(SCENARIOS).map(([k, s]) =>
-  `<button type="button" class="scenario-btn" data-key="${k}">${s.label}</button>`).join('');
-document.querySelectorAll('.scenario-btn').forEach(b => b.addEventListener('click', () => loadScenario(b.dataset.key)));
-renderChannelChecks();
-loadScenario('robotic');
-document.getElementById('brief').addEventListener('input', updateKpis);
-
-function selectedChannels() {
-  return Array.from(document.querySelectorAll('#channels input:checked')).map(cb => cb.value);
-}
-
-const SYSTEM = `You are the Marketing & Comms content assistant for VPS Lakeshore Hospital, Kochi. Brand voice is "In good hands": plain, observed, warm — never use clichés like "state-of-the-art", "world-class" or "miracle", and never make unverifiable medical claims. Stay within NMC (National Medical Commission) and ASCI advertising norms for healthcare: no outcome guarantees, no comparative superiority claims, no patient testimonials without documented consent, no before/after imagery claims. Always end a press note with "— Ends —". Always include a compliance checklist covering claims made, patient-story consent, and image rights.`;
-
-function buildPrompt() {
-  const brief = document.getElementById('brief').value;
-  const audience = document.getElementById('audience').value;
-  const channels = selectedChannels();
-  const lang = document.getElementById('lang').value;
-  return `Brief: ${brief}\n\nTarget audience: ${audience}\nChannels required: ${channels.join(', ') || 'Instagram'}\nAdditional language required: ${lang}\n\nProduce, in this order:\n1. Ready-to-post copy for each requested channel (with hashtags where relevant, and character-appropriate length per channel).\n2. A short press note ending with "— Ends —".\n3. A ${lang} translation of the press note (or lead social post if press note wasn't requested).\n4. A compliance checklist: claims made and whether each is verifiable, patient-story/image consent status, image rights, and any NMC/ASCI flags.`;
-}
-
-const DEMO = {
-  robotic: () => `## Instagram
-**Post 1**
-500 robotic surgeries. One team, four years, steady hands.
-
-This week our robotic surgery team completed its 500th procedure — a robotic-assisted nephrectomy led by Dr. Arjun Menon and team. Over four years the programme has covered urology, gynaecology, GI and cardiac cases.
-
-Grateful to every patient who trusted us, and to the OT, anaesthesia and nursing teams behind each case.
-
-#VPSLakeshore #RoboticSurgery #InGoodHands #Kochi #500Milestone
-
-**Post 2 (carousel — team photo + timeline)**
-Slide 1: "500 robotic surgeries."
-Slide 2: "4 years. 4 specialities: urology, gynaecology, GI, cardiac."
-Slide 3: "Led by Dr. Arjun Menon and the robotic surgery team."
-Slide 4: "Thank you for trusting us with your care."
-
-## LinkedIn
-VPS Lakeshore Hospital's robotic surgery programme has completed its 500th procedure this week — a robotic-assisted nephrectomy performed by Dr. Arjun Menon and team.
-
-Since the da Vinci platform was introduced four years ago, the programme has extended across urology, gynaecology, gastrointestinal and cardiac surgery, built on close coordination between our surgical, anaesthesia and nursing teams.
-
-We thank our patients, referring doctors and staff for being part of this journey.
-
-#Healthcare #RoboticSurgery #Kochi #VPSLakeshore
-
-## Press note
-**VPS Lakeshore Hospital completes 500th robotic surgery**
-
-Kochi, [date] — VPS Lakeshore Hospital, Kochi, has completed its 500th robotic-assisted surgery, a nephrectomy performed this week by a team led by Dr. Arjun Menon. The hospital introduced its robotic surgery programme four years ago and has since used it across urology, gynaecology, gastrointestinal and cardiac procedures.
-
-"Every one of these 500 cases is a patient who chose to trust our team," said Dr. Arjun Menon, lead robotic surgeon. "The credit sits with the full team around the table — surgeons, anaesthesia, nursing and OT staff."
-
-VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala.
-
-For media queries: corpcomm@vpslakeshore.example
-
-— Ends —
-
-## Malayalam version (press note lead)
-വിപിഎസ് ലേക്‌ഷോർ ഹോസ്പിറ്റൽ 500-ാമത് റോബോട്ടിക് ശസ്ത്രക്രിയ പൂർത്തിയാക്കി
-
-കൊച്ചി — വിപിഎസ് ലേക്‌ഷോർ ഹോസ്പിറ്റൽ ഈ ആഴ്ച 500-ാമത് റോബോട്ടിക് ശസ്ത്രക്രിയ പൂർത്തിയാക്കി, ഡോ. അർജുൻ മേനോന്റെ നേതൃത്വത്തിലുള്ള സംഘമാണ് ഇത് നിർവഹിച്ചത്. നാല് വർഷം മുൻപ് ആരംഭിച്ച ഈ പ്രോഗ്രാം യൂറോളജി, ഗൈനക്കോളജി, ജിഐ, കാർഡിയാക് ശസ്ത്രക്രിയകളിലേക്ക് വ്യാപിച്ചു.
-
-## Doctor profile — Dr. Arjun Menon
-Dr. Arjun Menon leads the robotic surgery programme at VPS Lakeshore Hospital, Kochi. Over the past four years, he and his team have performed procedures spanning urology, gynaecology, GI and cardiac surgery on the da Vinci platform, reaching 500 cases this week. He trained in minimally invasive and robotic urology and joined VPS Lakeshore in [year].
-
-## Compliance checklist
-| Item | Status | Note |
-|---|---|---|
-| Claim: "500 robotic surgeries completed" | Verifiable | Confirm exact count with OT register before publishing |
-| Claim: outcome/success language | None used | Copy avoids success-rate or superiority claims — keep it that way |
-| Patient-story consent | N/A | No named patient referenced; confirm before any future case story |
-| Image rights (team photo) | Needs check | Confirm consent from all staff shown in OT/team photos |
-| Doctor quote approval | Pending | Get Dr. Menon's sign-off on quoted text before release |
-| NMC/ASCI flag | Clear | No comparative or guarantee language present |`,
-  heart: () => `## Instagram
-Free heart check this World Heart Day.
-
-BP, ECG and lipid profile at a concessional rate — 29–30 Sept, VPS Lakeshore atrium. Anyone flagged gets a same-day cardiologist consult.
-
-200 slots a day. Call [number] or WhatsApp [number] to register.
-
-#WorldHeartDay #VPSLakeshore #HeartHealth #Kochi #InGoodHands
-
-## Facebook
-This World Heart Day, know your numbers.
-
-VPS Lakeshore Hospital is running a free cardiac screening camp on 29–30 September — blood pressure check, ECG and lipid profile at a concessional rate, with a cardiologist consultation for anyone flagged.
-
-Open to all, especially if you're 40+ or have a family history of heart disease. Limited to 200 slots a day — register by phone or WhatsApp.
-
-📍 VPS Lakeshore Hospital atrium
-📞 [number] · WhatsApp [number]
-
-## WhatsApp broadcast
-*VPS Lakeshore — World Heart Day Screening Camp*
-29–30 Sept | Hospital atrium
-Free BP check + ECG, lipid profile at concessional rate
-Cardiologist consult if flagged
-200 slots/day — reply YES to book, or call [number]
-
-## Press note
-**VPS Lakeshore Hospital to hold free cardiac screening camp for World Heart Day**
-
-Kochi, [date] — Ahead of World Heart Day on 29 September, VPS Lakeshore Hospital will hold a two-day cardiac screening camp on 29–30 September at its atrium, offering blood pressure checks and ECG free of charge, and a lipid profile test at a concessional rate. Anyone flagged during screening will be offered a same-day consultation with a cardiologist.
-
-The camp is open to the public and expected to draw interest from residents aged 40 and above, a group at higher risk of cardiovascular disease. Registration is by phone or WhatsApp, with 200 slots available each day.
-
-"Most heart disease we see could have been caught earlier with a simple check," said [Cardiologist name], consultant cardiologist. "This camp is about making that first check easy to get to."
-
-VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala.
-
-For media queries: corpcomm@vpslakeshore.example
-
-— Ends —
-
-## Compliance checklist
-| Item | Status | Note |
-|---|---|---|
-| Claim: "free BP/ECG, concessional lipid profile" | Verifiable | Confirm final pricing with Finance before publishing |
-| Claim: risk-group framing (40+) | Verifiable | General epidemiological framing, not a diagnosis claim |
-| Cardiologist quote | Needs name + approval | Insert real name and get sign-off before release |
-| Patient-story consent | N/A | No patient story used in this pack |
-| Image rights (camp photos, if used later) | Needs check | Get consent from attendees before posting event photos |
-| NMC/ASCI flag | Clear | No outcome guarantees; camp described as screening, not diagnosis |`,
-  lounge: () => `## Instagram
-A quieter corner for our Maldivian patients.
-
-Our new International Patient Lounge opens next month — a dedicated waiting area near the international desk, with a Dhivehi-speaking coordinator, prayer room access, and help with visa extension letters and currency guidance.
-
-For families travelling to Kochi for care, one less thing to navigate.
-
-#VPSLakeshore #InternationalPatients #Maldives #InGoodHands
-
-## WhatsApp broadcast
-*VPS Lakeshore International Patient Lounge — opening next month*
-Dedicated waiting area | Dhivehi-speaking coordinator | Prayer room access | Visa extension + currency help
-For patients travelling from Maldives for cardiology, orthopaedics, fertility care
-Details: [contact]
-
-## Press note
-**VPS Lakeshore Hospital to open dedicated lounge for international patients**
-
-Kochi, [date] — VPS Lakeshore Hospital will open a new International Patient Lounge next month, a dedicated waiting area for patients travelling from abroad, with particular focus on the hospital's Maldivian patients.
-
-The lounge will be staffed by a Dhivehi-speaking patient coordinator and offer prayer room access, refreshments, and assistance with visa extension letters and currency exchange guidance — support requested most often by families travelling for cardiology, orthopaedic and fertility treatment.
-
-"Travelling for treatment already asks a lot of a family," said [International Desk Head name], head of international patient services. "This lounge is about making the waiting part easier."
-
-VPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala, with a longstanding base of patients from the Maldives, GCC and East Africa.
-
-For media queries: corpcomm@vpslakeshore.example
-
-— Ends —
-
-## Dhivehi version (press note lead)
-VPS Lakeshore ހޮސްޕިޓަލުން ބައިނަލްއަޤްވާމީ ބަލިމީހުންނަށް ހާއްސަ ލައުންޖެއް ހުޅުވަނީ
-
-ކޮޗިން — VPS Lakeshore ހޮސްޕިޓަލުން އަންނަ މަހު ބައިނަލްއަޤްވާމީ ބަލިމީހުންނަށް ހާއްސަ ލައުންޖެއް ހުޅުވުމަށް ތައްޔާރުވެއްޖެއެވެ. ދިވެހި ބަހުން ވާހަކަދައްކާ ކޯޑިނޭޓަރަކާއެކު، ނަމާދު ކުރާނެ ތަނަކާއި ވިސާ އިތުރުކުރުމަށް އެހީތެރިކަން ފޯރުކޮށްދޭނެއެވެ.
-
-## Compliance checklist
-| Item | Status | Note |
-|---|---|---|
-| Claim: lounge facilities (coordinator, prayer room, visa help) | Verifiable | Confirm final service list with International Desk before publishing |
-| Quote attribution | Needs name + approval | Insert real spokesperson name and get sign-off |
-| Patient-story consent | N/A | No named patient referenced in this pack |
-| Image rights (lounge/facility photos) | Needs check | Use render/stock or confirm consent if real photos used |
-| Dhivehi translation accuracy | Needs review | Have a native Dhivehi speaker verify before publishing |
-| NMC/ASCI flag | Clear | Describes a service facility, not a clinical outcome claim |`,
+const ALT_TEXT = {
+  milestone: 'Surgical team in the operating theatre, gathered around the robotic console after the procedure.',
+  awareness: 'A hospital staff member explaining a screening checklist to a visitor at a table.',
+  camp: 'Volunteers and hospital staff at a registration desk in the atrium, with a queue of visitors waiting to be screened.',
+  doctor: 'A consultant in a white coat seated in a consultation room, looking towards the camera.',
+  lounge: 'A quiet waiting area with soft seating, a coordinator\'s desk and a small reception counter.',
+  promo: 'A price card listing the health check package inclusions, laid on a reception counter.',
+  csr: 'A community health camp under a shamiana, with a hospital team member checking a visitor\'s blood pressure.',
+  greeting: 'A festive but understated graphic with the hospital name and a short greeting line.',
 };
+function localizedLine(item, lang, brief) {
+  const lead = firstSentences(brief, 1);
+  const T = {
+    Malayalam: `വിപിഎസ് ലേക്‌ഷോർ ഹോസ്പിറ്റലിൽ നിന്ന്: ${item.title}. ${lead} കൂടുതൽ വിവരങ്ങൾക്ക് ഞങ്ങളെ ബന്ധപ്പെടുക.\n\n*(Machine-assisted draft — have a native Malayalam speaker verify before publishing.)*`,
+    Arabic: `من مستشفى في بي إس ليكشور: ${item.title}. لمزيد من المعلومات يرجى التواصل معنا عبر واتساب.\n\n*(مسودة بمساعدة آلية — يرجى مراجعتها من قبل متحدث عربي أصلي قبل النشر.)*`,
+    Dhivehi: `VPS Lakeshore ހޮސްޕިޓަލުން: ${item.title}. އިތުރު މަޢުލޫމާތަށް ވަޓްސްއެޕް މެދުވެރިކޮށް ގުޅުއްވާ.\n\n*(Machine-assisted draft — have a native Dhivehi speaker verify before publishing.)*`,
+  };
+  return T[lang] || '';
+}
+function hashtagsFor(item) {
+  const base = ['#VPSLakeshore', '#Kochi'];
+  const byCat = { milestone: ['#RoboticSurgery', '#Milestone'], awareness: ['#Awareness', '#HealthCheck'], camp: ['#FreeCamp', '#ScreeningCamp'], doctor: ['#MeetTheDoctor'], lounge: ['#InternationalPatients'], promo: ['#HealthCheckPackage'], csr: ['#CSR', '#CommunityHealth'], greeting: ['#Greetings'] };
+  return base.concat(byCat[item.category] || []).join(' ');
+}
+function channelCopy(item, channel, brief) {
+  const lead = CATEGORY_LINE[item.category] || '';
+  const facts = firstSentences(brief, 2);
+  const tags = hashtagsFor(item);
+  if (channel === 'Instagram') return `${lead}\n\n${facts}\n\n${tags}`;
+  if (channel === 'LinkedIn') return `${item.title}\n\n${facts} ${firstSentences(brief.split(facts)[1] || '', 1)}\n\nAudience: ${item.audience}.\n\n${tags.split(' ').slice(0, 3).join(' ')}`;
+  if (channel === 'Facebook') return `${item.title}\n\n${facts}\n\nWho this is for: ${item.audience}.\n\n${tags}`;
+  if (channel === 'WhatsApp broadcast') return `*${item.title}*\n${firstSentences(brief, 1)}\nReply or call to know more.`;
+  if (channel === 'Press note') return `**VPS Lakeshore Hospital — ${item.title}**\n\nKochi, [date] — ${brief}\n\n"[Quote from the named spokesperson, to be added and approved before release.]"\n\nVPS Lakeshore Hospital is a 350-bed, NABH-accredited multi-specialty hospital in Kochi, Kerala.\n\nFor media queries: corpcomm@vpslakeshore.example\n\n— Ends —`;
+  if (channel === 'Website') return `## ${item.title}\n\n${brief}\n\n**Who it's for:** ${item.audience}`;
+  return facts;
+}
+function buildDraft(item, brief) {
+  const parts = item.channels.map(c => `## ${c}\n${channelCopy(item, c, brief)}`);
+  const langs = (item.languages || []).filter(l => l !== 'English');
+  const locParts = langs.map(l => `## ${l} version\n${localizedLine(item, l, brief)}`);
+  const compliance = `## Compliance checklist\n| Item | Status | Note |\n|---|---|---|\n` +
+    `| Claim: "${firstSentences(brief, 1).slice(0, 70)}…" | Verifiable | Confirm exact figures with the source department before publishing |\n` +
+    `| Patient-story consent | ${item.requiresConsent ? 'Needs check' : 'N/A'} | ${item.requiresConsent ? 'Get written consent on file before naming or picturing any patient/beneficiary' : 'No named patient in this post'} |\n` +
+    `| Image rights | ${item.requiresImageRights ? 'Needs check' : 'N/A'} | ${item.requiresImageRights ? 'Confirm consent from everyone shown before posting' : 'No identifiable people in the planned image'} |\n` +
+    `| Doctor approval | ${item.requiresDoctorApproval ? 'Pending' : 'N/A'} | ${item.requiresDoctorApproval ? 'Get the named doctor\'s sign-off on any quote or claim about their work' : 'No doctor named or quoted'} |\n` +
+    `| NMC/ASCI flag | Clear | No outcome guarantees or comparative claims used |`;
+  return `${parts.join('\n\n')}\n\n${locParts.join('\n\n')}\n\n## Hashtags\n${hashtagsFor(item)}\n\n## Alt text\n${ALT_TEXT[item.category] || 'Photograph relevant to the post topic.'}\n\n${compliance}`;
+}
 
-document.getElementById('runBtn').addEventListener('click', () => {
-  Hub.run({
-    out: '#out',
-    button: '#runBtn',
-    system: SYSTEM,
-    prompt: buildPrompt(),
-    demo: DEMO[current],
-    manualMinutes: 150,
+/* ---------- local upload wiring ----------
+   shared/claude.js only wires .card textareas present at first page load; the brief and
+   voice-checker textareas here are created after Hub.kit.data() resolves, so they need
+   the same "Upload file" control wired in manually, reusing Hub.fileToText. */
+let uploadSeq = 0;
+function wireUpload(ta) {
+  if (!ta || ta.dataset.upload === 'off') return;
+  if (ta.previousElementSibling && ta.previousElementSibling.classList.contains('hub-upload')) return;
+  const row = document.createElement('div');
+  row.className = 'row hub-upload';
+  row.style.margin = '4px 0';
+  const id = 'ms-file-' + (uploadSeq++);
+  row.innerHTML = `<label class="btn" for="${id}" style="margin:0;color:var(--text);font-size:13px;padding:4px 10px;cursor:pointer">Upload file</label>
+    <input id="${id}" type="file" accept=".txt,.csv,.tsv,.md,.json,.xlsx,.xls,.xlsm,.ods,.docx,.pdf" style="display:none">
+    <span class="small">txt, csv, xlsx, docx or pdf — read in your browser, not uploaded anywhere</span>`;
+  ta.parentNode.insertBefore(row, ta);
+  const input = row.querySelector('input'), note = row.querySelector('.small');
+  input.onchange = async () => {
+    const f = input.files[0]; if (!f) return;
+    note.textContent = `Reading ${f.name}…`;
+    try {
+      ta.value = await Hub.fileToText(f);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      note.textContent = `Loaded ${f.name} (${ta.value.length.toLocaleString('en-IN')} characters). Check it before running.`;
+    } catch (e) { note.textContent = e.message; }
+    input.value = '';
+  };
+}
+
+/* ---------- helpers on state ---------- */
+function effectiveBrief(item) { return (st.get().edits || {})[item.id] ?? item.brief; }
+function statusOf(item) {
+  const rv = (st.get().reviews || {})[item.id];
+  if (!rv) return item.status;
+  return { draft: 'Drafted', submitted: 'In review', approved: 'Scheduled', returned: 'Drafted' }[rv.status] || item.status;
+}
+function statusTag(s) {
+  const cls = s === 'Scheduled' || s === 'Approved' ? 'ok' : s === 'In review' ? 'warn' : 'warn';
+  return `<span class="tag ${cls}">${Hub.esc(s)}</span>`;
+}
+function complianceOf(id) { return (st.get().compliance || {})[id] || { consentOnFile: false, imageRights: false, doctorApproval: false }; }
+function setCompliance(id, patch) { st.set(s => ({ compliance: { ...(s.compliance || {}), [id]: { ...complianceOf(id), ...patch } } })); }
+
+/* ---------- Calendar tab ---------- */
+function calendar(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <h2>October calendar</h2>
+        <button type="button" id="exportBtn">Export to Excel</button>
+      </div>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected item</h2><div id="detail"><p class="small">Pick a row from the calendar.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.items, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'date', label: 'Date' }, { key: 'title', label: 'Item' },
+      { key: 'category', label: 'Category', render: r => `<span class="chiptag">${Hub.esc(r.category)}</span>` },
+      { key: 'owner', label: 'Owner' },
+      { key: 'status', label: 'Status', render: r => statusTag(statusOf(r)) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
   });
+  el.querySelector('#exportBtn').onclick = () => {
+    const rows = DATA.items.map(r => ({
+      Date: r.date, ID: r.id, Item: r.title, Category: r.category, Owner: r.owner, Status: statusOf(r),
+      Channels: r.channels.join(', '), Languages: r.languages.join(', '), Audience: r.audience,
+    }));
+    Hub.kit.exportXlsx(rows, 'marketing-studio-october-calendar.xlsx', 'Calendar');
+    Hub.kit.log(SLUG, 'Exported calendar to Excel', `${rows.length} items`);
+  };
+  const sel = DATA.items.find(i => i.id === st.get().selected) || DATA.items[0];
+  if (sel && !st.get().selected) st.set({ selected: sel.id });
+  if (sel) detail(sel);
+}
+
+function detail(r) {
+  const el = document.getElementById('detail');
+  const brief = effectiveBrief(r);
+  const rv = (st.get().reviews || {})[r.id];
+  const idx = DATA.meta.statuses.indexOf(statusOf(r));
+  el.innerHTML = `<div id="steps"></div>
+    <p class="kicker">${Hub.esc(r.date)} · ${Hub.esc(r.category)}</p>
+    <p><b>${Hub.esc(r.title)}</b></p>
+    <p class="meta-line">Owner: ${Hub.esc(r.owner)} · Approver: ${Hub.esc(DATA.meta.approver)}</p>
+    <div class="tagrow">${r.channels.map(c => `<span class="chiptag">${Hub.esc(c)}</span>`).join('')}${r.languages.map(l => `<span class="chiptag">${Hub.esc(l)}</span>`).join('')}</div>
+    <label for="brief-ta">Brief</label>
+    <textarea id="brief-ta">${Hub.esc(brief)}</textarea>
+    <label for="aud-ro">Audience</label>
+    <input id="aud-ro" value="${Hub.esc(r.audience)}" readonly>
+    <h3 style="margin-top:14px">Brand voice check</h3>
+    <div id="vc"></div>
+    <h3 style="margin-top:14px">Compliance</h3>
+    <div id="comp"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="run">Run with Claude</button>
+    </div>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv" style="margin-top:10px"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), DATA.meta.statuses, Math.max(0, idx));
+
+  const ta = el.querySelector('#brief-ta');
+  wireUpload(ta);
+  const drawVc = () => { el.querySelector('#vc').innerHTML = renderVoiceChecklist(voiceCheck(ta.value)); };
+  ta.addEventListener('input', () => { st.set(s => ({ edits: { ...(s.edits || {}), [r.id]: ta.value } })); drawVc(); });
+  drawVc();
+
+  const comp = complianceOf(r.id);
+  const compRow = (key, label, required) => `<label class="compliance-row ${required ? '' : 'na'}"><input type="checkbox" data-c="${key}" ${comp[key] ? 'checked' : ''} ${required ? '' : 'disabled'}> ${label}${required ? '' : ' (not required for this item)'}</label>`;
+  el.querySelector('#comp').innerHTML =
+    compRow('consentOnFile', 'Patient/beneficiary consent on file', r.requiresConsent) +
+    compRow('imageRights', 'Image rights confirmed', r.requiresImageRights) +
+    compRow('doctorApproval', 'Doctor has approved quote/claim', r.requiresDoctorApproval);
+  el.querySelectorAll('#comp input').forEach(cb => cb.onchange = () => { setCompliance(r.id, { [cb.dataset.c]: cb.checked }); Hub.kit.log(SLUG, 'Compliance updated', `${r.id}: ${cb.dataset.c} = ${cb.checked}`); });
+
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: r.title }, text: rv.text, st, onDecision: () => detail(r) });
+
+  el.querySelector('#run').onclick = async () => {
+    const currentBrief = ta.value;
+    const record = { id: r.id, title: r.title, category: r.category, brief: currentBrief, audience: r.audience, channels: r.channels, languages: r.languages, date: r.date };
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 90,
+      system: 'You are the Marketing & Comms content assistant for VPS Lakeshore Hospital, Kochi. Brand voice is plain, observed, specific — never use "world-class", "state-of-the-art", "compassionate care", "patient-centric", "miracle", "best-in-class" or "cutting-edge", and use "In good hands" only where earned, not as a tagline on every post. Stay within NMC and ASCI advertising norms: no outcome guarantees, no comparative superiority claims, no patient testimonials without documented written consent. Always end a press note with "— Ends —". Always include a compliance checklist covering claims made, consent status and image rights.',
+      prompt: `Content calendar item (JSON): ${JSON.stringify(record)}\n\nProduce, in this order: 1) ready-to-post copy for each channel listed; 2) a translated version for each non-English language listed; 3) a hashtag line; 4) one alt-text line describing the planned image; 5) a compliance checklist (claims, consent, image rights, doctor approval, NMC/ASCI flag).`,
+      demo: () => buildDraft(r, currentBrief),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude draft created', r.title);
+    st.set(s => ({ reviews: { ...(s.reviews || {}), [r.id]: (s.reviews || {})[r.id] || { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps'), DATA.meta.statuses, DATA.meta.statuses.indexOf('Drafted'));
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: r.title }, text, st, onDecision: () => detail(r) });
+  };
+}
+
+/* ---------- Voice checker tab ---------- */
+function voiceTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Paste text to check</h2>
+      <p class="small">Paste a caption, press note or any draft. The rule check runs locally in your browser as you type; Claude's rewrite needs a click.</p>
+      <textarea id="vc-in" placeholder="Paste text here…">${Hub.esc(st.get().voiceText || '')}</textarea>
+      <div class="row" style="margin-top:10px"><button type="button" id="vc-rewrite">Rewrite in brand voice</button></div>
+    </div>
+    <div class="card">
+      <h2>Local rule check</h2>
+      <div id="vc-result"></div>
+      <h2 style="margin-top:16px">Claude's rewrite</h2>
+      <div class="claude-out" id="vc-out"><p class="small">Run the rewrite to see suggested copy here.</p></div>
+    </div>
+  </div>`;
+  const ta = el.querySelector('#vc-in');
+  wireUpload(ta);
+  const draw = () => { el.querySelector('#vc-result').innerHTML = ta.value.trim() ? renderVoiceChecklist(voiceCheck(ta.value)) : '<p class="small">Nothing to check yet.</p>'; };
+  ta.addEventListener('input', () => { st.set({ voiceText: ta.value }); draw(); });
+  draw();
+  el.querySelector('#vc-rewrite').onclick = async () => {
+    const text = ta.value.trim();
+    if (!text) { alert('Paste some text first.'); return; }
+    const v = voiceCheck(text);
+    await Hub.run({
+      out: '#vc-out', button: '#vc-rewrite', manualMinutes: 20,
+      system: 'You are the VPS Lakeshore brand voice editor. Rewrite text in plain, observed, specific language. Remove clichés (world-class, state-of-the-art, compassionate care, patient-centric, miracle, best-in-class, cutting-edge), remove unverifiable claims, and use "In good hands" only if it is clearly earned by the content, never as a default sign-off. Keep facts intact — do not invent numbers or quotes. Show the rewritten text, then a short list of what you changed and why.',
+      prompt: `Rewrite this in VPS Lakeshore brand voice:\n\n${text}`,
+      demo: () => {
+        const flags = [];
+        if (v.banned.length) flags.push(`removed the clichés: ${v.banned.join(', ')}`);
+        if (v.claims.length) flags.push(`softened unverifiable claims: ${v.claims.join(', ')}`);
+        if (v.capWords.length) flags.push(`toned down uppercase shouting: ${v.capWords.join(', ')}`);
+        const cleaned = DATA.meta.bannedPhrases.reduce((s, p) => s.replace(new RegExp(p, 'ig'), 'reliable'), text)
+          .replace(/\b(guaranteed|100%|zero risk|completely safe|risk-free|no side effects|always works|cures)\b/ig, 'expected to help in most cases');
+        return `## Rewritten\n${cleaned}\n\n## What changed\n${flags.length ? flags.map(f => `- ${f}`).join('\n') : '- No brand-voice issues found — copy already reads plainly.'}\n\n*Review before use — Claude edits wording, not facts. Check that nothing meaningful was softened away.*`;
+      },
+    });
+  };
+}
+
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const items = DATA.items;
+  const scheduled = items.filter(i => statusOf(i) === 'Scheduled').length;
+  const approved = items.filter(i => statusOf(i) === 'Approved').length;
+  const totalPosts = Object.values(DATA.engagement.postsByChannel).reduce((a, s) => a + s.reduce((x, y) => x + y, 0), 0);
+  const lastWeekEng = DATA.engagement.reachTotal.slice(-1)[0];
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Items this month</div><div class="value">${items.length}</div></div>
+    <div class="kpi"><div class="label">Approved or scheduled</div><div class="value">${approved + scheduled}</div></div>
+    <div class="kpi"><div class="label">Posts, last 8 weeks</div><div class="value">${totalPosts}</div></div>
+    <div class="kpi"><div class="label">Reach, most recent week</div><div class="value">${Hub.chart.compact(lastWeekEng)}</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card" id="c3"></div>
+  </div>`;
+  Hub.chart.stacked(el.querySelector('#c1'), {
+    title: 'Posts by channel, by week', sub: 'Past 8 weeks', labels: DATA.engagement.weeks,
+    series: Object.keys(DATA.engagement.postsByChannel).map(c => ({ name: c, values: DATA.engagement.postsByChannel[c] })),
+    format: v => String(v),
+  });
+  Hub.chart.line(el.querySelector('#c2'), {
+    title: 'Total engagement trend', sub: 'Likes, comments, shares and WhatsApp replies combined',
+    labels: DATA.engagement.weeks, series: [{ name: 'Engagement', values: DATA.engagement.weeks.map((_, i) => Object.keys(DATA.engagement.engagementByChannel).reduce((a, c) => a + DATA.engagement.engagementByChannel[c][i], 0)) }],
+  });
+  const byCat = {};
+  items.forEach(i => { byCat[i.category] = (byCat[i.category] || 0) + 1; });
+  Hub.chart.hbar(el.querySelector('#c3'), { title: 'Calendar items by category', data: Object.entries(byCat).map(([label, value]) => ({ label, value })), format: v => String(v) });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The October calendar', text: 'Every planned post, camp announcement, doctor profile and greeting for the month, with its current status.' },
+      { sel: '#brief-ta', title: 'The brief', text: 'The content exec edits the brief here — the specific facts Claude drafts from.' },
+      { sel: '#vc', title: 'Brand voice check', text: 'Runs locally as you type: flags banned clichés, unverifiable claims and uppercase shouting before you even ask Claude.' },
+      { sel: '#comp', title: 'Compliance ticks', text: 'Consent, image rights and doctor approval — ticked off per item and saved with it.' },
+      { sel: '#run', title: 'Draft with Claude', text: 'Produces per-channel copy, a translated version, hashtags and alt text from the brief on screen.' },
+      { sel: '#tabs', title: 'Voice checker and dashboard', text: 'Paste any text into Voice checker for a standalone check and rewrite, or see the month\'s posting and engagement trends on Dashboard.' },
+      { sel: '#exportBtn', title: 'Export', text: 'The full calendar, with current statuses, as an Excel file for the weekly comms meeting.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'calendar', label: 'Calendar' }, { id: 'voice', label: 'Voice checker' }, { id: 'dash', label: 'Dashboard' },
+  ], id => {
+    st.set({ tab: id });
+    ({ calendar, voice: voiceTab, dash: dashboard })[id](document.getElementById('view'));
+  }, st.get().tab);
 });
 </script>
 </body>
