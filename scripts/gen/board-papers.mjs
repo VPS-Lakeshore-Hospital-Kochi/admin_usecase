@@ -214,6 +214,7 @@ const MINUTES_NOTES = [
     date: '2026-09-24', venue: 'Boardroom',
     present: ['Managing Director', 'Chief Financial Officer', 'Chief Operating Officer', 'Medical Director'],
     inAttendance: ['Company Secretary (recording)'],
+    nextMeeting: '22 October 2026',
     roughNotes: `Meeting: EC meeting, 24 Sept 2026, 4pm, boardroom. Present: MD, CFO, COO, Medical Director, CS (recording).
 - CFO walked through Aug MIS. Revenue up 6% MoM, EBITDA margin steady at 19%. Robotics program contributing more than expected.
 - Discussed ICU capex proposal - CFO said funding plan looks fine, wants one more round with the bank on interest rate before board.
@@ -222,6 +223,15 @@ const MINUTES_NOTES = [
 - CS to circulate NABH prep committee terms of reference by 3 Oct.
 - Approved: renewal of biomedical waste management contract with existing vendor for 1 more year, same commercial terms.
 - Next EC meeting: 22 Oct 2026.`,
+    agendaItems: [
+      { heading: 'Confirmation of previous minutes', discussion: 'Taken as read.' },
+      { heading: 'August MIS review', discussion: 'The CFO presented the August MIS. Revenue was up 6% month-on-month, with EBITDA margin steady at 19%. The robotics surgery programme contributed above expectation for the month.' },
+      { heading: 'ICU Complex capex proposal', discussion: 'The CFO noted the funding plan was broadly acceptable but requested one further round of discussion with the lead bank on interest-rate terms before the proposal is placed before the Board.', action: { owner: 'CFO', due: 'Before next Board placement', text: 'Finalise bank terms for ICU capex before Board placement' } },
+      { heading: 'Critical care nursing staffing', discussion: 'The COO reported 8 vacancies in critical care nursing. It was agreed to fast-track recruitment through two external agencies, with a status review in 4 weeks.', action: { owner: 'COO', due: '22 Oct 2026', text: 'Review critical care nursing recruitment progress' } },
+      { heading: 'Transplant programme update', discussion: 'The Medical Director reported 2 further successful transplant cases during the month. An NABH surveyor visit is scheduled for the first week of November 2026; a preparation committee is to be constituted.', action: { owner: 'Medical Director', due: 'Ahead of Nov survey', text: 'Constitute NABH preparation committee' } },
+      { heading: 'NABH preparation committee — terms of reference', discussion: '', action: { owner: 'Company Secretary', due: '3 Oct 2026', text: 'Circulate draft Terms of Reference for the NABH preparation committee' } },
+      { heading: 'Biomedical waste management contract renewal', discussion: '', resolution: 'RESOLVED THAT the biomedical waste management services contract with the existing vendor be renewed for a further period of one year on the same commercial terms as the current agreement.' },
+    ],
   },
   {
     id: 'notes-ac-jun',
@@ -230,6 +240,7 @@ const MINUTES_NOTES = [
     date: '2026-07-09', venue: 'Conference Room 2',
     present: ['Audit Committee Chairman (Independent Director)', 'Independent Director', 'CFO (invitee)'],
     inAttendance: ['Statutory Auditor (invitee)', 'Company Secretary (recording)'],
+    nextMeeting: '8 October 2026',
     roughNotes: `Meeting: Audit Committee, 9 July 2026, 3pm, conference room 2. Present: AC Chairman (ID), another ID, CFO (invitee). Statutory auditor joined for first part. CS recording.
 - Statutory auditor presented Q1 FY27 limited review - clean, no qualifications. One observation on TPA receivable ageing beyond 120 days going up a bit, CFO to track monthly.
 - Internal auditor presented Q1 report - flagged a gap in biomedical waste segregation compliance at 2 satellite OPD centres, corrective action plan agreed, to close by end Aug.
@@ -238,6 +249,14 @@ const MINUTES_NOTES = [
 - AC chairman asked for a cyber-security readiness update at next meeting given DPDP Act enforcement.
 - CFO to also bring related party omnibus limit renewal proposal for FY27 to next meeting.
 - Next Audit Committee meeting: 8 Oct 2026, ahead of Q2 results.`,
+    agendaItems: [
+      { heading: 'Statutory auditor — Q1 FY27 limited review', discussion: 'The statutory auditor presented the Q1 FY27 limited review report — clean, with no qualifications. One observation was raised on TPA receivable ageing beyond 120 days trending up slightly; the CFO agreed to track this monthly.', action: { owner: 'CFO', due: 'Monthly, ongoing', text: 'Track TPA receivable ageing beyond 120 days monthly' } },
+      { heading: 'Internal audit — Q1 report', discussion: 'The internal auditor flagged a gap in biomedical waste segregation compliance at 2 satellite OPD centres. A corrective action plan was agreed.', action: { owner: 'Internal Auditor', due: 'End August 2026', text: 'Close corrective action plan on biomedical waste segregation at 2 satellite OPD centres' } },
+      { heading: 'Related-party transactions — quarterly review', discussion: 'Related-party transactions for the quarter were reviewed against the omnibus approval limit and found to be within limit; nothing was flagged.' },
+      { heading: 'Whistleblower complaints', discussion: 'One complaint was received during the quarter, relating to procurement vendor selection. It was investigated by internal audit; no wrongdoing was found and the matter was closed.' },
+      { heading: 'Cyber-security readiness', discussion: 'The Committee Chairman asked for a cyber-security readiness update at the next meeting, given DPDP Act, 2023 enforcement.', action: { owner: 'Chief Information Officer', due: 'Next Audit Committee meeting', text: 'Present a cyber-security readiness update' } },
+      { heading: 'Related-party omnibus limit — FY27 renewal', discussion: '', action: { owner: 'CFO', due: 'Next Audit Committee meeting', text: 'Bring the related-party omnibus limit renewal proposal for FY27' } },
+    ],
   },
 ];
 
