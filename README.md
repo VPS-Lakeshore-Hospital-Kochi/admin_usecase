@@ -12,11 +12,11 @@ Static HTML — no build step, no server-side code.
 | Finance & Accounts | Audit query responder | `apps/audit-responder.html` |
 | Finance & Accounts | MIS consolidation checker | `apps/mis-pipeline.html` |
 | Revenue Cycle · TPA | Cashless pre-auth file builder ★ | `apps/tpa-preauth.html` |
-| Revenue Cycle · TPA | Denial & short-payment analyser | `apps/denial-analyser.html` |
+| Revenue Cycle · TPA | Denial & short-payment analyser ★ | `apps/denial-analyser.html` |
 | Revenue Cycle · TPA | Discharge bill checker | `apps/discharge-billing.html` |
 | Revenue Cycle · TPA | Patient cost estimate | `apps/estimate-generator.html` |
 | Purchase & Stores | Quote comparison & PC note ★ | `apps/purchase-quotes.html` |
-| Purchase & Stores | PO–GRN–invoice matcher | `apps/three-way-match.html` |
+| Purchase & Stores | PO–GRN–invoice matcher ★ | `apps/three-way-match.html` |
 | Purchase & Stores | Vendor contract summariser | `apps/vendor-contracts.html` |
 | Purchase & Stores | Reorder & expiry watch | `apps/stock-watch.html` |
 | Human Resources | Resume screener & interview kit ★ | `apps/hr-screener.html` |
@@ -30,11 +30,11 @@ Static HTML — no build step, no server-side code.
 | Marketing & Comms | Enquiry-to-revenue waterfall | `apps/enquiry-waterfall.html` |
 | Patient Experience | Feedback intelligence ★ | `apps/patient-feedback.html` |
 | Patient Experience | Call centre & WhatsApp agent | `apps/contact-centre.html` |
-| Patient Experience | Bed & discharge flow assistant | `apps/bed-flow.html` |
-| International Patients | International patient desk assistant | `apps/intl-desk.html` |
+| Patient Experience | Bed & discharge flow assistant ★ | `apps/bed-flow.html` |
+| International Patients | International patient desk assistant ★ | `apps/intl-desk.html` |
 | Quality & Accreditation | NABH readiness & policy Q&A ★ | `apps/nabh-readiness.html` |
 | Quality & Accreditation | Incident trend report | `apps/incident-trends.html` |
-| Legal & Secretarial | Contract risk review | `apps/contract-review.html` |
+| Legal & Secretarial | Contract risk review ★ | `apps/contract-review.html` |
 | Legal & Secretarial | Board paper & minutes drafter | `apps/board-papers.html` |
 | Legal & Secretarial | Approval turnaround tracker | `apps/docusign-tracker.html` |
 | Legal & Secretarial | Statutory compliance calendar | `apps/compliance-calendar.html` |
@@ -57,7 +57,7 @@ Static HTML — no build step, no server-side code.
 | CSR | CSR project reporter | `apps/csr-report.html` |
 | Training & Academics | Mandatory training planner | `apps/training-planner.html` |
 
-★ = flagship. Also: [`governance.html`](governance.html) — principles, data rules, approval tiers, phased rollout and an hours-saved estimator.
+★ = flagship: a fully working demo with its own dataset, work queue, maker/approver approval, dashboard and guided tour. Also: [`governance.html`](governance.html) — principles, data rules, approval tiers, phased rollout and an hours-saved estimator.
 
 ## Running
 
