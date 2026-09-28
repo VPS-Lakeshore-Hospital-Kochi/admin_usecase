@@ -79,9 +79,9 @@ const PACKAGES = [
 ];
 
 const TPA_LIST = ['Suraksha TPA', 'MedAssure TPA Services', 'CareLink Health TPA', 'Sanjeevani TPA', 'TrustHealth TPA',
-  'Wellcare Insurance TPA', 'Amrutha Mediclaim TPA', 'Paramount Health TPA', 'Universal Health Assurance TPA',
-  'Kerala Mediclaim TPA', 'Raksha Health TPA', 'Vidyut Health TPA', 'Star Assist TPA', 'MDCare TPA',
-  'Family Shield TPA', 'Nova Health TPA'];
+  'Wellcare Insurance TPA', 'Thejas Mediclaim TPA', 'Periyar Claims TPA', 'Monsoon Health Assurance TPA',
+  'Kerala Mediclaim TPA', 'Kayal Health TPA', 'Vidyut Health TPA', 'Backwater Assist TPA', 'Vembanad Care TPA',
+  'Kochi Claims Desk TPA', 'Nova Health TPA'];
 
 const KB_GENERAL = {
   opdReg: { title: 'OPD registration timings', source: 'Front office SOP', text: 'OPD registration Mon–Sat 8:00 AM–7:00 PM, Sunday 9:00 AM–1:00 PM. Emergency department is open 24x7, every day including Sundays and holidays.' },

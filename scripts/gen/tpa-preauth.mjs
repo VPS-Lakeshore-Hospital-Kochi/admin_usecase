@@ -17,7 +17,7 @@ const pick = arr => arr[Math.floor(rand() * arr.length)];
 const int = (a, b) => a + Math.floor(rand() * (b - a + 1));
 const round100 = n => Math.round(n / 100) * 100;
 
-const PAYERS = ['Star Health', 'Medi Assist (TPA)', 'Paramount TPA', 'Vidal Health TPA', 'MediBuddy', 'Corporate GHI — PeerCorp Industries', 'CGHS / PMJAY (govt scheme)'];
+const PAYERS = ['Sahya Health Insurance', 'MedAssure TPA', 'Periyar Claims TPA', 'Kayal Health TPA', 'CareLink TPA', 'Corporate GHI — PeerCorp Industries', 'CGHS / PMJAY (govt scheme)'];
 const DOCTORS = ['Dr. Anil Menon', 'Dr. Priya Varghese', 'Dr. Thomas Koshy', 'Dr. Lakshmi Pillai', 'Dr. Sunil Nair', 'Dr. Divya Krishnan', 'Dr. Rajeev Panicker', 'Dr. Meera Balakrishnan', 'Dr. George Mathew', 'Dr. Anjali Warrier', 'Dr. Vinod Kurup', 'Dr. Sheeba Thomas'];
 const ROOM = ['General ward', 'Twin sharing', 'Private (non-AC)', 'Private AC', 'ICU/CCU', 'Deluxe / suite'];
 

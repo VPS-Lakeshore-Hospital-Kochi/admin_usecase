@@ -171,10 +171,10 @@ function reviewPanel(el, c) {
   const rec = (st.get().reviews[c.id]);
   if (!rec) { el.innerHTML = ''; return; }
   const approval = needsApproval(c);
-  const role = Hub.kit.role();
   function save(patch) { st.set(s => ({ reviews: { ...s.reviews, [c.id]: { ...s.reviews[c.id], ...patch } } })); }
   function draw() {
     const r = st.get().reviews[c.id];
+    const role = Hub.kit.role(); // re-read on every draw — role can change via the toolbar between renders
     const badge = { draft: '<span class="tag warn">Draft — with agent</span>', submitted: '<span class="tag warn">Awaiting team lead approval</span>', sent: '<span class="tag ok">Sent</span>', returned: '<span class="tag bad">Returned to agent</span>' }[r.status];
     el.className = 'kit-review';
     el.innerHTML = `<div class="row" style="justify-content:space-between"><h3 style="margin:0">Draft reply</h3>${badge}</div>

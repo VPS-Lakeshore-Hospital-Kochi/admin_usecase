@@ -19,7 +19,7 @@ const int = (a, b) => a + Math.floor(rand() * (b - a + 1));
 const round100 = n => Math.round(n / 100) * 100;
 
 // Same payer set as tpa-preauth.
-const PAYERS = ['Star Health', 'Medi Assist (TPA)', 'Paramount TPA', 'Vidal Health TPA', 'MediBuddy', 'Corporate GHI — PeerCorp Industries', 'CGHS / PMJAY (govt scheme)'];
+const PAYERS = ['Sahya Health Insurance', 'MedAssure TPA', 'Periyar Claims TPA', 'Kayal Health TPA', 'CareLink TPA', 'Corporate GHI — PeerCorp Industries', 'CGHS / PMJAY (govt scheme)'];
 
 const DEPTS = ['Orthopaedics', 'Cardiology', 'General Surgery', 'Gynaecology', 'Nephrology', 'Urology', 'ENT', 'Ophthalmology', 'Neurology'];
 const PROCEDURES = [

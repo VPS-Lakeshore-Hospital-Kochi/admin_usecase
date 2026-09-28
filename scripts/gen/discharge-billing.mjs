@@ -72,7 +72,7 @@ const PAYER_TYPES = [
   { type: 'International', share: 0.12 },
   { type: 'Govt scheme', share: 0.23 },
 ];
-const TPA_NAMES = ['Star Health', 'Medi Assist (TPA)', 'Paramount TPA', 'Vidal Health TPA', 'MediBuddy', 'Corporate GHI — PeerCorp Industries'];
+const TPA_NAMES = ['Sahya Health Insurance', 'MedAssure TPA', 'Periyar Claims TPA', 'Kayal Health TPA', 'CareLink TPA', 'Corporate GHI — PeerCorp Industries'];
 const INTL_NAMES = ['GlobeCare International Assist', 'Gulf Region Corporate Insurance', 'OverseasMed TPA (UAE)', 'Self-pay — international patient'];
 const SCHEME_NAMES = ['CGHS', 'PMJAY (Ayushman Bharat)', 'Kerala govt employee scheme (MEDISEP)'];
 const ENTITLEMENT_BY_PAYER = { 'CGHS': 'Twin sharing', 'PMJAY (Ayushman Bharat)': 'General ward', 'Kerala govt employee scheme (MEDISEP)': 'Twin sharing' };

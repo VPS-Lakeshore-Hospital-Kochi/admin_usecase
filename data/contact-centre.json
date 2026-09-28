@@ -336,15 +336,15 @@
   "Sanjeevani TPA",
   "TrustHealth TPA",
   "Wellcare Insurance TPA",
-  "Amrutha Mediclaim TPA",
-  "Paramount Health TPA",
-  "Universal Health Assurance TPA",
+  "Thejas Mediclaim TPA",
+  "Periyar Claims TPA",
+  "Monsoon Health Assurance TPA",
   "Kerala Mediclaim TPA",
-  "Raksha Health TPA",
+  "Kayal Health TPA",
   "Vidyut Health TPA",
-  "Star Assist TPA",
-  "MDCare TPA",
-  "Family Shield TPA",
+  "Backwater Assist TPA",
+  "Vembanad Care TPA",
+  "Kochi Claims Desk TPA",
   "Nova Health TPA"
  ],
  "general": {
@@ -1471,7 +1471,7 @@
    "id": "KB-57",
    "category": "Insurance (TPA)",
    "title": "Cashless TPA list",
-   "detail": "Suraksha TPA, MedAssure TPA Services, CareLink Health TPA, Sanjeevani TPA, TrustHealth TPA, Wellcare Insurance TPA, Amrutha Mediclaim TPA, Paramount Health TPA, Universal Health Assurance TPA, Kerala Mediclaim TPA, Raksha Health TPA, Vidyut Health TPA, Star Assist TPA, MDCare TPA, Family Shield TPA, Nova Health TPA",
+   "detail": "Suraksha TPA, MedAssure TPA Services, CareLink Health TPA, Sanjeevani TPA, TrustHealth TPA, Wellcare Insurance TPA, Thejas Mediclaim TPA, Periyar Claims TPA, Monsoon Health Assurance TPA, Kerala Mediclaim TPA, Kayal Health TPA, Vidyut Health TPA, Backwater Assist TPA, Vembanad Care TPA, Kochi Claims Desk TPA, Nova Health TPA",
    "source": "Insurance desk TPA list, current"
   }
  ],
