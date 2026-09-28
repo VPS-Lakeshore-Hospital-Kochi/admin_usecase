@@ -5,212 +5,349 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bed &amp; discharge flow assistant</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .blk { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .blk:last-child { border-bottom: none; }
+  .blk input { width: auto; }
+  .blk .done { text-decoration: line-through; color: var(--muted); }
+  .taglist { display: flex; flex-wrap: wrap; gap: 4px; }
+  .noon { font-variant-numeric: tabular-nums; font-weight: 500; }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Bed &amp; discharge flow assistant</h1>
-    <p>Turn today's census into a prioritised discharge action list and a bed huddle plan, before the noon crunch.</p>
+    <p>Today's IP census across every ward: chase blockers on expected discharges, run the morning bed huddle, and match freed beds against waiting ER/OT/elective admissions.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Today's IP census (editable)</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="typical">Typical weekday — mixed payer mix</option>
-          <option value="busy">Post-weekend surge — heavy TPA blockers</option>
-        </select>
-      </div>
-      <label>Census (editable, pipe-separated: bed | ward | payer | expected discharge today | pending items)</label>
-      <textarea id="census" rows="16"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <h2 style="margin-top:20px">Blocker breakdown</h2>
-  <div class="table-wrap"><table id="blockTable"></table></div>
-
-  <p class="footer-note">Synthetic census for demonstration only. Beds, wards and staff names are illustrative, not actual patient data.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic census for demonstration only — no real patients. Nothing here is sent or posted to any hospital system; a named person approves before anything goes out.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'bed-flow';
 Hub.mountHeader({ dept: 'Patient Experience', title: 'Bed & discharge flow assistant' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, resolved: {}, reviews: {} });
+let DATA;
 
-const BLOCKER_TYPES = ['TPA final approval', 'Final bill', 'Pharmacy return', 'Discharge summary', 'Reports pending', 'Transport'];
-
-const SCENARIOS = {
-  typical: {
-    rows: [
-      ['304A', 'General Surgery', 'Cash', 'Y', 'Final bill'],
-      ['304B', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
-      ['312', 'Ortho', 'TPA', 'Y', 'Discharge summary'],
-      ['315', 'Ortho', 'Cash', 'N', '—'],
-      ['401', 'Cardiology', 'International', 'Y', 'Transport'],
-      ['403', 'Cardiology', 'TPA', 'N', 'Reports pending'],
-      ['406', 'Cardiology', 'Cash', 'Y', 'Pharmacy return'],
-      ['502', 'ICU', 'TPA', 'N', '—'],
-      ['505', 'Medicine', 'Cash', 'Y', 'Final bill'],
-      ['507', 'Medicine', 'International', 'Y', 'Discharge summary'],
-      ['509', 'Medicine', 'TPA', 'N', 'Reports pending'],
-      ['602', 'Paediatrics', 'Cash', 'Y', 'Pharmacy return'],
-      ['605', 'Paediatrics', 'TPA', 'Y', 'TPA final approval'],
-      ['610', 'Gynae', 'Cash', 'N', '—'],
-    ],
-  },
-  busy: {
-    rows: [
-      ['304A', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
-      ['304B', 'General Surgery', 'TPA', 'Y', 'TPA final approval'],
-      ['312', 'Ortho', 'TPA', 'Y', 'TPA final approval, Discharge summary'],
-      ['315', 'Ortho', 'Cash', 'Y', 'Final bill'],
-      ['401', 'Cardiology', 'International', 'Y', 'Transport, Reports pending'],
-      ['403', 'Cardiology', 'TPA', 'Y', 'TPA final approval'],
-      ['406', 'Cardiology', 'Cash', 'Y', 'Pharmacy return'],
-      ['502', 'ICU', 'TPA', 'N', '—'],
-      ['505', 'Medicine', 'TPA', 'Y', 'TPA final approval, Final bill'],
-      ['507', 'Medicine', 'International', 'Y', 'Discharge summary'],
-      ['509', 'Medicine', 'TPA', 'Y', 'TPA final approval'],
-      ['602', 'Paediatrics', 'Cash', 'Y', 'Pharmacy return'],
-      ['605', 'Paediatrics', 'TPA', 'Y', 'TPA final approval'],
-      ['610', 'Gynae', 'TPA', 'N', 'Reports pending'],
-    ],
-  },
+/* ---------- helpers shared across tabs ---------- */
+function resolvedFor(id) { return st.get().resolved[id] || {}; }
+function openBlockers(bed) { const r = resolvedFor(bed.id); return bed.blockers.filter(b => !r[b]); }
+function expectedBeds() { return DATA.beds.filter(b => b.expectedDischargeToday); }
+function noonMinutes(targetTime) {
+  const [h, m] = targetTime.split(':').map(Number);
+  return (h * 60 + m) - 12 * 60; // negative = before noon
+}
+function noonTag(bed) {
+  if (openBlockers(bed).length === 0) return { cls: 'ok', text: 'Clear now' };
+  const mins = noonMinutes(bed.targetTime);
+  if (mins <= -60) return { cls: 'ok', text: `${bed.targetTime} target` };
+  if (mins <= 30) return { cls: 'warn', text: `${bed.targetTime} target` };
+  return { cls: 'bad', text: `${bed.targetTime} target — after noon` };
+}
+function blockerTags(bed) {
+  const r = resolvedFor(bed.id);
+  if (!bed.blockers.length) return '<span class="tag ok">No blockers</span>';
+  return `<div class="taglist">${bed.blockers.map(b => `<span class="tag ${r[b] ? 'ok' : 'warn'}">${Hub.esc(b)}${r[b] ? ' ✓' : ''}</span>`).join('')}</div>`;
+}
+const OWNER_BY_BLOCKER = {
+  'TPA final approval pending': 'TPA desk',
+  'Final bill not prepared': 'Billing desk',
+  'Pharmacy return': 'Pharmacy',
+  'Discharge summary unsigned': 'Treating consultant',
+  'Reports awaited': 'Lab/reports desk',
+  'Transport/relatives not arrived': 'Front office / concierge',
+  'Housekeeping': 'Housekeeping',
 };
 
-function fmtCensus(rows) {
-  const head = 'Bed | Ward | Payer | Expected Discharge Today | Pending Items';
-  return head + '\n' + rows.map(r => r.join(' | ')).join('\n');
+/* ================= Tab: Discharges today ================= */
+function queue(el) {
+  const beds = expectedBeds();
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Expected discharges today</h2>
+      <p class="small">${beds.length} of ${DATA.beds.length} occupied beds are expected to discharge today (as of ${Hub.esc(DATA.currentTime)}). Tick a blocker off as it clears — the list and the huddle both update.</p>
+      <div class="row" style="margin-bottom:8px"><button type="button" id="expQ">Export census to Excel</button></div>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected bed</h2><div id="detail"><p class="small">Pick a bed from the list.</p></div></div>
+  </div>`;
+  drawTable(beds);
+  el.querySelector('#expQ').onclick = () => Hub.kit.exportXlsx(DATA.beds.map(b => ({
+    Bed: b.bedNo, Ward: b.ward, 'Bed type': b.bedType, Patient: `${b.patientInitials}, ${b.age}${b.sex}`, Payer: b.payer,
+    Admitted: b.admittedDate, 'Expected discharge today': b.expectedDischargeToday ? 'Y' : 'N', 'Target time': b.targetTime || '',
+    Blockers: b.blockers.length ? b.blockers.filter(x => !resolvedFor(b.id)[x]).join('; ') : '',
+  })), 'bed-flow-census.xlsx', 'Census');
+  const sel = beds.find(b => b.id === st.get().selected) || beds[0];
+  if (sel) { st.set({ selected: sel.id }); detail(sel); }
 }
 
-function analyse(rows) {
-  const expected = rows.filter(r => r[3] === 'Y');
+let tblHandle;
+function drawTable(beds) {
+  const box = document.getElementById('tbl');
+  if (!box) return; // user is on a different tab
+  tblHandle = Hub.kit.table(box, {
+    rows: beds, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'bedNo', label: 'Bed' },
+      { key: 'ward', label: 'Ward' },
+      { key: 'patientInitials', label: 'Patient', render: r => `${Hub.esc(r.patientInitials)}, ${r.age}${r.sex}` },
+      { key: 'payer', label: 'Payer' },
+      { key: 'targetTime', label: 'To noon', render: r => { const t = noonTag(r); return `<span class="tag ${t.cls}">${Hub.esc(t.text)}</span>`; } },
+      { key: 'blockers', label: 'Blockers', render: r => blockerTags(r) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
+  });
+}
+
+function chasePrompt(bed) {
+  const open = openBlockers(bed);
+  return JSON.stringify({
+    bed: bed.bedNo, ward: bed.ward, bedType: bed.bedType, patient: `${bed.patientInitials}, ${bed.age}${bed.sex}`,
+    payer: bed.payer, admittedDate: bed.admittedDate, targetTime: bed.targetTime,
+    openBlockers: open, ownersByBlocker: open.map(b => ({ blocker: b, owner: OWNER_BY_BLOCKER[b] })),
+  }, null, 1);
+}
+function chaseDemo(bed) {
+  const open = openBlockers(bed);
+  const rows = open.map(b => `| ${OWNER_BY_BLOCKER[b]} | ${b} | ${chaseLine(b, bed)} |`).join('\n');
+  return `## Discharge plan — ${bed.bedNo} (${bed.ward})
+
+**Patient:** ${bed.patientInitials}, ${bed.age}${bed.sex} · **Payer:** ${bed.payer} · **Admitted:** ${bed.admittedDate} · **Target discharge:** ${bed.targetTime || 'not set'}
+
+### Owner-wise chase messages
+${open.length ? `| Owner | Blocker | Message to send |\n|---|---|---|\n${rows}` : 'No open blockers — this bed is clear to discharge now.'}
+
+### Discharge plan
+${open.length
+  ? `1. Chase the ${open.length} open item${open.length > 1 ? 's' : ''} above in parallel, starting with **${OWNER_BY_BLOCKER[open[0]]}** since it is usually the longest pole.\n2. Confirm each owner's ETA and set a recheck for 30 minutes before the ${bed.targetTime || 'noon'} target.\n3. Once all items clear, notify housekeeping so the bed is turned around within 30 minutes of the patient leaving.\n4. Log the actual discharge time against the ${bed.targetTime || 'noon'} target for tomorrow's TAT trend.`
+  : `1. Confirm the patient and attendant are ready and transport (if needed) is arranged.\n2. Complete final nursing handover and clinical clearance.\n3. Notify housekeeping the moment the bed is vacated so it can be offered to a waiting admission.`}
+
+*Recommendation:* ${open.length ? `escalate ${OWNER_BY_BLOCKER[open[0]]} now — this is the constraint for the ${bed.targetTime || 'noon'} target.` : 'ready for discharge — release to the bed huddle as a free bed.'}`;
+}
+function chaseLine(b, bed) {
+  const t = bed.targetTime || 'the target time';
+  return {
+    'TPA final approval pending': `Requesting urgent status on final approval for ${bed.patientInitials} (${bed.bedNo}), clinically fit for discharge, target ${t}. Please confirm approval ETA this hour.`,
+    'Final bill not prepared': `Please prepare the final bill for ${bed.bedNo} (${bed.patientInitials}) now — discharge is targeted for ${t} and the bed is needed for a waiting admission.`,
+    'Pharmacy return': `Pending pharmacy return for ${bed.bedNo} needs to be collected and reconciled before discharge at ${t}. Please send someone up within the hour.`,
+    'Discharge summary unsigned': `Discharge summary for ${bed.patientInitials} (${bed.bedNo}) is still awaiting sign-off. Target discharge is ${t} — please review and sign at the earliest.`,
+    'Reports awaited': `${bed.bedNo} discharge (target ${t}) is waiting on pending reports. Please expedite and flag the treating team once available.`,
+    'Transport/relatives not arrived': `Transport/relatives have not yet arrived for ${bed.bedNo} (target ${t}). Please confirm arrival time so we can plan the discharge round.`,
+    'Housekeeping': `${bed.bedNo} will need a housekeeping turnaround as soon as the patient leaves (target ${t}) — a waiting admission needs this bed.`,
+  }[b] || `Please action the "${b}" item for ${bed.bedNo}, target ${t}.`;
+}
+
+function detail(bed) {
+  const el = document.getElementById('detail');
+  if (!el) return; // user is on a different tab
+  const rv = st.get().reviews[bed.id];
+  const open = openBlockers(bed);
+  const stepIdx = rv ? (rv.status === 'approved' ? 3 : 2) : (open.length === 0 ? 1 : 0);
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(bed.bedNo)} · ${Hub.esc(bed.ward)}</b><br>
+    <span class="small">${Hub.esc(bed.patientInitials)}, ${bed.age}${bed.sex} · ${Hub.esc(bed.payer)} · admitted ${Hub.esc(bed.admittedDate)} · target ${Hub.esc(bed.targetTime || '—')}</span></p>
+    <h3>Blockers</h3>
+    <div id="blist"></div>
+    <div class="row" style="margin-top:12px"><button class="primary" id="run">Run with Claude</button></div>
+    <div class="claude-out" id="out" style="margin-top:10px"></div>
+    <div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Blockers listed', 'Ready for Claude', 'Claude draft', 'Approved'], stepIdx);
+  drawBlockers(bed);
+  if (rv) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: bed.id, title: `Discharge plan — ${bed.bedNo}` }, text: rv.text, st, docTitle: `Discharge plan ${bed.bedNo}`, onDecision: () => { detail(bed); drawTable(expectedBeds()); } });
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 20,
+      system: 'You are a hospital bed manager at a 350-bed Kerala hospital drafting owner-wise chase messages and a discharge plan for one patient expected to discharge today. Be specific about who owns each open blocker and what to say to them.',
+      prompt: chasePrompt(bed), demo: () => chaseDemo(bed),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted discharge plan', bed.bedNo);
+    Hub.kit.steps(el.querySelector('#steps'), ['Blockers listed', 'Ready for Claude', 'Claude draft', 'Approved'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: bed.id, title: `Discharge plan — ${bed.bedNo}` }, text, st, docTitle: `Discharge plan ${bed.bedNo}`, onDecision: () => { detail(bed); drawTable(expectedBeds()); } });
+  };
+}
+
+function drawBlockers(bed) {
+  const box = document.getElementById('blist');
+  const r = resolvedFor(bed.id);
+  box.innerHTML = bed.blockers.length
+    ? bed.blockers.map(b => `<label class="blk"><input type="checkbox" data-b="${Hub.esc(b)}" ${r[b] ? 'checked' : ''}><span class="${r[b] ? 'done' : ''}">${Hub.esc(b)} <span class="small">(${Hub.esc(OWNER_BY_BLOCKER[b])})</span></span></label>`).join('')
+      + `<p class="small" style="margin-top:6px">${bed.blockers.filter(b => r[b]).length} of ${bed.blockers.length} blockers resolved.</p>`
+    : '<p class="small">No blockers on this bed — clear to discharge.</p>';
+  box.querySelectorAll('input[type=checkbox]').forEach(cb => cb.onchange = () => {
+    st.set(s => ({ resolved: { ...(s.resolved || {}), [bed.id]: { ...(s.resolved[bed.id] || {}), [cb.dataset.b]: cb.checked } } }));
+    Hub.kit.log(SLUG, cb.checked ? 'Blocker resolved' : 'Blocker reopened', `${bed.bedNo} — ${cb.dataset.b}`);
+    drawBlockers(bed);
+    drawTable(expectedBeds());
+  });
+}
+
+/* ================= Tab: Bed huddle ================= */
+function freedBedSummary() {
+  const beds = expectedBeds();
+  const clear = beds.filter(b => openBlockers(b).length === 0);
+  const blocked = beds.filter(b => openBlockers(b).length > 0);
+  const byType = {};
+  clear.forEach(b => { byType[b.bedType] = (byType[b.bedType] || 0) + 1; });
   const counts = {};
-  BLOCKER_TYPES.forEach(b => counts[b] = 0);
-  let atRisk = 0;
-  expected.forEach(r => {
-    const items = r[4];
-    if (items === '—' || !items) return;
-    const parts = items.split(',').map(s => s.trim());
-    BLOCKER_TYPES.forEach(b => { if (parts.includes(b)) counts[b]++; });
-    if (parts.length > 0 && items !== '—') atRisk++;
+  blocked.forEach(b => openBlockers(b).forEach(x => { counts[x] = (counts[x] || 0) + 1; }));
+  const risks = blocked.filter(b => noonMinutes(b.targetTime) > -60)
+    .sort((a, b) => noonMinutes(a.targetTime) - noonMinutes(b.targetTime)).slice(0, 6);
+  return { beds, clear, blocked, byType, counts, risks };
+}
+function matchWaiting(byType) {
+  const used = { ...byType };
+  return DATA.waiting.map(w => {
+    const has = used[w.requiredBedType] > 0;
+    if (has) used[w.requiredBedType]--;
+    return { ...w, suggested: has };
   });
-  return { expected, counts, atRisk };
+}
+function huddlePrompt() {
+  const s = freedBedSummary();
+  const matched = matchWaiting(s.byType);
+  return JSON.stringify({
+    date: DATA.generatedAt, currentTime: DATA.currentTime,
+    expectedDischarges: s.beds.length, clearNow: s.clear.length, stillBlocked: s.blocked.length,
+    freedBedsByType: s.byType, blockerCounts: s.counts,
+    topRisks: s.risks.map(b => ({ bed: b.bedNo, ward: b.ward, target: b.targetTime, openBlockers: openBlockers(b) })),
+    waitingAdmissions: matched.map(w => ({ id: w.id, source: w.source, requiredBedType: w.requiredBedType, waitHours: w.waitHours, suggestedMatch: w.suggested })),
+  }, null, 1);
+}
+function huddleDemo() {
+  const s = freedBedSummary();
+  const matched = matchWaiting(s.byType);
+  const canMatch = matched.filter(w => w.suggested);
+  const topBlockers = Object.entries(s.counts).sort((a, b) => b[1] - a[1]);
+  return `## Morning bed huddle — ${DATA.generatedAt}, ${DATA.currentTime}
+
+${s.beds.length} beds are expected to discharge today; ${s.clear.length} are clear now, ${s.blocked.length} still have an open blocker.
+
+### 10-minute huddle script
+1. **(1 min)** Bed manager reads the headline: ${s.clear.length} of ${s.beds.length} expected discharges are clear now; ${s.blocked.length} have an open blocker.
+2. **(3 min)** Go through the top blocker types out loud — ${topBlockers.slice(0, 3).map(([b, n]) => `**${b}** (${n})`).join(', ')} — each owner confirms status and ETA.
+3. **(2 min)** Walk the at-risk list below in target-time order; agree an escalation owner for anything still open past its target.
+4. **(2 min)** Match freed bed types against the waiting list — flag ${canMatch.length} admissions that can move as soon as their bed clears.
+5. **(1 min)** Housekeeping confirms turnaround capacity for the beds expected to free up.
+6. **(1 min)** Bed manager sets a recheck time and closes.
+
+### Priorities (in order)
+${topBlockers.length ? topBlockers.map(([b, n], i) => `${i + 1}. **${b}** — ${n} bed${n > 1 ? 's' : ''} affected, owner: ${OWNER_BY_BLOCKER[b]}`).join('\n') : '- No open blockers — focus on bed turnaround speed.'}
+
+### Beds most at risk of missing their noon target
+${s.risks.length ? s.risks.map(b => `- **${b.bedNo}** (${b.ward}, target ${b.targetTime}) — ${openBlockers(b).join(', ')}`).join('\n') : '- None — all expected discharges are on track.'}
+
+### Freed beds matched against waiting admissions
+| Bed type | Freed now | Waiting admissions of this type |
+|---|---|---|
+${Object.keys(s.byType).length ? Object.entries(s.byType).map(([t, n]) => `| ${t} | ${n} | ${DATA.waiting.filter(w => w.requiredBedType === t).length} |`).join('\n') : '| — | 0 | 0 |'}
+
+${canMatch.length ? canMatch.map(w => `- **${w.id}** (${w.source}, waiting ${w.waitHours}h) can move into a freed **${w.requiredBedType}** bed.`).join('\n') : '- No immediate matches from beds that are clear now — revisit once more blockers clear.'}
+
+*Recommendation:* run the escalation calls for the top blocker type first, then release matched beds to admissions as soon as housekeeping confirms turnaround.`;
 }
 
-function renderBlockTable(rows) {
-  const { counts } = analyse(rows);
-  const tbl = document.getElementById('blockTable');
-  const body = BLOCKER_TYPES.map(b => `<tr><td>${b}</td><td class="num">${counts[b]}</td></tr>`).join('');
-  tbl.innerHTML = `<thead><tr><th>Blocker type</th><th class="num">Beds affected</th></tr></thead><tbody>${body}</tbody>`;
+function huddle(el) {
+  const rv = st.get().reviews['huddle'];
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Morning huddle brief</h2>
+      <p class="small">Snapshot as of ${Hub.esc(DATA.currentTime)}: ${expectedBeds().length} expected discharges, ${freedBedSummary().clear.length} clear now.</p>
+      <div class="row"><button class="primary" id="hrun">Draft huddle script</button></div>
+      <div class="claude-out" id="hout" style="margin-top:10px"></div>
+    </div>
+    <div class="card"><h2>Review &amp; approval</h2><div id="hrv">${rv ? '' : '<p class="small">Draft the huddle script to send it for review.</p>'}</div></div>
+  </div>`;
+  if (rv) Hub.kit.review(el.querySelector('#hrv'), { slug: SLUG, item: { id: 'huddle', title: `Bed huddle script — ${DATA.generatedAt}` }, text: rv.text, st, docTitle: `Bed huddle ${DATA.generatedAt}`, onDecision: () => huddle(el) });
+  el.querySelector('#hrun').onclick = async () => {
+    const text = await Hub.run({
+      out: '#hout', button: '#hrun', manualMinutes: 25,
+      system: 'You are a hospital bed manager preparing the 10-minute morning bed huddle script for nursing/ops leadership at a 350-bed Kerala hospital, matching freed beds against the waiting admission list by bed type.',
+      prompt: huddlePrompt(), demo: huddleDemo,
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted huddle script', DATA.generatedAt);
+    const rvBox = document.getElementById('hrv');
+    if (!rvBox) return; // user switched tabs while Claude was writing
+    Hub.kit.review(rvBox, { slug: SLUG, item: { id: 'huddle', title: `Bed huddle script — ${DATA.generatedAt}` }, text, st, docTitle: `Bed huddle ${DATA.generatedAt}`, onDecision: () => { if (st.get().tab === 'huddle') huddle(document.getElementById('view')); } });
+  };
 }
 
-function renderKPIs(rows) {
-  const { expected, atRisk } = analyse(rows);
-  renderBlockTable(rows);
-  const box = document.getElementById('kpis');
-  const clearNow = expected.filter(r => r[4] === '—').length;
-  const tiles = [
-    ['Occupied beds', rows.length, ''],
-    ['Expected discharges today', expected.length, ''],
-    ['Ready to discharge now', clearNow, clearNow ? 'up' : ''],
-    ['At risk for noon discharge', atRisk, atRisk > 4 ? 'down' : ''],
-  ];
-  box.innerHTML = tiles.map(([l, v, cls]) => `<div class="kpi"><div class="label">${l}</div><div class="value ${cls}">${v}</div></div>`).join('');
-}
-
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('census').value = fmtCensus(s.rows);
-  renderKPIs(s.rows);
-}
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-loadScenario('typical');
-
-const DEMO = {
-typical: `## Prioritised discharge list
-
-| Priority | Bed / Ward | Blocker | Owner | Action needed now |
-|---|---|---|---|---|
-| 1 | 304B, Gen Surgery (TPA) | TPA final approval | Insurance desk (Sunil) | Call TPA desk, confirm approval ETA before 11am |
-| 2 | 605, Paediatrics (TPA) | TPA final approval | Insurance desk | Same — bundle both TPA calls in one round |
-| 3 | 312, Ortho (TPA) | Discharge summary | Dr. on duty, Ortho | Flag to consultant now — summary is the long pole once approval clears |
-| 4 | 507, Medicine (International) | Discharge summary | Dr. on duty, Medicine | Prepare summary in parallel with transport booking |
-| 5 | 401, Cardiology (International) | Transport | Front office / concierge | Confirm airport/hotel transport slot now, before noon traffic |
-| 6 | 406, Cardiology (Cash) | Pharmacy return | Pharmacy | Route pending pharmacy return list to pharmacy immediately |
-| 7 | 602, Paediatrics (Cash) | Pharmacy return | Pharmacy | Bundle with 406 |
-| 8 | 304A, 505 (Cash) | Final bill | Billing desk (Anitha) | Push both bills for a 10am billing slot |
-
-## 10-minute bed huddle script
-1. **(1 min)** Nurse-in-charge reads today's expected discharge count (9 of 14 beds) and current at-risk count (5).
-2. **(3 min)** Go bed-by-bed through the "TPA final approval" list first — insurance desk confirms call status for 304B and 605 out loud.
-3. **(2 min)** Discharge summary owners (Ortho, Medicine consultants on duty) confirm expected sign-off time.
-4. **(2 min)** Pharmacy and billing confirm they have the pending list and give an ETA per bed.
-5. **(1 min)** Front office confirms international transport bookings for 401 and 507.
-6. **(1 min)** Nurse-in-charge assigns a follow-up check-in time (11:30am) and closes.
-
-## Admissions waiting to match against freed beds
-- ER holding: 1 Ortho post-fall case awaiting bed — matches 312/315 (Ortho) once cleared.
-- OT recovery: 1 elective Cardiology case awaiting stepdown — matches 403/406 once cleared.
-- Suggest holding one Medicine bed (505 or 509) for a pending Medicine OP-to-IP conversion flagged this morning.
-
-## Message draft to the TPA desk
-*"Requesting urgent status update on final approval for Bed 304B (Gen Surgery, planned discharge today) and Bed 605 (Paediatrics, planned discharge today). Both patients are clinically fit for discharge and beds are needed for waiting ER/OT admissions. Please confirm approval ETA within the next hour so we can plan the noon discharge round."*`,
-busy: `## Prioritised discharge list
-
-With 9 of 14 expected discharges TPA-blocked, insurance desk capacity is the critical path today.
-
-| Priority | Bed / Ward | Blocker | Owner | Action needed now |
-|---|---|---|---|---|
-| 1 | 505, Medicine (TPA) | TPA final approval + Final bill | Insurance desk + Billing | Two blockers stacked — start this call first, bill can be readied in parallel |
-| 2 | 312, Ortho (TPA) | TPA final approval + Discharge summary | Insurance desk + Ortho consultant | Push both in parallel, don't sequence |
-| 3 | 304A, 304B, Gen Surgery (TPA) | TPA final approval | Insurance desk | Batch both hospital-side calls to the same TPA if same insurer |
-| 4 | 403, 509, Medicine/Cardio (TPA) | TPA final approval | Insurance desk | Add to the batch call queue |
-| 5 | 605, Paediatrics (TPA) | TPA final approval | Insurance desk | Add to queue — insurance desk now has 6 open TPA calls, consider pulling in a second staffer for the morning |
-| 6 | 401, Cardiology (International) | Transport + Reports pending | Front office + Lab | Reports first — transport booking depends on discharge time confirmation |
-| 7 | 315, Gen Surgery (Cash) | Final bill | Billing desk | Quick win — clear this first to free capacity while TPA calls run |
-| 8 | 406, 602, Cardio/Paeds (Cash) | Pharmacy return | Pharmacy | Bundle both |
-
-## 10-minute bed huddle script
-1. **(1 min)** Nurse-in-charge flags the unusual load: 9 of 14 expected discharges, 7 with a TPA approval blocker.
-2. **(4 min)** Insurance desk lead calls out each of the 6 pending TPA cases with current status — decide which 2 need duty manager escalation if no response by 10:30am.
-3. **(2 min)** Billing confirms the two quick-win cash bills (315) can close within the hour to free capacity.
-4. **(2 min)** Pharmacy and front office confirm their smaller queues (2 pharmacy returns, 1 transport+reports case).
-5. **(1 min)** Nurse-in-charge requests a second insurance desk staffer for the morning given the load, and sets an 11:30am recheck.
-
-## Admissions waiting to match against freed beds
-- ER holding: 2 cases (1 Ortho, 1 Cardiology) awaiting a bed — match against 312/315 and 403/406 once cleared.
-- OT recovery: 1 Gen Surgery post-op case awaiting stepdown — matches 304A/304B.
-- Recommend an early call to admissions to hold non-urgent elective admissions until at least 3 TPA approvals clear, given today's blocker load.
-
-## Message draft to the TPA desk
-*"We currently have 7 patients across General Surgery, Ortho, Cardiology, Medicine and Paediatrics awaiting final TPA approval for planned discharges today, with ER and OT admissions waiting for these beds. Requesting an urgent bulk status update on all pending cases, and priority handling given the volume, so we can plan today's discharge round by 11am."*`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const census = document.getElementById('census').value;
-  const prompt = `You are helping Patient Experience at VPS Lakeshore Hospital, Kochi run today's bed and discharge flow, based on the IP census below (bed | ward | payer cash/TPA/international | expected discharge today Y/N | pending items).
-
-Census:
-${census}
-
-Provide: (1) a prioritised discharge list with a clear owner per blocker, (2) a 10-minute bed huddle script for the nursing/ops team, (3) likely ER/OT admissions waiting that could match freed beds, (4) a short message draft to the TPA desk. Use ₹ formatting only if costs are mentioned.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced hospital patient-flow / bed management coordinator at a 350-bed Kerala hospital with a significant TPA and international patient mix.',
-    prompt, demo: DEMO[key], manualMinutes: 45,
+/* ================= Tab: Waiting admissions ================= */
+function waitTag(h) { return h >= 4 ? 'bad' : h >= 2 ? 'warn' : 'ok'; }
+function waitingTab(el) {
+  const s = freedBedSummary();
+  const matched = matchWaiting(s.byType);
+  el.innerHTML = `<div class="card">
+    <h2>Waiting admissions</h2>
+    <p class="small">${matched.length} patients waiting from ER, OT recovery and elective bookings. Suggested bed applies the local rule: match by bed type against beds that are clear to discharge now.</p>
+    <div id="wtbl"></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#wtbl'), {
+    rows: matched, search: true,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'source', label: 'Source' },
+      { key: 'patientInitials', label: 'Patient', render: r => `${Hub.esc(r.patientInitials)}, ${r.age}${r.sex}` },
+      { key: 'requiredBedType', label: 'Needs bed type' },
+      { key: 'note', label: 'Note' },
+      { key: 'waitHours', label: 'Waiting', num: true, render: r => `<span class="tag ${waitTag(r.waitHours)}">${r.waitHours}h (since ${Hub.esc(r.waitStart)})</span>` },
+      { key: 'suggested', label: 'Suggested bed', render: r => r.suggested ? `<span class="tag ok">A freed ${Hub.esc(r.requiredBedType)} bed</span>` : '<span class="tag warn">None free yet</span>' },
+    ],
   });
+}
+
+/* ================= Tab: Dashboard ================= */
+function dashboard(el) {
+  const beds = expectedBeds();
+  const s = freedBedSummary();
+  const m = DATA.metrics;
+  const last = m[m.length - 1];
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Expected discharges today</div><div class="value">${beds.length}</div></div>
+    <div class="kpi"><div class="label">Still blocked</div><div class="value">${s.blocked.length}</div></div>
+    <div class="kpi"><div class="label">Discharges before noon (30d avg)</div><div class="value">${Math.round(m.reduce((a, x) => a + x.pctBeforeNoon, 0) / m.length)}%</div></div>
+    <div class="kpi"><div class="label">ER boarding (yesterday)</div><div class="value">${last.erBoardingHours}h</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card" id="c3"></div>
+    <div class="card" id="c4"></div>
+  </div>`;
+  const blockerData = Object.entries(s.counts).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+  Hub.chart.hbar(el.querySelector('#c1'), { title: 'Open blockers by type', data: blockerData.length ? blockerData : [{ label: 'None open', value: 0 }] });
+  Hub.chart.hbar(el.querySelector('#c2'), { title: 'Freed beds by type (clear now)', data: Object.entries(s.byType).map(([label, value]) => ({ label, value })) });
+  Hub.chart.line(el.querySelector('#c3'), { title: '% discharges before noon (30 days)', labels: m.map(x => x.date.slice(5)), series: [{ name: '% before noon', values: m.map(x => x.pctBeforeNoon) }], format: v => `${Math.round(v)}%` });
+  Hub.chart.line(el.querySelector('#c4'), { title: 'Average discharge TAT, advice to exit (30 days)', labels: m.map(x => x.date.slice(5)), series: [{ name: 'Hours', values: m.map(x => x.avgTAT) }], format: v => `${v}h` });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'Today’s expected discharges', text: 'Every bed expected to discharge today, with blocker tags and how much runway is left before noon.' },
+      { sel: '#blist', title: 'Tick off blockers', text: 'As TPA desk, billing, pharmacy or the consultant clear an item, tick it here — it is logged and feeds straight into the huddle.' },
+      { sel: '#run', title: 'Claude drafts the chase', text: 'Owner-wise chase messages and a discharge plan for this bed, ready for the bed manager to edit.' },
+      { sel: '#rv', title: 'Maker edits, approver approves', text: 'The bed manager edits the draft; switch to Approver in the toolbar to approve. Nothing is sent anywhere from this demo.' },
+      { sel: '#tabs', title: 'Bed huddle', text: 'Claude drafts the 10-minute morning huddle script, matching freed beds against the waiting list by bed type.' },
+      { sel: '#tabs', title: 'Waiting admissions', text: 'ER, OT and elective patients waiting for a bed, with a suggested match against beds that are clear now.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Blocker mix, before-noon rate and discharge TAT trend for patient flow leadership.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Discharges today' }, { id: 'huddle', label: 'Bed huddle' },
+    { id: 'waiting', label: 'Waiting admissions' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ queue, huddle, waiting: waitingTab, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

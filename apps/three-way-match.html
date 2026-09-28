@@ -3,177 +3,346 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PO-GRN-invoice matcher</title>
+<title>PO–GRN–invoice matcher</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .lt-tags .tag { margin: 1px 3px 1px 0; }
+  .lt-summary { display: flex; gap: 18px; flex-wrap: wrap; margin: 8px 0 14px; }
+  .lt-summary div b { display: block; color: var(--navy); font-size: 1.15rem; font-weight: 300; }
+  .lt-summary div span { font-size: 12px; color: var(--muted); }
+  .vend-card { border: 1px solid var(--border); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
+  .vend-card h4 { margin: 0 0 4px; font-weight: 500; color: var(--navy); }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>PO–GRN–invoice matcher</h1>
-    <p>Line-level three-way match of purchase order, goods-receipt and vendor invoice before payment release.</p>
+    <p>Every vendor invoice this month checked line by line against its purchase order, goods-receipt note and rate
+      contract before payment release — Claude explains each exception and drafts the debit note or vendor query.</p>
   </section>
-
-  <div id="kpis" class="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample match set</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="ortho">Ortho implants — Meditrust Surgicals</option>
-          <option value="pharma">Pharmacy bulk order — Keralon Pharma Distributors</option>
-        </select>
-      </div>
-      <label>PO / GRN / Invoice lines (editable — one per row: item | PO qty | PO rate | GRN qty | Inv qty | Inv rate | GST% | Rate-contract rate)</label>
-      <textarea id="lines" rows="10"></textarea>
-      <label>Notes (freight, PO terms, etc.)</label>
-      <textarea id="notes" rows="3"></textarea>
-      <div id="matchTable"></div>
-      <div class="row" style="margin-top:12px"><button class="primary" id="runBtn">Run with Claude</button></div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-  <p class="footer-note">Synthetic vendor and PO data for demonstration only.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · synthetic vendor and invoice data, no real vendors ·
+    nothing here is sent to accounts payable or any vendor.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'three-way-match';
 Hub.mountHeader({ dept: 'Purchase & Stores', title: 'PO–GRN–invoice matcher' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, reviews: {}, invoiceStatus: {}, vendorSelected: null, vendorNoteReviews: {} });
+let DATA, VMAP, BYVENDOR;
 
-const SCENARIOS = {
-  ortho: {
-    lines: `Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | RC Rate
-Titanium hip stem, size 12 | 10 | 42000 | 10 | 10 | 44500 | 12 | 42000
-Bone cement (40g pack) | 40 | 3200 | 36 | 40 | 3200 | 18 | 3200
-Surgical gloves size 7.5 (box) | 100 | 450 | 100 | 100 | 450 | 5 | 450
-Orthopaedic drill bits (set) | 6 | 8800 | 6 | 6 | 8800 | 18 | 8800
-Freight & handling | 1 | 0 | 1 | 1 | 2400 | 18 | 0`,
-    notes: `PO number: PO/LKS/2026/1187. Vendor: Meditrust Surgicals. Rate contract valid till Mar-2027. PO silent on freight — vendor to bear as per standard clause 4.2. GST on implants should be 12% (medical device), vendor billed several lines at 18% by system default.`,
-  },
-  pharma: {
-    lines: `Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | RC Rate
-Paracetamol 500mg (strip of 15) | 2000 | 8.5 | 1850 | 2000 | 8.5 | 12 | 8.5
-Amoxicillin 500mg (strip of 10) | 1200 | 22 | 1200 | 1200 | 24.5 | 12 | 22
-IV fluid NS 500ml (bottle) | 800 | 38 | 800 | 800 | 38 | 12 | 38
-Insulin glargine (vial) | 150 | 620 | 150 | 150 | 620 | 5 | 620
-Surgical spirit (5L can) | 30 | 410 | 28 | 30 | 410 | 18 | 410`,
-    notes: `PO number: PO/LKS/2026/1203. Vendor: Keralon Pharma Distributors, quarterly rate contract. Two batches of Amoxicillin flagged near-expiry at receiving dock; GRN short by 150 strips citing transit damage.`,
-  },
-};
+/* ---------- computation: never pre-baked, always derived from the raw lines ---------- */
+const cr = v => Hub.chart.compact(v);
+const TOL = 0.001;
 
-function parseLines(text) {
-  return text.trim().split('\n').slice(1).filter(Boolean).map(r => {
-    const c = r.split('|').map(x => x.trim());
-    return { item: c[0], poQty: +c[1], poRate: +c[2], grnQty: +c[3], invQty: +c[4], invRate: +c[5], gst: +c[6], rcRate: +c[7] };
-  });
-}
-
-function statusFor(l) {
+function lineCompute(l) {
   const tags = [];
-  if (l.grnQty < l.poQty) tags.push(['warn', 'Short supply']);
-  if (l.invQty > l.grnQty) tags.push(['bad', 'Over-billed qty']);
-  if (l.rcRate && l.invRate > l.rcRate) tags.push(['bad', 'Price > rate contract']);
-  if (l.poRate === 0 && l.invRate > 0) tags.push(['warn', 'Not on PO']);
+  const isShort = /^Short/.test(l.grnStatus);
+  const isPartial = /^Partial/.test(l.grnStatus);
+  if (isShort) tags.push(['bad', 'Short supply']);
+  else if (isPartial) tags.push(['warn', 'Partial delivery']);
+  if (l.invRate > l.contractRate * (1 + TOL)) tags.push(['bad', 'Rate > contract']);
+  if (l.gstPctInv !== l.gstPctPO) tags.push(['warn', 'GST error']);
   if (!tags.length) tags.push(['ok', 'Matched']);
-  return tags;
+  const billed = l.invQty * l.invRate * (1 + l.gstPctInv / 100);
+  const payQty = Math.min(l.invQty, l.grnQty);
+  const payRate = Math.min(l.invRate, l.contractRate);
+  const payable = payQty * payRate * (1 + l.gstPctPO / 100);
+  return { tags, billed, payable, atRisk: Math.max(0, billed - payable) };
 }
 
-function renderTable(lines) {
-  const box = document.getElementById('matchTable');
-  let rows = lines.map(l => {
-    const payable = l.invQty <= l.grnQty ? l.invQty * l.invRate : l.grnQty * (l.rcRate || l.invRate);
-    const tags = statusFor(l).map(([c, t]) => `<span class="tag ${c}">${Hub.esc(t)}</span>`).join(' ');
-    return `<tr><td>${Hub.esc(l.item)}</td><td class="num">${l.poQty}</td><td class="num">${l.grnQty}</td><td class="num">${l.invQty}</td><td class="num">${Hub.inr(l.invRate)}</td><td class="num">${Hub.inr(Math.round(payable))}</td><td>${tags}</td></tr>`;
-  }).join('');
-  box.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">PO</th><th class="num">GRN</th><th class="num">Inv</th><th class="num">Rate</th><th class="num">Payable</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-
-  const total = lines.reduce((s, l) => s + Math.min(l.invQty, l.grnQty) * (l.rcRate || l.invRate), 0);
-  const mismatches = lines.filter(l => statusFor(l)[0][0] !== 'ok').length;
-  const kpis = document.getElementById('kpis');
-  kpis.innerHTML = `
-    <div class="kpi"><div class="label">Lines checked</div><div class="value">${lines.length}</div></div>
-    <div class="kpi"><div class="label">Mismatched lines</div><div class="value">${mismatches}</div></div>
-    <div class="kpi"><div class="label">Net payable (recommended)</div><div class="value">${Hub.inr(Math.round(total))}</div></div>`;
+function invoiceCompute(inv) {
+  const lineC = inv.lines.map(lineCompute);
+  let billed = lineC.reduce((s, c) => s + c.billed, 0);
+  let payable = lineC.reduce((s, c) => s + c.payable, 0);
+  const freightAmt = inv.freightBilled * (1 + inv.freightGstPct / 100);
+  billed += freightAmt;
+  payable += inv.freightInPO ? freightAmt : 0;
+  const maxGrn = inv.lines.reduce((m, l) => (l.grnDate > m ? l.grnDate : m), inv.lines[0] ? inv.lines[0].grnDate : inv.poDate);
+  const invoiceBeforeGrn = inv.invoiceDate < maxGrn;
+  const isDuplicate = !!inv.duplicateOf || DATA.invoices.some(o => o.duplicateOf === inv.id);
+  const exceptions = [];
+  if (lineC.some(c => c.tags[0][1] === 'Short supply')) exceptions.push('Short supply');
+  if (lineC.some(c => c.tags.some(t => t[1] === 'Partial delivery'))) exceptions.push('Partial delivery');
+  if (lineC.some(c => c.tags.some(t => t[1] === 'Rate > contract'))) exceptions.push('Rate above contract');
+  if (lineC.some(c => c.tags.some(t => t[1] === 'GST error'))) exceptions.push('GST rate error');
+  if (inv.freightBilled > 0 && !inv.freightInPO) exceptions.push('Freight not on PO');
+  if (invoiceBeforeGrn) exceptions.push('Invoice before GRN');
+  if (isDuplicate) exceptions.push('Duplicate invoice number');
+  let atRisk = Math.max(0, billed - payable);
+  if (isDuplicate) atRisk = Math.max(atRisk, billed);
+  const status = isDuplicate ? 'Duplicate?' : (exceptions.length ? 'Exception' : 'Matched');
+  return { lineC, billed, payable, atRisk, exceptions, invoiceBeforeGrn, isDuplicate, status, businessStatus: (st.get().invoiceStatus || {})[inv.id] || null };
 }
 
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('lines').value = s.lines;
-  document.getElementById('notes').value = s.notes;
-  renderTable(parseLines(s.lines));
-}
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-document.getElementById('lines').addEventListener('change', e => { try { renderTable(parseLines(e.target.value)); } catch (err) {} });
-loadScenario('ortho');
+/* ---------- Match queue tab ---------- */
+function queue(el) {
+  el.innerHTML = `<div class="lt-summary" id="qsum"></div>
+    <div class="grid cols-2"><div class="card"><h2>Invoice queue — ${DATA.month}</h2><div id="tbl"></div></div>
+    <div class="card"><h2>Selected invoice</h2><div id="detail"><p class="small">Pick a row.</p></div></div></div>`;
+  const rows = DATA.invoices.map(inv => ({ inv, c: invoiceCompute(inv) }));
+  const matched = rows.filter(r => r.c.status === 'Matched').length;
+  const atRiskTotal = rows.reduce((s, r) => s + r.c.atRisk, 0);
+  document.getElementById('qsum').innerHTML = `
+    <div><b>${rows.length}</b><span>Invoices this month</span></div>
+    <div><b>${Math.round(matched / rows.length * 100)}%</b><span>Auto-matched clean</span></div>
+    <div><b>${Hub.inr(Math.round(atRiskTotal))}</b><span>₹ at risk across the queue</span></div>`;
 
-const DEMO = {
-ortho: `## Line-level mismatch analysis
-
-| Item | Issue | Detail |
-|---|---|---|
-| Titanium hip stem | Price drift | Invoiced at ₹44,500 vs rate-contract ₹42,000 — ₹2,500/unit above contract, ₹25,000 excess across 10 units |
-| Titanium hip stem | GST rate error | Billed at 12% — correct per rate contract, no issue |
-| Bone cement | Short supply | GRN received 36 of 40 ordered, but invoice bills for 40 — 4 units over-billed against receipt |
-| Surgical drill bits, gloves | Matched | Qty, rate and GST all tie out cleanly |
-| Freight & handling | Not on PO | ₹2,400 freight billed but PO clause 4.2 makes vendor bear freight — this line is not payable |
-
-## Payable amount
-Recommended payable: **₹4,86,300** (implants at contract rate ₹42,000 × 10, cement capped at received 36 units, gloves and drill bits as billed, freight excluded).
-Invoice claims ₹5,15,700 — a variance of **₹29,400** to hold back.
-
-## Draft debit note
-**Debit Note — Meditrust Surgicals | Ref PO/LKS/2026/1187**
-1. Price drift on titanium hip stem (10 units × ₹2,500 over rate contract): **₹25,000**
-2. Bone cement billed for 4 units not received (short supply per GRN): **₹12,800**
-3. Freight & handling not payable under PO clause 4.2: **₹2,400**
-**Total debit note value: ₹40,200** (net of GST adjustment, to be confirmed with accounts).
-
-**Recommendation:** Hold payment at ₹4,86,300, issue debit note for ₹40,200, and flag the rate-contract deviation to the vendor relationship owner before the next PO cycle.`,
-
-pharma: `## Line-level mismatch analysis
-
-| Item | Issue | Detail |
-|---|---|---|
-| Paracetamol 500mg | Short supply | GRN 1,850 vs invoiced 2,000 — 150 strips billed but not received |
-| Amoxicillin 500mg | Price drift | Invoiced at ₹24.5 vs rate contract ₹22 — ₹2.5/strip above contract, ₹3,000 excess on 1,200 strips |
-| IV fluid, Insulin | Matched | Qty and rate tie out to rate contract |
-| Surgical spirit | Short supply (minor) | GRN 28 of 30 cans, invoice bills for 30 |
-
-## Payable amount
-Recommended payable: **₹67,220** — paracetamol capped at received 1,850 strips, amoxicillin capped at contract rate ₹22, spirit capped at received 28 cans, other lines as billed.
-Invoice claims ₹73,510 — variance of **₹6,290** to hold back.
-
-## Draft debit note
-**Debit Note — Keralon Pharma Distributors | Ref PO/LKS/2026/1203**
-1. Paracetamol short-received (150 strips × ₹8.5): **₹1,275**
-2. Amoxicillin price above rate contract (1,200 × ₹2.5): **₹3,000**
-3. Surgical spirit short-received (2 cans × ₹410): **₹820**
-**Total debit note value: ₹5,095**
-
-**Recommendation:** Also flag the near-expiry Amoxicillin batches noted at receiving for return-to-vendor rather than acceptance, separate from this billing dispute.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const lines = document.getElementById('lines').value;
-  const notes = document.getElementById('notes').value;
-  const prompt = `You are assisting Purchase & Stores at VPS Lakeshore Hospital, Kochi with a three-way match of PO, GRN and vendor invoice lines before payment release.
-
-Lines (Item | PO Qty | PO Rate | GRN Qty | Inv Qty | Inv Rate | GST% | Rate-contract Rate):
-${lines}
-
-Notes: ${notes}
-
-For each mismatched line explain the issue (short supply, price drift vs rate contract, GST rate error, freight not on PO). State the recommended payable amount vs invoiced amount. Draft a debit note with line items and a total value. Use ₹ formatting.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced hospital purchase/accounts-payable officer at a 350-bed Kerala hospital, expert in three-way matching and vendor billing disputes.',
-    prompt, demo: DEMO[key], manualMinutes: 60,
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: rows.map(r => ({ id: r.inv.id, vendor: VMAP[r.inv.vendorId].name, po: r.inv.poNumber, date: r.inv.invoiceDate, status: r.c.businessStatus || r.c.status, atRisk: r.c.atRisk })),
+    search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'Invoice' }, { key: 'vendor', label: 'Vendor' }, { key: 'po', label: 'PO' }, { key: 'date', label: 'Inv. date' },
+      { key: 'status', label: 'Status', render: r => `<span class="tag ${r.status === 'Matched' || r.status === 'Cleared for payment' ? 'ok' : r.status === 'Duplicate?' ? 'bad' : 'warn'}">${Hub.esc(r.status)}</span>` },
+      { key: 'atRisk', label: '₹ at risk', num: true, format: v => v > 0 ? Hub.inr(Math.round(v)) : '—' },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(DATA.invoices.find(i => i.id === r.id)); },
   });
+  let sel = DATA.invoices.find(i => i.id === st.get().selected);
+  if (!sel) { sel = DATA.invoices[0]; st.set({ selected: sel.id }); }
+  detail(sel);
+}
+
+function detail(inv) {
+  const el = document.getElementById('detail');
+  const c = invoiceCompute(inv);
+  const v = VMAP[inv.vendorId];
+  const done = st.get().reviews[inv.id];
+  const stepIdx = done ? (done.status === 'approved' ? 2 : 1) : 0;
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(inv.id)}</b> · ${Hub.esc(v.name)} (${Hub.esc(v.categoryLabel)}) · PO ${Hub.esc(inv.poNumber)}</p>
+    <p class="small">Invoice ${Hub.esc(inv.invoiceNumber)} dated ${Hub.esc(inv.invoiceDate)}, received ${Hub.esc(inv.receivedOn)}. Payment terms: ${Hub.esc(v.paymentTerms)}.
+      ${inv.freightBilled ? `Freight billed ${Hub.inr(inv.freightBilled)} (${inv.freightInPO ? 'on PO' : 'not on PO'}).` : ''}</p>
+    <h3 style="margin-top:12px">Line-level three-way match</h3>
+    <div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">PO qty</th><th class="num">GRN qty</th><th class="num">Inv qty</th><th class="num">Inv rate</th><th class="num">Contract rate</th><th class="num">GST% (PO / Inv)</th><th>Tags</th></tr></thead>
+    <tbody>${inv.lines.map((l, i) => `<tr><td>${Hub.esc(l.item)}</td><td class="num">${l.poQty}</td><td class="num">${l.grnQty}</td><td class="num">${l.invQty}</td>
+      <td class="num">${Hub.inr(l.invRate)}</td><td class="num">${Hub.inr(l.contractRate)}</td><td class="num">${l.gstPctPO}% / ${l.gstPctInv}%</td>
+      <td class="lt-tags">${c.lineC[i].tags.map(([cls, t]) => `<span class="tag ${cls}">${Hub.esc(t)}</span>`).join('')}</td></tr>`).join('')}</tbody></table></div>
+    ${inv.lines.some((l, i) => /^(Short|Partial)/.test(l.grnStatus)) ? `<p class="small">GRN notes: ${inv.lines.filter(l => /^(Short|Partial)/.test(l.grnStatus)).map(l => `${Hub.esc(l.item)} — ${Hub.esc(l.grnStatus)}`).join('; ')}.</p>` : ''}
+    <div class="lt-summary"><div><b>${Hub.inr(Math.round(c.billed))}</b><span>Invoiced total</span></div>
+      <div><b>${Hub.inr(Math.round(c.payable))}</b><span>Recommended payable</span></div>
+      <div><b>${Hub.inr(Math.round(c.atRisk))}</b><span>₹ at risk</span></div></div>
+    ${c.exceptions.length ? `<p class="small"><b>Exceptions flagged:</b> ${c.exceptions.map(Hub.esc).join(', ')}.</p>` : '<p class="small">No exceptions — every line ties out to PO, GRN and rate contract.</p>'}
+    <button class="primary" id="run">Run with Claude</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:10px"><button type="button" id="exportLines">Export match lines to Excel</button></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Received', 'Claude match & draft', 'Reviewed', c.businessStatus || 'Resolved'], done ? (done.status === 'approved' ? 3 : 2) : 0);
+
+  el.querySelector('#exportLines').onclick = () => {
+    const rows = inv.lines.map((l, i) => ({
+      Invoice: inv.id, Vendor: v.name, PO: inv.poNumber, Item: l.item, 'PO qty': l.poQty, 'GRN qty': l.grnQty, 'Inv qty': l.invQty,
+      'Inv rate (₹)': l.invRate, 'Contract rate (₹)': l.contractRate, 'GST% PO': l.gstPctPO, 'GST% Inv': l.gstPctInv,
+      'Billed (₹)': Math.round(c.lineC[i].billed), 'Payable (₹)': Math.round(c.lineC[i].payable), 'At risk (₹)': Math.round(c.lineC[i].atRisk),
+      Tags: c.lineC[i].tags.map(t => t[1]).join('; '),
+    }));
+    Hub.kit.exportXlsx(rows, `${inv.id}-match-lines.xlsx`, 'Match lines');
+    Hub.kit.log(SLUG, 'Exported match lines to Excel', inv.id);
+  };
+
+  if (done) Hub.kit.review(el.querySelector('#rv'), {
+    slug: SLUG, item: { id: inv.id, title: `${inv.id} — ${v.name}` }, text: done.text, st, docTitle: `Debit note / query — ${inv.id}`,
+    onDecision: (status) => { if (status === 'approved') st.set(s => ({ invoiceStatus: { ...s.invoiceStatus, [inv.id]: c.atRisk > 1 ? 'Debit note raised' : 'Cleared for payment' } })); detail(inv); },
+  });
+
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 45,
+      system: 'You are an accounts-payable executive at VPS Lakeshore Hospital, Kochi, doing a three-way match of PO, GRN and vendor invoice lines before payment release. Be specific with numbers and cite the exact lines and amounts.',
+      prompt: JSON.stringify({ invoice: inv, vendor: v, computed: { billed: Math.round(c.billed), payable: Math.round(c.payable), atRisk: Math.round(c.atRisk), exceptions: c.exceptions } }),
+      demo: () => demoText(inv, v, c),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude match explanation & draft created', inv.id);
+    st.set(s => ({ reviews: { ...(s.reviews || {}), [inv.id]: { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps'), ['Received', 'Claude match & draft', 'Reviewed', c.businessStatus || 'Resolved'], 1);
+    Hub.kit.review(el.querySelector('#rv'), {
+      slug: SLUG, item: { id: inv.id, title: `${inv.id} — ${v.name}` }, text, st, docTitle: `Debit note / query — ${inv.id}`,
+      onDecision: (status) => { if (status === 'approved') st.set(s => ({ invoiceStatus: { ...s.invoiceStatus, [inv.id]: c.atRisk > 1 ? 'Debit note raised' : 'Cleared for payment' } })); detail(inv); },
+    });
+  };
+}
+
+function demoText(inv, v, c) {
+  const lines = inv.lines.map((l, i) => ({ l, lc: c.lineC[i] }));
+  const flagged = lines.filter(x => x.lc.tags[0][1] !== 'Matched');
+  const explain = flagged.length ? flagged.map(({ l, lc }) => {
+    const tagNames = lc.tags.map(t => t[1]).join(', ');
+    const bits = [];
+    if (/^Short/.test(l.grnStatus)) bits.push(`GRN shows only ${l.grnQty} of ${l.poQty} ordered received (${l.grnStatus.toLowerCase()}), yet the invoice bills the full ${l.invQty} — payable capped at the ${l.grnQty} actually received.`);
+    if (/^Partial/.test(l.grnStatus)) bits.push(`Delivery is still partial — ${l.grnQty} of ${l.poQty} received so far, balance expected. Payable held to what has arrived until the remainder is received.`);
+    if (l.invRate > l.contractRate * 1.001) bits.push(`Billed at ₹${l.invRate} against a rate-contract price of ₹${l.contractRate} — ₹${(l.invRate - l.contractRate).toFixed(2)}/${l.uom} above contract, ₹${Math.round((l.invRate - l.contractRate) * Math.min(l.invQty, l.grnQty)).toLocaleString('en-IN')} excess on this line.`);
+    if (l.gstPctInv !== l.gstPctPO) bits.push(`GST billed at ${l.gstPctInv}% but the applicable slab for this item is ${l.gstPctPO}% — a tax-rate error, not a price dispute, but it changes the payable figure.`);
+    return `| ${l.item} | ${tagNames} | ${bits.join(' ')} |`;
+  }).join('\n') : `| — | Matched | Every line ties out cleanly to PO quantity, GRN receipt, rate contract and GST slab. |`;
+  const freightLine = inv.freightBilled ? (inv.freightInPO ? '' : `\n- **Freight not on PO:** ₹${inv.freightBilled.toLocaleString('en-IN')} (+GST) billed as freight, but the purchase order carries no freight clause for this vendor — this amount is not payable without a written exception from Purchase.`) : '';
+  const dupLine = c.isDuplicate ? `\n- **Possible duplicate:** invoice number ${inv.invoiceNumber} also appears against ${inv.duplicateOf ? 'invoice ' + inv.duplicateOf : 'another invoice from this vendor'} this month. Hold the entire ₹${Math.round(c.billed).toLocaleString('en-IN')} until Purchase confirms this is not a re-submission of an already-paid bill.` : '';
+  const beforeGrnLine = c.invoiceBeforeGrn ? `\n- **Invoice predates the GRN:** invoiced on ${inv.invoiceDate} before the last goods receipt on ${inv.lines.reduce((m, l) => l.grnDate > m ? l.grnDate : m, inv.lines[0].grnDate)} — invoice should not have been raised before goods were confirmed received.` : '';
+  const draftNeeded = c.atRisk > 1 || c.isDuplicate;
+  const debitLines = flagged.filter(({ l }) => l.invRate > l.contractRate * 1.001 || /^Short/.test(l.grnStatus) || /^Partial/.test(l.grnStatus) || l.gstPctInv !== l.gstPctPO).map(({ l, lc }) => `1. ${l.item}: bill ₹${Math.round(lc.billed).toLocaleString('en-IN')} vs payable ₹${Math.round(lc.payable).toLocaleString('en-IN')} — hold **₹${Math.round(lc.atRisk).toLocaleString('en-IN')}**`).join('\n');
+  return `## Three-way match — ${inv.id} (${v.name})
+
+**PO** ${inv.poNumber} · **Invoice** ${inv.invoiceNumber}, dated ${inv.invoiceDate} · **Received** ${inv.receivedOn}
+
+### Line-level findings
+| Item | Tag | Explanation |
+|---|---|---|
+${explain}
+${freightLine}${dupLine}${beforeGrnLine}
+
+### Payable amount
+Invoiced total: **${Hub.inr(Math.round(c.billed))}**
+Recommended payable: **${Hub.inr(Math.round(c.payable))}**
+Amount to hold / query: **${Hub.inr(Math.round(c.atRisk))}**
+
+${draftNeeded ? `### Draft debit note / vendor query
+**To:** ${v.name} · Accounts team
+**Ref:** PO ${inv.poNumber} · Invoice ${inv.invoiceNumber}
+
+${c.isDuplicate ? `This invoice number (${inv.invoiceNumber}) appears to duplicate a bill already on file for this vendor. We are holding payment pending your written confirmation that this is not a re-submission.\n\n` : ''}Please find below the lines where our three-way match does not agree with your invoice:
+${debitLines || '(freight and other header-level items only — see notes above)'}${inv.freightBilled && !inv.freightInPO ? `\n\nFreight of ₹${inv.freightBilled.toLocaleString('en-IN')} billed on this invoice is not provided for on the purchase order and will not be paid unless Purchase confirms an exception.` : ''}
+
+We will process payment of ${Hub.inr(Math.round(c.payable))} against this invoice and would appreciate a credit note or written confirmation for the balance of ${Hub.inr(Math.round(c.atRisk))}, or supporting documents if you believe the amount is in fact payable.
+
+Regards,
+Accounts Payable, Purchase & Stores
+VPS Lakeshore Hospital, Kochi
+
+*Draft for the AP executive to edit before it is submitted for the finance controller's approval. Nothing has been sent to the vendor.*` : `**Recommendation:** clear for payment at the invoiced amount — all lines match PO, GRN, rate contract and GST slab, and no header-level exceptions were found.`}`;
+}
+
+/* ---------- Vendors tab ---------- */
+function vendorStats(v) {
+  const invs = BYVENDOR[v.id] || [];
+  const computed = invs.map(invoiceCompute);
+  const excCount = computed.filter(c => c.status !== 'Matched').length;
+  const debitRecovered = invs.reduce((s, inv, i) => s + ((st.get().invoiceStatus || {})[inv.id] === 'Debit note raised' ? computed[i].atRisk : 0), 0);
+  const atRiskTotal = computed.reduce((s, c) => s + c.atRisk, 0);
+  return { invs, computed, excRate: invs.length ? Math.round(excCount / invs.length * 100) : 0, debitRecovered, atRiskTotal };
+}
+
+function vendors(el) {
+  el.innerHTML = `<div class="grid cols-2"><div class="card"><h2>Vendors this month</h2><div id="vtbl"></div></div>
+    <div class="card"><h2>Vendor performance note</h2><div id="vdetail"><p class="small">Pick a vendor.</p></div></div></div>`;
+  const rows = DATA.vendors.map(v => { const s = vendorStats(v); return { id: v.id, name: v.name, category: v.categoryLabel, invoices: s.invs.length, excRate: s.excRate, recovered: s.debitRecovered }; });
+  Hub.kit.table(el.querySelector('#vtbl'), {
+    rows, search: true, selectedKey: st.get().vendorSelected,
+    columns: [
+      { key: 'name', label: 'Vendor' }, { key: 'category', label: 'Category' }, { key: 'invoices', label: 'Invoices', num: true },
+      { key: 'excRate', label: 'Exception rate', num: true, format: v => v + '%' },
+      { key: 'recovered', label: '₹ recovered via debit notes', num: true, format: v => v > 0 ? Hub.inr(Math.round(v)) : '—' },
+    ],
+    onRowClick: r => { st.set({ vendorSelected: r.id }); vendorDetail(DATA.vendors.find(v => v.id === r.id)); },
+  });
+  let sel = DATA.vendors.find(v => v.id === st.get().vendorSelected) || DATA.vendors[0];
+  st.set({ vendorSelected: sel.id });
+  vendorDetail(sel);
+}
+
+function vendorDetail(v) {
+  const el = document.getElementById('vdetail');
+  const s = vendorStats(v);
+  const done = st.get().vendorNoteReviews[v.id];
+  el.innerHTML = `<div class="vend-card"><h4>${Hub.esc(v.name)}</h4>
+    <p class="small" style="margin:0">${Hub.esc(v.categoryLabel)} · ${Hub.esc(v.city)} · GSTIN ${Hub.esc(v.gstin)} · Contact: ${Hub.esc(v.contact)} · Terms: ${Hub.esc(v.paymentTerms)}</p></div>
+    <div class="lt-summary"><div><b>${s.invs.length}</b><span>Invoices this month</span></div>
+      <div><b>${s.excRate}%</b><span>Exception rate</span></div>
+      <div><b>${Hub.inr(Math.round(s.atRiskTotal))}</b><span>₹ at risk (all invoices)</span></div>
+      <div><b>${Hub.inr(Math.round(s.debitRecovered))}</b><span>₹ recovered via debit notes</span></div></div>
+    <button class="primary" id="vnote">Draft vendor performance note with Claude</button>
+    <div class="claude-out" id="vout" style="margin-top:10px"></div><div id="vrv" style="margin-top:10px"></div>`;
+  if (done) Hub.kit.review(el.querySelector('#vrv'), { slug: SLUG, item: { id: v.id, title: `Vendor performance note — ${v.name}` }, text: done.text, st: { get: () => ({ reviews: st.get().vendorNoteReviews }), set: p => st.set(cur => ({ vendorNoteReviews: (typeof p === 'function' ? p(cur) : p).reviews })) }, docTitle: `Vendor performance note — ${v.name}`, onDecision: () => vendorDetail(v) });
+  el.querySelector('#vnote').onclick = async () => {
+    const text = await Hub.run({
+      out: '#vout', button: '#vnote', manualMinutes: 40,
+      system: 'You are an accounts-payable / purchase officer at VPS Lakeshore Hospital, Kochi, writing a vendor performance note based on this month\'s three-way match results.',
+      prompt: JSON.stringify({ vendor: v, stats: { invoices: s.invs.length, exceptionRatePct: s.excRate, atRisk: Math.round(s.atRiskTotal), debitNotesRaised: Math.round(s.debitRecovered) }, invoiceExceptions: s.computed.filter(c => c.exceptions.length).map(c => c.exceptions) }),
+      demo: () => demoVendorNote(v, s),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Vendor performance note drafted', v.name);
+    st.set(cur => ({ vendorNoteReviews: { ...cur.vendorNoteReviews, [v.id]: { status: 'draft', text } } }));
+    Hub.kit.review(el.querySelector('#vrv'), { slug: SLUG, item: { id: v.id, title: `Vendor performance note — ${v.name}` }, text, st: { get: () => ({ reviews: st.get().vendorNoteReviews }), set: p => st.set(cur => ({ vendorNoteReviews: (typeof p === 'function' ? p(cur) : p).reviews })) }, docTitle: `Vendor performance note — ${v.name}`, onDecision: () => vendorDetail(v) });
+  };
+}
+
+function demoVendorNote(v, s) {
+  const excTypes = {};
+  s.computed.forEach(c => c.exceptions.forEach(e => excTypes[e] = (excTypes[e] || 0) + 1));
+  const top = Object.entries(excTypes).sort((a, b) => b[1] - a[1]);
+  return `## Vendor performance note — ${v.name}
+**Category:** ${v.categoryLabel} · **City:** ${v.city} · **Payment terms:** ${v.paymentTerms}
+
+### This month at a glance
+- ${s.invs.length} invoices processed through the three-way match.
+- Exception rate: **${s.excRate}%** ${s.excRate > 25 ? '— materially above the desk average and worth a conversation with the vendor.' : s.excRate > 0 ? '— broadly in line with other vendors in this category.' : '— every invoice matched cleanly.'}
+- ₹ at risk flagged across the month: **${Hub.inr(Math.round(s.atRiskTotal))}**; of this, **${Hub.inr(Math.round(s.debitRecovered))}** has moved to a debit note after approval.
+
+### Recurring issues
+${top.length ? top.map(([name, n]) => `- **${name}** — ${n} invoice${n > 1 ? 's' : ''} this month.`).join('\n') : '- No recurring issues this month.'}
+
+### Recommendation
+${s.excRate > 25 ? `Flag ${v.name} to the vendor relationship owner ahead of the next PO cycle — the exception rate and value at risk suggest either a rate-contract refresh or a direct conversation on receiving-dock accuracy is needed.` : s.excRate > 0 ? `Continue routine three-way matching; no escalation needed this cycle, but keep an eye on the pattern above at the next review.` : `No action needed — ${v.name} remains a clean, low-friction vendor this month.`}
+
+*Draft for the Purchase & Stores manager to review and edit before circulating. Figures are demo/synthetic.*`;
+}
+
+/* ---------- Dashboard tab ---------- */
+function dashboard(el) {
+  const computed = DATA.invoices.map(inv => ({ inv, c: invoiceCompute(inv) }));
+  const matched = computed.filter(x => x.c.status === 'Matched').length;
+  const excInvoices = computed.filter(x => x.c.status !== 'Matched');
+  const exceptionsValue = excInvoices.reduce((s, x) => s + x.c.atRisk, 0);
+  const debitValue = computed.reduce((s, x) => s + ((st.get().invoiceStatus || {})[x.inv.id] === 'Debit note raised' ? x.c.atRisk : 0), 0);
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Invoices this month</div><div class="value">${DATA.invoices.length}</div></div>
+    <div class="kpi"><div class="label">Auto-matched clean</div><div class="value">${Math.round(matched / DATA.invoices.length * 100)}%</div></div>
+    <div class="kpi"><div class="label">Exceptions ₹ flagged</div><div class="value">${cr(exceptionsValue)}</div></div>
+    <div class="kpi"><div class="label">Debit notes raised ₹</div><div class="value">${cr(debitValue)}</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>
+  <div class="card" id="c3" style="margin-top:16px"></div>`;
+
+  const excByType = {};
+  excInvoices.forEach(x => x.c.exceptions.forEach(e => excByType[e] = (excByType[e] || 0) + 1));
+  Hub.chart.bar(el.querySelector('#c1'), { title: 'Exceptions by type', sub: 'Count of invoices flagged this month', data: Object.entries(excByType).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })) });
+
+  const byVendor = {};
+  computed.forEach(x => { byVendor[x.inv.vendorId] = (byVendor[x.inv.vendorId] || 0) + x.c.atRisk; });
+  const topVendors = Object.entries(byVendor).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, value]) => ({ label: VMAP[id].name, value }));
+  Hub.chart.hbar(el.querySelector('#c2'), { title: 'Top vendors by exception ₹', sub: '₹ at risk across this month\'s invoices', data: topVendors, format: cr });
+
+  const byDate = {};
+  DATA.invoices.forEach(inv => { byDate[inv.receivedOn] = (byDate[inv.receivedOn] || 0) + 1; });
+  const dates = Object.keys(byDate).sort();
+  Hub.chart.line(el.querySelector('#c3'), { title: 'Invoices received per day', sub: 'By date received at AP', labels: dates.map(d => d.slice(5)), series: [{ name: 'Invoices', values: dates.map(d => byDate[d]) }], format: v => String(v) });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  VMAP = Object.fromEntries(d.vendors.map(v => [v.id, v]));
+  BYVENDOR = {};
+  d.invoices.forEach(inv => (BYVENDOR[inv.vendorId] = BYVENDOR[inv.vendorId] || []).push(inv));
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The invoice queue', text: `${d.invoices.length} vendor invoices received this month, each already linked to its PO and goods-receipt note.` },
+      { sel: '#qsum', title: 'Nothing pre-computed', text: 'Matched %, ₹ at risk and every tag below are computed live from the PO/GRN/invoice lines — change a scenario and the numbers move with it.' },
+      { sel: '.lt-tags', title: 'Line-level tags', text: 'Short supply, rate above contract, GST error and more — each line is checked independently.' },
+      { sel: '#run', title: 'Run with Claude', text: 'Claude explains each exception in plain language, works out the recommended payable amount, and drafts a debit note or vendor query.' },
+      { sel: '#rv', title: 'Maker → approver', text: 'The AP executive edits the draft and submits; the finance controller approves. The invoice then moves to Cleared for payment or Debit note raised — a demo status only.' },
+      { sel: '#tabs', title: 'Vendors & dashboard', text: 'The Vendors tab tracks exception rates and debit notes recovered per vendor; the Dashboard rolls the whole month up into KPIs and charts.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Match queue' }, { id: 'vendors', label: 'Vendors' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ queue, vendors, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

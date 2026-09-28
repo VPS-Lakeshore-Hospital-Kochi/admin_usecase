@@ -1,0 +1,2610 @@
+{
+ "generatedAt": "2026-09-27",
+ "hospital": "VPS Lakeshore Hospital, Kochi",
+ "cases": [
+  {
+   "id": "PA-261012",
+   "patientInitials": "BF",
+   "age": 60,
+   "sex": "M",
+   "procedure": "Transurethral resection of prostate (TURP)",
+   "dept": "Urology",
+   "doctor": "Dr. Vinod Kurup",
+   "payer": "Paramount TPA",
+   "sumInsured": 2000000,
+   "policyYear": 4,
+   "roomCategory": "Private (non-AC)",
+   "admissionType": "Planned",
+   "requestTime": "10:53",
+   "baselineMinutes": 41,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": false
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 32100
+    },
+    {
+     "label": "Room rent (3 days, private (non-ac) @ ₹4,500/day)",
+     "amount": 13500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 33800
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 10300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 6100
+    }
+   ],
+   "totalEstimate": 95800,
+   "pedFlag": false,
+   "ilness": "BPH",
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261014",
+   "patientInitials": "NC",
+   "age": 46,
+   "sex": "F",
+   "procedure": "Total thyroidectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Anil Menon",
+   "payer": "Vidal Health TPA",
+   "sumInsured": 1500000,
+   "policyYear": 5,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Planned",
+   "requestTime": "08:15",
+   "baselineMinutes": 3,
+   "status": "Draft ready",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 34800
+    },
+    {
+     "label": "Room rent (1 day, deluxe / suite @ ₹12,000/day)",
+     "amount": 12000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 37900
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 23400
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 2000
+    }
+   ],
+   "totalEstimate": 110100,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261022",
+   "patientInitials": "NV",
+   "age": 36,
+   "sex": "F",
+   "procedure": "Total thyroidectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Rajeev Panicker",
+   "payer": "MediBuddy",
+   "sumInsured": 500000,
+   "policyYear": 2,
+   "roomCategory": "Private AC",
+   "admissionType": "Planned",
+   "requestTime": "07:29",
+   "baselineMinutes": 8,
+   "status": "Submitted",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 34700
+    },
+    {
+     "label": "Room rent (1 day, private ac @ ₹6,500/day)",
+     "amount": 6500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 43200
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 19300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 3100
+    }
+   ],
+   "totalEstimate": 106800,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261003",
+   "patientInitials": "TM",
+   "age": 25,
+   "sex": "M",
+   "procedure": "Laparoscopic cholecystectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Anil Menon",
+   "payer": "MediBuddy",
+   "sumInsured": 700000,
+   "policyYear": 5,
+   "roomCategory": "Twin sharing",
+   "admissionType": "Planned",
+   "requestTime": "10:53",
+   "baselineMinutes": 52,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 25200
+    },
+    {
+     "label": "Room rent (1 day, twin sharing @ ₹3,200/day)",
+     "amount": 3200
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 31900
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 19200
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 3200
+    }
+   ],
+   "totalEstimate": 82700,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261017",
+   "patientInitials": "RK",
+   "age": 55,
+   "sex": "F",
+   "procedure": "Phacoemulsification with IOL (cataract)",
+   "dept": "Ophthalmology",
+   "doctor": "Dr. George Mathew",
+   "payer": "Vidal Health TPA",
+   "sumInsured": 700000,
+   "policyYear": 6,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Planned",
+   "requestTime": "08:59",
+   "baselineMinutes": 17,
+   "status": "Draft ready",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": false
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 17000
+    },
+    {
+     "label": "Room rent (3 days, deluxe / suite @ ₹12,000/day)",
+     "amount": 36000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 19000
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 8200
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7300
+    }
+   ],
+   "totalEstimate": 87500,
+   "pedFlag": false,
+   "ilness": "cataract",
+   "roomRentFlag": true,
+   "subLimitFlag": true,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261019",
+   "patientInitials": "AC",
+   "age": 40,
+   "sex": "M",
+   "procedure": "AV fistula creation (dialysis access)",
+   "dept": "Nephrology",
+   "doctor": "Dr. Sunil Nair",
+   "payer": "MediBuddy",
+   "sumInsured": 2000000,
+   "policyYear": 2,
+   "roomCategory": "Private (non-AC)",
+   "admissionType": "Planned",
+   "requestTime": "09:29",
+   "baselineMinutes": 32,
+   "status": "Submitted",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": false
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 11900
+    },
+    {
+     "label": "Room rent (4 days, private (non-ac) @ ₹4,500/day)",
+     "amount": 18000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 20700
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 8500
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7800
+    }
+   ],
+   "totalEstimate": 66900,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261010",
+   "patientInitials": "GM",
+   "age": 67,
+   "sex": "M",
+   "procedure": "Lumbar spinal fusion (L4-L5)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Meera Balakrishnan",
+   "payer": "Corporate GHI — PeerCorp Industries",
+   "sumInsured": 700000,
+   "policyYear": 3,
+   "roomCategory": "Private (non-AC)",
+   "admissionType": "Planned",
+   "requestTime": "08:36",
+   "baselineMinutes": 5,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": false
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 161500
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 59100
+    },
+    {
+     "label": "Room rent (1 day, private (non-ac) @ ₹4,500/day)",
+     "amount": 4500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 111400
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 46700
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 3600
+    }
+   ],
+   "totalEstimate": 386800,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261000",
+   "patientInitials": "DB",
+   "age": 46,
+   "sex": "F",
+   "procedure": "ACL reconstruction (arthroscopic)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Priya Varghese",
+   "payer": "Corporate GHI — PeerCorp Industries",
+   "sumInsured": 2000000,
+   "policyYear": 5,
+   "roomCategory": "Twin sharing",
+   "admissionType": "Planned",
+   "requestTime": "08:13",
+   "baselineMinutes": 2,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": false
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": false
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 24300
+    },
+    {
+     "label": "Room rent (1 day, twin sharing @ ₹3,200/day)",
+     "amount": 3200
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 44700
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 20600
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 3300
+    }
+   ],
+   "totalEstimate": 96100,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261001",
+   "patientInitials": "VS",
+   "age": 28,
+   "sex": "M",
+   "procedure": "Right total knee replacement",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Divya Krishnan",
+   "payer": "Medi Assist (TPA)",
+   "sumInsured": 300000,
+   "policyYear": 1,
+   "roomCategory": "ICU/CCU",
+   "admissionType": "Planned",
+   "requestTime": "08:20",
+   "baselineMinutes": 17,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": false
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 171400
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 86400
+    },
+    {
+     "label": "Room rent (2 days, icu/ccu @ ₹9,500/day)",
+     "amount": 19000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 98800
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 49800
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 2400
+    }
+   ],
+   "totalEstimate": 427800,
+   "pedFlag": true,
+   "ilness": "osteoarthritis",
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261025",
+   "patientInitials": "DB",
+   "age": 55,
+   "sex": "F",
+   "procedure": "ACL reconstruction (arthroscopic)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Sheeba Thomas",
+   "payer": "Star Health",
+   "sumInsured": 500000,
+   "policyYear": 6,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Emergency",
+   "requestTime": "07:15",
+   "baselineMinutes": 5,
+   "status": "Query raised",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 36600
+    },
+    {
+     "label": "Room rent (3 days, deluxe / suite @ ₹12,000/day)",
+     "amount": 36000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 34100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 16800
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 4000
+    }
+   ],
+   "totalEstimate": 127500,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": {
+    "text": "Treating doctor's admission notes do not establish medical necessity clearly. Share detailed clinical justification with investigation reports.",
+    "raisedAt": "07:15"
+   }
+  },
+  {
+   "id": "PA-261026",
+   "patientInitials": "RH",
+   "age": 35,
+   "sex": "M",
+   "procedure": "Lumbar spinal fusion (L4-L5)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. George Mathew",
+   "payer": "MediBuddy",
+   "sumInsured": 500000,
+   "policyYear": 4,
+   "roomCategory": "Private AC",
+   "admissionType": "Planned",
+   "requestTime": "09:29",
+   "baselineMinutes": 24,
+   "status": "Query raised",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 160000
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 71200
+    },
+    {
+     "label": "Room rent (1 day, private ac @ ₹6,500/day)",
+     "amount": 6500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 94000
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 27900
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 4100
+    }
+   ],
+   "totalEstimate": 363700,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": {
+    "text": "Please confirm continuity of prior policy for PED waiting-period assessment on RH's ailment. Attach previous policy copy / portability certificate.",
+    "raisedAt": "09:29"
+   }
+  },
+  {
+   "id": "PA-261021",
+   "patientInitials": "DE",
+   "age": 58,
+   "sex": "F",
+   "procedure": "Phacoemulsification with IOL (cataract)",
+   "dept": "Ophthalmology",
+   "doctor": "Dr. Lakshmi Pillai",
+   "payer": "CGHS / PMJAY (govt scheme)",
+   "sumInsured": 2000000,
+   "policyYear": 1,
+   "roomCategory": "Twin sharing",
+   "admissionType": "Planned",
+   "requestTime": "07:04",
+   "baselineMinutes": 1,
+   "status": "Submitted",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 11600
+    },
+    {
+     "label": "Room rent (2 days, twin sharing @ ₹3,200/day)",
+     "amount": 6400
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 19700
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 8800
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 6200
+    }
+   ],
+   "totalEstimate": 52700,
+   "pedFlag": true,
+   "ilness": "cataract",
+   "roomRentFlag": false,
+   "subLimitFlag": true,
+   "govtScheme": true,
+   "query": null
+  },
+  {
+   "id": "PA-261013",
+   "patientInitials": "MJ",
+   "age": 62,
+   "sex": "M",
+   "procedure": "Lumbar spinal fusion (L4-L5)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Vinod Kurup",
+   "payer": "Star Health",
+   "sumInsured": 500000,
+   "policyYear": 3,
+   "roomCategory": "Private AC",
+   "admissionType": "Planned",
+   "requestTime": "08:10",
+   "baselineMinutes": 12,
+   "status": "Draft ready",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 150900
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 90500
+    },
+    {
+     "label": "Room rent (1 day, private ac @ ₹6,500/day)",
+     "amount": 6500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 76800
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 36700
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5200
+    }
+   ],
+   "totalEstimate": 366600,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261007",
+   "patientInitials": "TA",
+   "age": 31,
+   "sex": "M",
+   "procedure": "Total thyroidectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Priya Varghese",
+   "payer": "CGHS / PMJAY (govt scheme)",
+   "sumInsured": 500000,
+   "policyYear": 5,
+   "roomCategory": "Private AC",
+   "admissionType": "Planned",
+   "requestTime": "10:24",
+   "baselineMinutes": 60,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 24200
+    },
+    {
+     "label": "Room rent (4 days, private ac @ ₹6,500/day)",
+     "amount": 26000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 43800
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 11400
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 4600
+    }
+   ],
+   "totalEstimate": 110000,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": true,
+   "query": null
+  },
+  {
+   "id": "PA-261011",
+   "patientInitials": "RE",
+   "age": 63,
+   "sex": "F",
+   "procedure": "Total abdominal hysterectomy",
+   "dept": "Gynaecology",
+   "doctor": "Dr. George Mathew",
+   "payer": "Star Health",
+   "sumInsured": 1000000,
+   "policyYear": 3,
+   "roomCategory": "General ward",
+   "admissionType": "Emergency",
+   "requestTime": "08:13",
+   "baselineMinutes": 25,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 27700
+    },
+    {
+     "label": "Room rent (4 days, general ward @ ₹1,500/day)",
+     "amount": 6000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 47500
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 17900
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5400
+    }
+   ],
+   "totalEstimate": 104500,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261018",
+   "patientInitials": "TF",
+   "age": 77,
+   "sex": "M",
+   "procedure": "CABG (triple vessel)",
+   "dept": "Cardiology",
+   "doctor": "Dr. Anil Menon",
+   "payer": "Paramount TPA",
+   "sumInsured": 1500000,
+   "policyYear": 1,
+   "roomCategory": "Private AC",
+   "admissionType": "Emergency",
+   "requestTime": "10:05",
+   "baselineMinutes": 67,
+   "status": "Submitted",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 159000
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 83700
+    },
+    {
+     "label": "Room rent (2 days, private ac @ ₹6,500/day)",
+     "amount": 13000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 82200
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 35300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 2100
+    }
+   ],
+   "totalEstimate": 375300,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261028",
+   "patientInitials": "SG",
+   "age": 51,
+   "sex": "F",
+   "procedure": "Appendectomy (laparoscopic)",
+   "dept": "General Surgery",
+   "doctor": "Dr. Divya Krishnan",
+   "payer": "Vidal Health TPA",
+   "sumInsured": 1000000,
+   "policyYear": 4,
+   "roomCategory": "General ward",
+   "admissionType": "Emergency",
+   "requestTime": "07:04",
+   "baselineMinutes": 4,
+   "status": "Approved",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 11500
+    },
+    {
+     "label": "Room rent (4 days, general ward @ ₹1,500/day)",
+     "amount": 6000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 18100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 7300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7300
+    }
+   ],
+   "totalEstimate": 50200,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261027",
+   "patientInitials": "SM",
+   "age": 27,
+   "sex": "F",
+   "procedure": "Transurethral resection of prostate (TURP)",
+   "dept": "Urology",
+   "doctor": "Dr. Thomas Koshy",
+   "payer": "Medi Assist (TPA)",
+   "sumInsured": 700000,
+   "policyYear": 4,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Emergency",
+   "requestTime": "08:27",
+   "baselineMinutes": 16,
+   "status": "Approved",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 23900
+    },
+    {
+     "label": "Room rent (2 days, deluxe / suite @ ₹12,000/day)",
+     "amount": 24000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 33600
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 19900
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 3200
+    }
+   ],
+   "totalEstimate": 104600,
+   "pedFlag": false,
+   "ilness": "BPH",
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261030",
+   "patientInitials": "GC",
+   "age": 78,
+   "sex": "M",
+   "procedure": "Inguinal hernia repair (mesh)",
+   "dept": "General Surgery",
+   "doctor": "Dr. Anjali Warrier",
+   "payer": "CGHS / PMJAY (govt scheme)",
+   "sumInsured": 300000,
+   "policyYear": 1,
+   "roomCategory": "Private (non-AC)",
+   "admissionType": "Planned",
+   "requestTime": "08:13",
+   "baselineMinutes": 27,
+   "status": "Approved",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 17400
+    },
+    {
+     "label": "Room rent (1 day, private (non-ac) @ ₹4,500/day)",
+     "amount": 4500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 20000
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 10800
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 2300
+    }
+   ],
+   "totalEstimate": 55000,
+   "pedFlag": true,
+   "ilness": "hernia",
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": true,
+   "query": null
+  },
+  {
+   "id": "PA-261009",
+   "patientInitials": "AC",
+   "age": 71,
+   "sex": "M",
+   "procedure": "Modified radical mastectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Divya Krishnan",
+   "payer": "Vidal Health TPA",
+   "sumInsured": 2000000,
+   "policyYear": 4,
+   "roomCategory": "Private AC",
+   "admissionType": "Emergency",
+   "requestTime": "07:07",
+   "baselineMinutes": 9,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": false
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 194900
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 89100
+    },
+    {
+     "label": "Room rent (2 days, private ac @ ₹6,500/day)",
+     "amount": 13000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 112900
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 30500
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 6300
+    }
+   ],
+   "totalEstimate": 446700,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261031",
+   "patientInitials": "SM",
+   "age": 59,
+   "sex": "F",
+   "procedure": "ACL reconstruction (arthroscopic)",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Divya Krishnan",
+   "payer": "Paramount TPA",
+   "sumInsured": 1500000,
+   "policyYear": 2,
+   "roomCategory": "ICU/CCU",
+   "admissionType": "Planned",
+   "requestTime": "08:38",
+   "baselineMinutes": 26,
+   "status": "Denied",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": false
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 30400
+    },
+    {
+     "label": "Room rent (1 day, icu/ccu @ ₹9,500/day)",
+     "amount": 9500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 40100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 12800
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 4500
+    }
+   ],
+   "totalEstimate": 97300,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261016",
+   "patientInitials": "PN",
+   "age": 50,
+   "sex": "F",
+   "procedure": "Phacoemulsification with IOL (cataract)",
+   "dept": "Ophthalmology",
+   "doctor": "Dr. Divya Krishnan",
+   "payer": "CGHS / PMJAY (govt scheme)",
+   "sumInsured": 500000,
+   "policyYear": 3,
+   "roomCategory": "General ward",
+   "admissionType": "Emergency",
+   "requestTime": "08:33",
+   "baselineMinutes": 7,
+   "status": "Draft ready",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 15200
+    },
+    {
+     "label": "Room rent (3 days, general ward @ ₹1,500/day)",
+     "amount": 4500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 19400
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 6000
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5100
+    }
+   ],
+   "totalEstimate": 50200,
+   "pedFlag": false,
+   "ilness": "cataract",
+   "roomRentFlag": false,
+   "subLimitFlag": true,
+   "govtScheme": true,
+   "query": null
+  },
+  {
+   "id": "PA-261023",
+   "patientInitials": "RT",
+   "age": 23,
+   "sex": "F",
+   "procedure": "Inguinal hernia repair (mesh)",
+   "dept": "General Surgery",
+   "doctor": "Dr. Vinod Kurup",
+   "payer": "Paramount TPA",
+   "sumInsured": 2000000,
+   "policyYear": 2,
+   "roomCategory": "ICU/CCU",
+   "admissionType": "Planned",
+   "requestTime": "09:46",
+   "baselineMinutes": 40,
+   "status": "Query raised",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 13900
+    },
+    {
+     "label": "Room rent (3 days, icu/ccu @ ₹9,500/day)",
+     "amount": 28500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 18000
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 10200
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7200
+    }
+   ],
+   "totalEstimate": 77800,
+   "pedFlag": true,
+   "ilness": "hernia",
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": {
+    "text": "Itemised bill breakup does not match package code. Kindly resubmit cost estimate with room category and per-day room rent clearly stated.",
+    "raisedAt": "09:46"
+   }
+  },
+  {
+   "id": "PA-261002",
+   "patientInitials": "MK",
+   "age": 57,
+   "sex": "M",
+   "procedure": "Emergency PTCA with drug-eluting stent",
+   "dept": "Cardiology",
+   "doctor": "Dr. Priya Varghese",
+   "payer": "Corporate GHI — PeerCorp Industries",
+   "sumInsured": 1000000,
+   "policyYear": 3,
+   "roomCategory": "ICU/CCU",
+   "admissionType": "Emergency",
+   "requestTime": "07:08",
+   "baselineMinutes": 4,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 146700
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 65800
+    },
+    {
+     "label": "Room rent (5 days, icu/ccu @ ₹9,500/day)",
+     "amount": 47500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 94600
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 35500
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7000
+    }
+   ],
+   "totalEstimate": 397100,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261015",
+   "patientInitials": "RT",
+   "age": 56,
+   "sex": "F",
+   "procedure": "Phacoemulsification with IOL (cataract)",
+   "dept": "Ophthalmology",
+   "doctor": "Dr. Rajeev Panicker",
+   "payer": "Medi Assist (TPA)",
+   "sumInsured": 2000000,
+   "policyYear": 2,
+   "roomCategory": "ICU/CCU",
+   "admissionType": "Planned",
+   "requestTime": "08:28",
+   "baselineMinutes": 19,
+   "status": "Draft ready",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": false
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 14700
+    },
+    {
+     "label": "Room rent (2 days, icu/ccu @ ₹9,500/day)",
+     "amount": 19000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 17100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 7300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7100
+    }
+   ],
+   "totalEstimate": 65200,
+   "pedFlag": true,
+   "ilness": "cataract",
+   "roomRentFlag": false,
+   "subLimitFlag": true,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261020",
+   "patientInitials": "RF",
+   "age": 39,
+   "sex": "M",
+   "procedure": "Percutaneous nephrolithotomy (PCNL)",
+   "dept": "Urology",
+   "doctor": "Dr. Rajeev Panicker",
+   "payer": "Paramount TPA",
+   "sumInsured": 500000,
+   "policyYear": 6,
+   "roomCategory": "Twin sharing",
+   "admissionType": "Planned",
+   "requestTime": "07:29",
+   "baselineMinutes": 10,
+   "status": "Submitted",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": false
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 33500
+    },
+    {
+     "label": "Room rent (2 days, twin sharing @ ₹3,200/day)",
+     "amount": 6400
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 45100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 12100
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5500
+    }
+   ],
+   "totalEstimate": 102600,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261029",
+   "patientInitials": "MG",
+   "age": 32,
+   "sex": "F",
+   "procedure": "Lower segment caesarean section",
+   "dept": "Gynaecology",
+   "doctor": "Dr. Thomas Koshy",
+   "payer": "Paramount TPA",
+   "sumInsured": 500000,
+   "policyYear": 6,
+   "roomCategory": "Private AC",
+   "admissionType": "Emergency",
+   "requestTime": "09:19",
+   "baselineMinutes": 35,
+   "status": "Approved",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 26700
+    },
+    {
+     "label": "Room rent (3 days, private ac @ ₹6,500/day)",
+     "amount": 19500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 42100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 23200
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 6700
+    }
+   ],
+   "totalEstimate": 118200,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261008",
+   "patientInitials": "LD",
+   "age": 45,
+   "sex": "F",
+   "procedure": "Total thyroidectomy",
+   "dept": "General Surgery",
+   "doctor": "Dr. Vinod Kurup",
+   "payer": "Paramount TPA",
+   "sumInsured": 500000,
+   "policyYear": 4,
+   "roomCategory": "Private (non-AC)",
+   "admissionType": "Emergency",
+   "requestTime": "09:32",
+   "baselineMinutes": 17,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": false
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 30600
+    },
+    {
+     "label": "Room rent (4 days, private (non-ac) @ ₹4,500/day)",
+     "amount": 18000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 42700
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 10400
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7800
+    }
+   ],
+   "totalEstimate": 109500,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261006",
+   "patientInitials": "MB",
+   "age": 74,
+   "sex": "F",
+   "procedure": "AV fistula creation (dialysis access)",
+   "dept": "Nephrology",
+   "doctor": "Dr. Anil Menon",
+   "payer": "Paramount TPA",
+   "sumInsured": 500000,
+   "policyYear": 6,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Planned",
+   "requestTime": "08:49",
+   "baselineMinutes": 28,
+   "status": "Docs pending",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": false
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": true
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": false
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 17200
+    },
+    {
+     "label": "Room rent (4 days, deluxe / suite @ ₹12,000/day)",
+     "amount": 48000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 19500
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 5200
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 7800
+    }
+   ],
+   "totalEstimate": 97700,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261005",
+   "patientInitials": "MV",
+   "age": 43,
+   "sex": "F",
+   "procedure": "Appendectomy (laparoscopic)",
+   "dept": "General Surgery",
+   "doctor": "Dr. Meera Balakrishnan",
+   "payer": "CGHS / PMJAY (govt scheme)",
+   "sumInsured": 500000,
+   "policyYear": 5,
+   "roomCategory": "General ward",
+   "admissionType": "Emergency",
+   "requestTime": "07:11",
+   "baselineMinutes": 10,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 16100
+    },
+    {
+     "label": "Room rent (3 days, general ward @ ₹1,500/day)",
+     "amount": 4500
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 19200
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 10700
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5600
+    }
+   ],
+   "totalEstimate": 56100,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": false,
+   "subLimitFlag": false,
+   "govtScheme": true,
+   "query": null
+  },
+  {
+   "id": "PA-261004",
+   "patientInitials": "MJ",
+   "age": 27,
+   "sex": "F",
+   "procedure": "Lower segment caesarean section",
+   "dept": "Gynaecology",
+   "doctor": "Dr. Priya Varghese",
+   "payer": "Paramount TPA",
+   "sumInsured": 1500000,
+   "policyYear": 4,
+   "roomCategory": "Private AC",
+   "admissionType": "Emergency",
+   "requestTime": "10:43",
+   "baselineMinutes": 52,
+   "status": "New",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": false
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": false
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": false
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": true
+    }
+   ],
+   "costItems": [
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 27600
+    },
+    {
+     "label": "Room rent (2 days, private ac @ ₹6,500/day)",
+     "amount": 13000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 41500
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 12300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 5400
+    }
+   ],
+   "totalEstimate": 99800,
+   "pedFlag": false,
+   "ilness": null,
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": null
+  },
+  {
+   "id": "PA-261024",
+   "patientInitials": "AT",
+   "age": 54,
+   "sex": "F",
+   "procedure": "Right total knee replacement",
+   "dept": "Orthopaedics",
+   "doctor": "Dr. Rajeev Panicker",
+   "payer": "MediBuddy",
+   "sumInsured": 1000000,
+   "policyYear": 2,
+   "roomCategory": "Deluxe / suite",
+   "admissionType": "Planned",
+   "requestTime": "07:57",
+   "baselineMinutes": 11,
+   "status": "Query raised",
+   "documents": [
+    {
+     "name": "Patient ID proof (Aadhaar/Passport)",
+     "present": true
+    },
+    {
+     "name": "Policy card / e-card number",
+     "present": true
+    },
+    {
+     "name": "Doctor's clinical notes & admission advice",
+     "present": true
+    },
+    {
+     "name": "Investigation reports (relevant to diagnosis)",
+     "present": true
+    },
+    {
+     "name": "Detailed cost estimate (itemised)",
+     "present": false
+    },
+    {
+     "name": "Pre-auth request form (insurer/TPA format)",
+     "present": true
+    },
+    {
+     "name": "Past policy / continuity certificate (for PED check)",
+     "present": true
+    },
+    {
+     "name": "Employer / scheme authorisation letter",
+     "present": false
+    }
+   ],
+   "costItems": [
+    {
+     "label": "Implant / device charges",
+     "amount": 194400
+    },
+    {
+     "label": "OT & anaesthesia charges",
+     "amount": 90200
+    },
+    {
+     "label": "Room rent (2 days, deluxe / suite @ ₹12,000/day)",
+     "amount": 24000
+    },
+    {
+     "label": "Surgeon & anaesthetist professional fee",
+     "amount": 103100
+    },
+    {
+     "label": "Investigations, pharmacy & consumables",
+     "amount": 38300
+    },
+    {
+     "label": "Non-payable items (as per IRDAI list)",
+     "amount": 2300
+    }
+   ],
+   "totalEstimate": 452300,
+   "pedFlag": true,
+   "ilness": "osteoarthritis",
+   "roomRentFlag": true,
+   "subLimitFlag": false,
+   "govtScheme": false,
+   "query": {
+    "text": "Itemised bill breakup does not match package code. Kindly resubmit cost estimate with room category and per-day room rent clearly stated.",
+    "raisedAt": "07:57"
+   }
+  }
+ ]
+}

@@ -6,238 +6,321 @@
 <title>MIS commentary & variance memo</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .scn-row { margin-bottom: 12px; }
-  select#scenario { max-width: 320px; }
+  .month-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .month-bar select { max-width: 220px; }
   td.dept-name { font-weight: 500; }
   .mini { font-size: 12px; color: var(--muted); }
+  .num.up { color: var(--ok); } .num.down { color: var(--bad); }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>MIS commentary & variance memo</h1>
-    <p>Monthly MIS by department — budget vs actual revenue, volumes, and hospital KPIs. Claude drafts the CFO commentary, top risks and questions for department heads.</p>
+    <p>Monthly close workspace for Finance & Accounts — budget vs actual by department, hospital KPIs, a variance-explanation queue and the CFO's MIS pack. Synthetic figures only.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample input — August 2026 MIS</h2>
-      <div class="row scn-row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="A">A — Strong month, robotic surgery & transplant driving upside</option>
-          <option value="B">B — Soft month, occupancy pressure & payor mix shift</option>
-        </select>
-      </div>
-
-      <div class="table-wrap">
-        <table id="misTable">
-          <thead>
-            <tr><th>Department</th><th class="num">Budget (₹L)</th><th class="num">Actual (₹L)</th><th class="num">Var %</th><th>Flag</th><th class="num">IP vol</th><th class="num">OP vol</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <label>Hospital KPIs (editable)</label>
-      <textarea id="kpiText" rows="7"></textarea>
-
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
+  <div class="month-bar">
+    <label style="margin:0" for="monthSel">Month</label>
+    <select id="monthSel"></select>
+    <span class="small" id="monthNote"></span>
   </div>
-
-  <p class="footer-note">Synthetic MIS figures for demonstration only. No real financial data.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic MIS data for demonstration only. Nothing here is sent or posted to any hospital finance system.</p>
 </main>
-
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'finance-mis';
 Hub.mountHeader({ dept: 'Finance & Accounts', title: 'MIS commentary & variance memo' });
 
-const SCENARIOS = {
-  A: {
-    label: 'Strong month',
-    rows: [
-      { dept: 'Cardiology', budget: 410, actual: 452, ip: 168, op: 2140 },
-      { dept: 'Orthopaedics', budget: 260, actual: 244, ip: 96, op: 1510 },
-      { dept: 'Neurosciences', budget: 190, actual: 205, ip: 61, op: 980 },
-      { dept: 'Oncology', budget: 230, actual: 221, ip: 74, op: 1320 },
-      { dept: 'Gastro / Liver Transplant', budget: 175, actual: 233, ip: 22, op: 640 },
-      { dept: 'Nephrology / Dialysis', budget: 150, actual: 146, ip: 40, op: 1870 },
-      { dept: 'Robotic Surgery Programme', budget: 95, actual: 138, ip: 31, op: 210 },
-      { dept: 'Emergency Medicine', budget: 140, actual: 149, ip: 58, op: 2960 },
-      { dept: 'Pharmacy', budget: 310, actual: 322, ip: 0, op: 0 },
-      { dept: 'Lab & Radiology', budget: 180, actual: 191, ip: 0, op: 0 },
-    ],
-    kpis: `ARPOB: ₹52,400 (budget ₹48,900)
-ALOS: 4.1 days (budget 4.4 days)
-Bed occupancy: 79.6% (budget 74%)
-Case Mix Index (CMI): 1.42 (budget 1.31)
-Payor mix: Cash 34% · TPA/Insurance 41% · International 17% · Govt schemes (KASP/CMCHIS) 8%
-International patient revenue: ₹6.9 Cr (Maldives 46%, GCC 31%, Africa 14%, other 9%)
-Net revenue: ₹41.0 Cr vs budget ₹38.2 Cr`,
-  },
-  B: {
-    label: 'Soft month',
-    rows: [
-      { dept: 'Cardiology', budget: 410, actual: 372, ip: 141, op: 1860 },
-      { dept: 'Orthopaedics', budget: 260, actual: 198, ip: 71, op: 1190 },
-      { dept: 'Neurosciences', budget: 190, actual: 176, ip: 52, op: 860 },
-      { dept: 'Oncology', budget: 230, actual: 226, ip: 70, op: 1280 },
-      { dept: 'Gastro / Liver Transplant', budget: 175, actual: 158, ip: 15, op: 520 },
-      { dept: 'Nephrology / Dialysis', budget: 150, actual: 152, ip: 42, op: 1910 },
-      { dept: 'Robotic Surgery Programme', budget: 95, actual: 61, ip: 14, op: 130 },
-      { dept: 'Emergency Medicine', budget: 140, actual: 158, ip: 66, op: 3210 },
-      { dept: 'Pharmacy', budget: 310, actual: 289, ip: 0, op: 0 },
-      { dept: 'Lab & Radiology', budget: 180, actual: 171, ip: 0, op: 0 },
-    ],
-    kpis: `ARPOB: ₹44,100 (budget ₹48,900)
-ALOS: 4.9 days (budget 4.4 days)
-Bed occupancy: 66.2% (budget 74%)
-Case Mix Index (CMI): 1.22 (budget 1.31)
-Payor mix: Cash 29% · TPA/Insurance 46% · International 11% · Govt schemes (KASP/CMCHIS) 14%
-International patient revenue: ₹3.8 Cr (Maldives 39%, GCC 28%, Africa 21%, other 12%)
-Net revenue: ₹33.6 Cr vs budget ₹38.2 Cr`,
-  },
-};
+let DATA;
+const st = Hub.kit.state(SLUG, { tab: 'variance', month: null, selectedDept: null, reviews: {}, misReviews: {} });
 
-function variancePct(b, a) { return ((a - b) / b) * 100; }
-function flagFor(pct) {
-  if (pct >= -2) return '<span class="tag ok">On/above budget</span>';
-  if (pct >= -10) return '<span class="tag warn">Watch</span>';
-  return '<span class="tag bad">Shortfall</span>';
+/* ---------- helpers ---------- */
+const pct = (aop, actual) => ((actual - aop) / aop) * 100;
+const fp = p => (p >= 0 ? '+' : '') + p.toFixed(1) + '%';
+const rowsFor = m => DATA.rows.filter(r => r.month === m);
+const kpiFor = m => DATA.kpis.find(k => k.month === m);
+const mIdx = m => DATA.months.indexOf(m);
+function ytd(dept, month) {
+  const upto = DATA.months.slice(0, mIdx(month) + 1);
+  const rs = DATA.rows.filter(r => r.dept === dept && upto.includes(r.month));
+  return { aop: rs.reduce((a, r) => a + r.aop, 0), actual: rs.reduce((a, r) => a + r.actual, 0) };
+}
+function totalsFor(month) {
+  const rs = rowsFor(month);
+  return { aop: rs.reduce((a, r) => a + r.aop, 0), actual: rs.reduce((a, r) => a + r.actual, 0) };
+}
+function reviewKey(month, dept) { return `${month}|${dept}`; }
+function statusBadge(month, dept) {
+  const rec = (st.get().reviews || {})[reviewKey(month, dept)];
+  if (!rec) return '<span class="tag warn">Needs explanation</span>';
+  return { draft: '<span class="tag warn">Draft</span>', submitted: '<span class="tag warn">Awaiting approval</span>',
+    approved: '<span class="tag ok">Approved</span>', returned: '<span class="tag bad">Returned to maker</span>' }[rec.status];
 }
 
-function renderTable(scn) {
-  const tbody = document.querySelector('#misTable tbody');
-  let totalB = 0, totalA = 0;
-  tbody.innerHTML = scn.rows.map(r => {
-    const pct = variancePct(r.budget, r.actual);
-    totalB += r.budget; totalA += r.actual;
-    return `<tr>
-      <td class="dept-name">${Hub.esc(r.dept)}</td>
-      <td class="num">${r.budget.toLocaleString('en-IN')}</td>
-      <td class="num">${r.actual.toLocaleString('en-IN')}</td>
-      <td class="num">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</td>
-      <td>${flagFor(pct)}</td>
-      <td class="num">${r.ip}</td>
-      <td class="num">${r.op.toLocaleString('en-IN')}</td>
-    </tr>`;
-  }).join('') + `<tr><td class="dept-name">Total</td><td class="num"><b>${totalB.toLocaleString('en-IN')}</b></td>
-      <td class="num"><b>${totalA.toLocaleString('en-IN')}</b></td>
-      <td class="num"><b>${variancePct(totalB, totalA) >= 0 ? '+' : ''}${variancePct(totalB, totalA).toFixed(1)}%</b></td>
-      <td></td><td></td><td></td></tr>`;
+/* ---------- month selector ---------- */
+function buildMonthSel() {
+  const sel = document.getElementById('monthSel');
+  sel.innerHTML = DATA.months.map(m => `<option value="${Hub.esc(m)}">${Hub.esc(m)}</option>`).join('');
+  const cur = st.get().month || DATA.months[DATA.months.length - 1];
+  sel.value = cur;
+  st.set({ month: cur });
+  sel.onchange = () => { st.set({ month: sel.value }); renderView(); };
+  document.getElementById('monthNote').textContent = 'Drives every tab below. Defaults to the latest close.';
+}
 
-  const worst = [...scn.rows].sort((x, y) => variancePct(x.budget, x.actual) - variancePct(y.budget, y.actual))[0];
-  const best = [...scn.rows].sort((x, y) => variancePct(y.budget, y.actual) - variancePct(x.budget, x.actual))[0];
+/* ================= Dashboard ================= */
+function dashboard(el) {
+  const month = st.get().month;
+  const t = totalsFor(month), k = kpiFor(month), variance = pct(t.aop, t.actual);
+  el.innerHTML = `
+    <div class="kpis" id="kpis"></div>
+    <div class="grid cols-2">
+      <div class="card" id="c1"></div>
+      <div class="card" id="c2"></div>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="card" id="c3"></div>
+      <div class="card"><h2>What's driving ${Hub.esc(month)}</h2><div id="drivers"></div></div>
+    </div>`;
+
   document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><div class="label">Total revenue variance</div><div class="value">${variancePct(totalB, totalA) >= 0 ? '+' : ''}${variancePct(totalB, totalA).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="label">Best performer</div><div class="value" style="font-size:1.05rem">${Hub.esc(best.dept)}</div><div class="delta up">+${variancePct(best.budget, best.actual).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="label">Largest shortfall</div><div class="value" style="font-size:1.05rem">${Hub.esc(worst.dept)}</div><div class="delta down">${variancePct(worst.budget, worst.actual).toFixed(1)}%</div></div>
-    <div class="kpi"><div class="label">Departments in watch/shortfall</div><div class="value">${scn.rows.filter(r => variancePct(r.budget, r.actual) < -2).length} / ${scn.rows.length}</div></div>`;
-}
+    <div class="kpi"><div class="label">Revenue vs AOP</div><div class="value">${fp(variance)}</div>
+      <div class="delta ${variance >= 0 ? 'up' : 'down'}">${Hub.inr(t.actual * 1e5)} vs ${Hub.inr(t.aop * 1e5)} AOP</div></div>
+    <div class="kpi"><div class="label">ARPOB</div><div class="value">${Hub.inr(k.arpob)}</div>
+      <div class="delta ${k.arpob >= k.arpobAop ? 'up' : 'down'}">AOP ${Hub.inr(k.arpobAop)}</div></div>
+    <div class="kpi"><div class="label">ALOS</div><div class="value">${k.alos.toFixed(1)}d</div>
+      <div class="delta ${k.alos <= k.alosAop ? 'up' : 'down'}">AOP ${k.alosAop.toFixed(1)}d</div></div>
+    <div class="kpi"><div class="label">Bed occupancy</div><div class="value">${k.occ.toFixed(0)}%</div>
+      <div class="delta ${k.occ >= k.occAop ? 'up' : 'down'}">AOP ${k.occAop.toFixed(0)}%</div></div>`;
 
-function loadScenario(key) {
-  const scn = SCENARIOS[key];
-  renderTable(scn);
-  document.getElementById('kpiText').value = scn.kpis;
-}
-
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-loadScenario('A');
-
-const DEMO = {
-  A: `## Executive commentary — August 2026 MIS
-
-VPS Lakeshore closed August with **net revenue of ₹41.0 Cr against a budget of ₹38.2 Cr (+7.3%)**, the strongest beat in the last two quarters. The upside is concentrated and structural rather than one-off:
-
-- **Robotic Surgery Programme** overshot budget by **+45.3%** (₹138L vs ₹95L) — case volumes nearly doubled on the back of two new console-trained surgeons and a marketing push around minimally-invasive urology cases.
-- **Gastro / Liver Transplant** beat budget by **+33.1%**, driven by three high-value transplant cases from Maldives referrals — each carrying ARPOB well above the hospital average.
-- **Cardiology**, the largest revenue line, is **+10.2%** ahead on volume growth in OP consults (2,140 vs a typical ~1,850) rather than price, which is the healthier kind of beat.
-- Bed occupancy at **79.6%** (vs 74% budget) and CMI at **1.42** (vs 1.31) both point to a genuinely higher-acuity, better-utilised month, not just more patients.
-- **Orthopaedics is the one soft spot**, at **-6.2%**, likely elective knee/hip deferrals — worth checking against surgeon leave calendars.
-
-**International revenue of ₹6.9 Cr (17% of payor mix)** continues to be a swing factor — Maldives referrals alone are now a material line and should be tracked separately from GCC/Africa given different payment cycles (advance vs post-treatment insurance settlement).
-
-## Top 3 risks to flag to the CFO
-
-1. **Concentration risk in Robotic Surgery upside** — a large share of the beat sits with two surgeons; any leave, attrition or console downtime next month could reverse ₹40–50L of this gain quickly.
-2. **International receivables timing** — Maldives/GCC volume growth (₹6.9 Cr) needs matching against actual cash realisation; a revenue beat funded by rising international receivables is not the same as a cash beat.
-3. **Orthopaedics softness could be an early signal**, not noise — if it persists into September, it may indicate referral leakage to a competing ortho programme rather than seasonal deferral.
-
-## Draft variance memo — for CFO sign-off
-
-**To:** CFO, VPS Lakeshore | **Re:** August 2026 MIS variance | **Prepared by:** Finance Controller
-
-Net revenue for August was ₹41.0 Cr against a budgeted ₹38.2 Cr, a favourable variance of ₹2.8 Cr (+7.3%). The variance is led by Robotic Surgery (+₹43L), Gastro/Liver Transplant (+₹58L) and Cardiology (+₹42L), partially offset by a shortfall in Orthopaedics (-₹16L). ARPOB improved to ₹52,400 (budget ₹48,900) and ALOS improved to 4.1 days (budget 4.4), consistent with a higher-acuity case mix (CMI 1.42 vs 1.31 budget). Occupancy at 79.6% is comfortably above the 74% budget and should be watched for capacity constraints if the trend continues into Q3. Recommend Finance flag the Orthopaedics shortfall to the Ortho unit head for a root-cause review before the September MIS is finalised.
-
-## Questions to ask department heads
-
-- **Orthopaedics head:** Is the -6.2% shortfall due to surgeon leave, elective deferrals, or referral leakage? What is the September pipeline looking like?
-- **Robotic Surgery lead:** Is the +45% volume sustainable, or a one-month spike from a specific referral source? What is console utilisation (cases/week) trending to?
-- **Gastro/Transplant head:** Of the three transplant cases this month, what is the expected cash-collection timeline for the international patients specifically?
-- **Revenue Cycle / TPA desk:** Has the payor mix shift (International 17% vs typical ~13%) changed average days-to-collection this month?
-- **Nursing/Ops:** With occupancy at 79.6%, is there a bed-blocking risk building in any single ward (esp. Cardiology ICU/step-down)?`,
-  B: `## Executive commentary — August 2026 MIS
-
-August closed **below budget: net revenue ₹33.6 Cr vs a budget of ₹38.2 Cr, a shortfall of ₹4.6 Cr (-12.0%)** — the weakest month this quarter, and the softness is broad-based rather than isolated to one department.
-
-- **Robotic Surgery Programme** is the largest percentage miss, **-35.8%** (₹61L vs ₹95L budget) — case volumes nearly halved, consistent with a reported console downtime/servicing window this month.
-- **Orthopaedics** missed by **-23.8%**, the largest absolute rupee miss (-₹62L), tracking with the occupancy drop.
-- **Bed occupancy fell to 66.2%** (vs 74% budget) and **ALOS rose to 4.9 days** (vs 4.4 budget) — a combination that usually signals either a softer elective pipeline or discharge-process delays holding beds without adding revenue.
-- **CMI fell to 1.22** (vs 1.31 budget), so the case mix this month was also lower-acuity, compounding the ARPOB miss (₹44,100 vs ₹48,900 budget).
-- On the positive side, **Emergency Medicine (+12.9%)** and **Govt scheme revenue (14% of mix, up from a typical ~8%)** grew — the hospital is absorbing more emergency and scheme-funded load, which protects footfall but pressures margin given lower realisation per case on government schemes (KASP/CMCHIS) versus cash/international.
-- **International revenue fell to ₹3.8 Cr (11% of mix)**, down from a typical ~₹6-7 Cr — this is the single largest driver of the ARPOB miss given international cases carry the highest realisation.
-
-## Top 3 risks to flag to the CFO
-
-1. **Payor mix has shifted toward lower-margin business** — Govt schemes now 14% (from ~8%) and International down to 11% (from ~17%); if this mix persists, budgeted ARPOB assumptions for Q3 need revisiting, not just this month's variance explained away.
-2. **Robotic Surgery downtime is a recurring capacity risk** — a -35.8% miss driven by equipment/servicing suggests a single point of failure; confirm whether a backup slot or second robotic system access exists for FY27 planning.
-3. **Occupancy + rising ALOS together** point to a possible discharge-process bottleneck (pending TPA approvals, pharmacy billing delays) rather than pure demand softness — worth a same-week ops review rather than waiting for September numbers.
-
-## Draft variance memo — for CFO sign-off
-
-**To:** CFO, VPS Lakeshore | **Re:** August 2026 MIS variance | **Prepared by:** Finance Controller
-
-Net revenue for August was ₹33.6 Cr against a budgeted ₹38.2 Cr, an adverse variance of ₹4.6 Cr (-12.0%). The shortfall is led by Robotic Surgery (-₹34L), Orthopaedics (-₹62L) and Cardiology (-₹38L), with Emergency Medicine and government-scheme volumes providing partial offset. ARPOB fell to ₹44,100 (budget ₹48,900) on a lower CMI of 1.22 (budget 1.31) and a payor-mix shift away from International/Cash toward Govt schemes. Occupancy at 66.2% (budget 74%) combined with a higher ALOS of 4.9 days (budget 4.4) suggests both softer elective demand and a possible discharge-cycle delay; recommend a joint Finance-Ops review of TPA approval turnaround and bed-turnover before the September close.
-
-## Questions to ask department heads
-
-- **Robotic Surgery lead:** What caused the volume drop — equipment downtime, surgeon availability, or referral softness — and when is normal throughput expected to resume?
-- **Orthopaedics head:** Is the -23.8% miss linked to the same capacity constraint, or a separate elective-deferral pattern?
-- **Nursing/Bed management:** With ALOS up to 4.9 days against a 66.2% occupancy, is there a specific discharge bottleneck (TPA clearance, pharmacy reconciliation) adding a day or more per patient?
-- **Revenue Cycle / TPA desk:** Why did International revenue fall to 11% of mix this month — fewer referrals, or a timing/collection issue on existing cases?
-- **CFO/Finance:** Should Q3 budget assumptions be revised given the payor-mix shift toward Govt schemes, which carry lower per-case realisation?`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const scn = SCENARIOS[key];
-  const misText = document.querySelectorAll('#misTable tbody tr').length
-    ? Array.from(document.querySelectorAll('#misTable tbody tr')).map(tr => tr.innerText.replace(/\t/g, ' | ')).join('\n')
-    : '';
-  const kpiText = document.getElementById('kpiText').value;
-  const prompt = `You are the Finance Controller's assistant at VPS Lakeshore Hospital, Kochi. Here is the August 2026 MIS by department (Budget vs Actual, ₹ lakh, with IP/OP volumes):
-
-${misText}
-
-Hospital KPIs:
-${kpiText}
-
-Write: (1) executive commentary on what moved and why, (2) top 3 risks to flag to the CFO, (3) a short draft variance memo suitable for CFO sign-off, (4) a list of pointed questions to ask each relevant department head. Use Indian number formatting (₹ lakh/crore).`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are a hospital finance analyst producing MIS commentary for the CFO of a 350-bed multi-specialty hospital in Kochi.',
-    prompt, demo: DEMO[key], manualMinutes: 180,
+  Hub.chart.line(document.getElementById('c1'), {
+    title: 'Actual vs AOP revenue — 12 months', sub: '₹ lakh, all departments',
+    labels: DATA.months,
+    series: [
+      { name: 'Actual', values: DATA.months.map(m => totalsFor(m).actual) },
+      { name: 'AOP', values: DATA.months.map(m => totalsFor(m).aop) },
+    ],
   });
+  Hub.chart.hbar(document.getElementById('c2'), {
+    title: `Variance % by department — ${month}`, format: v => fp(v),
+    data: rowsFor(month).map(r => ({ label: r.dept, value: round1(pct(r.aop, r.actual)) })).sort((a, b) => a.value - b.value),
+  });
+  Hub.chart.stacked(document.getElementById('c3'), {
+    title: 'Payor mix by month', sub: '% of revenue', format: v => v.toFixed(1) + '%',
+    labels: DATA.months,
+    series: [
+      { name: 'Cash', values: DATA.kpis.map(k => k.payor.cash) },
+      { name: 'TPA/Insurance', values: DATA.kpis.map(k => k.payor.tpa) },
+      { name: 'International', values: DATA.kpis.map(k => k.payor.intl) },
+      { name: 'Govt schemes', values: DATA.kpis.map(k => k.payor.govt) },
+    ],
+  });
+
+  const sorted = rowsFor(month).slice().sort((a, b) => pct(b.aop, b.actual) - pct(a.aop, a.actual));
+  const best = sorted[0], worst = sorted[sorted.length - 1];
+  document.getElementById('drivers').innerHTML = `
+    <p><b>${Hub.esc(best.dept)}</b> is furthest ahead of plan at ${fp(pct(best.aop, best.actual))}.</p>
+    <p><b>${Hub.esc(worst.dept)}</b> is the largest shortfall at ${fp(pct(worst.aop, worst.actual))}.</p>
+    <p>International revenue is ${k.payor.intl.toFixed(1)}% of payor mix this month, up from ${DATA.kpis[0].payor.intl.toFixed(1)}% in ${DATA.months[0]}.</p>
+    <p class="small">${rowsFor(month).filter(r => Math.abs(pct(r.aop, r.actual)) > 5).length} of ${rowsFor(month).length} departments have a variance beyond ±5% this month — see the Variance review tab.</p>`;
+}
+function round1(n) { return Math.round(n * 10) / 10; }
+
+/* ================= Variance review ================= */
+function varianceTab(el) {
+  const month = st.get().month;
+  const rows = rowsFor(month).filter(r => Math.abs(pct(r.aop, r.actual)) > 5);
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Variance queue — ${Hub.esc(month)}</h2>
+      <p class="small">Departments whose monthly variance is beyond ±5%. Each becomes an item: Claude drafts the explanation and questions for the department head, the maker edits, the CFO approves.</p>
+      <div id="tbl"></div></div>
+    <div class="card"><h2>Selected item</h2><div id="detail"><p class="small">Pick a department from the queue.</p></div></div>
+  </div>`;
+  if (!rows.length) { document.getElementById('tbl').innerHTML = '<p class="small">No department is beyond ±5% variance this month.</p>'; return; }
+  Hub.kit.table(document.getElementById('tbl'), {
+    rows, rowKey: 'dept', selectedKey: st.get().selectedDept,
+    columns: [
+      { key: 'dept', label: 'Department', render: r => `<span class="dept-name">${Hub.esc(r.dept)}</span>` },
+      { key: 'aop', label: 'AOP (₹L)', num: true, format: v => v.toLocaleString('en-IN') },
+      { key: 'actual', label: 'Actual (₹L)', num: true, format: v => v.toLocaleString('en-IN') },
+      { key: 'var', label: 'Variance', num: true, render: r => `<span class="${pct(r.aop, r.actual) >= 0 ? 'up' : 'down'}">${fp(pct(r.aop, r.actual))}</span>` },
+      { key: 'status', label: 'Status', render: r => statusBadge(month, r.dept) },
+    ],
+    onRowClick: r => { st.set({ selectedDept: r.dept }); varianceDetail(r); },
+  });
+  const sel = rows.find(r => r.dept === st.get().selectedDept) || rows[0];
+  if (sel) { st.set({ selectedDept: sel.dept }); varianceDetail(sel); }
+}
+
+function demoVarianceText(row, month) {
+  const v = pct(row.aop, row.actual), y = ytd(row.dept, month), note = (DATA.notes || {})[row.dept];
+  const direction = v >= 0 ? 'ahead of' : 'behind';
+  return `## Variance explanation — ${row.dept}, ${month}
+
+${row.dept} closed the month at ₹${row.actual.toLocaleString('en-IN')} L against an AOP of ₹${row.aop.toLocaleString('en-IN')} L, a variance of **${fp(v)}** (${direction} plan). Year-to-date the department is at ₹${y.actual.toFixed(0)} L against a cumulative AOP of ₹${y.aop.toFixed(0)} L (${fp(pct(y.aop, y.actual))} YTD), against ₹${row.priorYearActual.toFixed(0)} L in the same month a year ago.
+
+${note ? note : `Volumes this month were ${row.ip} IP admissions and ${row.op.toLocaleString('en-IN')} OP visits. The variance appears consistent with normal month-to-month movement in case mix and referral volume rather than a one-off event.`}
+
+**Recommendation:** ${v < -5 ? 'flag to the department head for a root-cause note before the pack is finalised.' : v > 5 ? 'note the upside driver so it can be assessed for sustainability into next month.' : 'no further action; monitor next month.'}
+
+## Questions for the department head
+
+- What share of the ${fp(v)} variance is volume (IP/OP mix) versus rate (ARPOB, payor mix)?
+- Is this a one-month movement or the start of a trend that should change next quarter's AOP?
+- Are there any pending TPA/insurance settlements or referral-pipeline changes that would affect next month's numbers?`;
+}
+
+function varianceDetail(row) {
+  const el = document.getElementById('detail');
+  const month = st.get().month, y = ytd(row.dept, month);
+  const key = reviewKey(month, row.dept);
+  const done = st.get().reviews[key];
+  el.innerHTML = `<div id="steps"></div>
+    <div class="table-wrap"><table><thead><tr><th></th><th class="num">AOP (₹L)</th><th class="num">Actual (₹L)</th></tr></thead><tbody>
+      <tr><td>${Hub.esc(month)}</td><td class="num">${row.aop.toLocaleString('en-IN')}</td><td class="num">${row.actual.toLocaleString('en-IN')}</td></tr>
+      <tr><td>YTD</td><td class="num">${y.aop.toFixed(0)}</td><td class="num">${y.actual.toFixed(0)}</td></tr>
+      <tr><td>Same month, prior year-ish</td><td class="num">—</td><td class="num">${row.priorYearActual.toFixed(0)}</td></tr>
+    </tbody></table></div>
+    <p style="margin-top:10px"><b>${Hub.esc(row.dept)}</b> · variance ${fp(pct(row.aop, row.actual))} · ${row.ip} IP admissions · ${row.op.toLocaleString('en-IN')} OP visits</p>
+    <button class="primary" id="run">Run with Claude</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Flagged', 'Claude draft', 'Review', 'Approved'], done ? (done.status === 'approved' ? 3 : 2) : 0);
+  if (done) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: key, title: `${row.dept} — ${month} variance` }, text: done.text, st: reviewsSt(), onDecision: () => varianceDetail(row) });
+  el.querySelector('#run').onclick = async () => {
+    const record = { dept: row.dept, month, aop: row.aop, actual: row.actual, variancePct: round1(pct(row.aop, row.actual)), ip: row.ip, op: row.op, ytd: y };
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 25,
+      system: 'You are a hospital finance analyst drafting variance explanations for department heads and the CFO at a 350-bed Kochi hospital. All figures are synthetic demo data.',
+      prompt: `Draft a variance explanation and questions for the department head from this record:\n${JSON.stringify(record)}`,
+      demo: () => demoVarianceText(row, month),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude variance draft created', `${row.dept} — ${month}`);
+    reviewsSt().set(s => ({ reviews: { ...(s.reviews || {}), [key]: { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps'), ['Flagged', 'Claude draft', 'Review', 'Approved'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: key, title: `${row.dept} — ${month} variance` }, text, st: reviewsSt(), onDecision: () => varianceDetail(row) });
+  };
+}
+// kit.review stores under st.get().reviews keyed by item.id — our keys already look like "month|dept", reuse the shared state object directly.
+function reviewsSt() { return st; }
+
+/* ================= MIS pack ================= */
+function approvedNotesFor(month) {
+  const reviews = st.get().reviews || {};
+  return Object.keys(reviews).filter(k => k.startsWith(month + '|') && reviews[k].status === 'approved')
+    .map(k => ({ dept: k.split('|')[1], text: reviews[k].text }));
+}
+function demoCommentary(month) {
+  const t = totalsFor(month), k = kpiFor(month), v = pct(t.aop, t.actual);
+  const sorted = rowsFor(month).slice().sort((a, b) => pct(b.aop, b.actual) - pct(a.aop, a.actual));
+  const best = sorted[0], worst = sorted[sorted.length - 1], notes = approvedNotesFor(month);
+  return `## Executive commentary — ${month} MIS
+
+Net revenue for ${month} was ₹${(t.actual / 100).toFixed(2)} Cr against an AOP of ₹${(t.aop / 100).toFixed(2)} Cr, a variance of **${fp(v)}**. ${best.dept} is the largest positive driver at ${fp(pct(best.aop, best.actual))}, while ${worst.dept} is the largest shortfall at ${fp(pct(worst.aop, worst.actual))}. ARPOB is ${Hub.inr(k.arpob)} (AOP ${Hub.inr(k.arpobAop)}), ALOS ${k.alos.toFixed(1)} days (AOP ${k.alosAop.toFixed(1)}), occupancy ${k.occ.toFixed(0)}% (AOP ${k.occAop.toFixed(0)}%) and CMI ${k.cmi.toFixed(2)} (AOP ${k.cmiAop.toFixed(2)}). International revenue is ${k.payor.intl.toFixed(1)}% of payor mix, continuing its rise toward 20% over the year.
+
+${notes.length ? `Approved department notes on file for this month:\n${notes.map(n => `- **${n.dept}:** ${n.text.split('\n').find(l => l.trim() && !l.startsWith('#')) || ''}`).join('\n')}` : '_No department variance note has been approved for this month yet — see the Variance review tab._'}
+
+## Top 3 risks
+
+1. **${worst.dept} shortfall (${fp(pct(worst.aop, worst.actual))})** — needs a root-cause note before next month's AOP is reconfirmed.
+2. **International receivables timing** — international share is now ${k.payor.intl.toFixed(1)}% of mix; a revenue beat funded by rising receivables is not the same as a cash beat, and collection cycles should be checked.
+3. **Occupancy/ALOS combination** — occupancy ${k.occ.toFixed(0)}% against ALOS ${k.alos.toFixed(1)} days should be read together; a rising ALOS at falling occupancy can signal a discharge-process delay rather than genuine demand softness.
+
+## Actions
+
+- Finance to circulate the ${worst.dept} variance note to the unit head this week.
+- Revenue Cycle to check international-patient collection ageing given the rising payor-mix share.
+- Ops to review bed-turnover for any ward showing ALOS drift versus the ${k.alosAop.toFixed(1)}-day AOP.`;
+}
+
+function misPackTab(el) {
+  const month = st.get().month, key = 'mispack|' + month;
+  const done = st.get().misReviews[key];
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>${Hub.esc(month)} MIS table</h2>
+      <div id="misTbl"></div>
+      <div class="row" style="margin-top:10px"><button id="exp">Export to Excel</button></div>
+      <p class="small" style="margin-top:8px">${approvedNotesFor(month).length} approved department note(s) will be used in the commentary below.</p></div>
+    <div class="card"><h2>Executive commentary</h2>
+      <div id="steps2"></div>
+      <button class="primary" id="run2" ${done ? 'style="display:none"' : ''}>Draft with Claude</button>
+      <div class="claude-out" id="out2" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+      <div id="rv2"></div></div>
+  </div>`;
+  Hub.kit.steps(el.querySelector('#steps2'), ['MIS closed', 'Claude draft', 'Review', 'Approved'], done ? (done.status === 'approved' ? 3 : 2) : 0);
+  const rows = rowsFor(month);
+  Hub.kit.table(el.querySelector('#misTbl'), {
+    rows, rowKey: 'dept',
+    columns: [
+      { key: 'dept', label: 'Department', render: r => `<span class="dept-name">${Hub.esc(r.dept)}</span>` },
+      { key: 'aop', label: 'AOP (₹L)', num: true, format: v => v.toLocaleString('en-IN') },
+      { key: 'actual', label: 'Actual (₹L)', num: true, format: v => v.toLocaleString('en-IN') },
+      { key: 'var', label: 'Var %', num: true, render: r => fp(pct(r.aop, r.actual)) },
+      { key: 'ip', label: 'IP', num: true }, { key: 'op', label: 'OP', num: true, format: v => v.toLocaleString('en-IN') },
+    ],
+  });
+  el.querySelector('#exp').onclick = () => {
+    Hub.kit.exportXlsx(rows.map(r => ({ Department: r.dept, 'AOP (₹L)': r.aop, 'Actual (₹L)': r.actual, 'Variance %': round1(pct(r.aop, r.actual)), 'IP admissions': r.ip, 'OP visits': r.op })),
+      `mis-${month.replace(' ', '-').toLowerCase()}.xlsx`, month);
+    Hub.kit.log(SLUG, 'Exported MIS table to Excel', month);
+  };
+  if (done) Hub.kit.review(el.querySelector('#rv2'), { slug: SLUG, item: { id: key, title: `MIS pack — ${month}` }, text: done.text, st: misSt(), docTitle: `MIS pack — ${month}`, onDecision: () => misPackTab(el) });
+  el.querySelector('#run2').onclick = async () => {
+    const context = { month, totals: totalsFor(month), kpis: kpiFor(month), rows: rowsFor(month), approvedNotes: approvedNotesFor(month) };
+    const text = await Hub.run({
+      out: '#out2', button: '#run2', manualMinutes: 90,
+      system: 'You are the Finance Controller\'s assistant writing the monthly MIS executive commentary for the CFO of a 350-bed Kochi hospital. All figures are synthetic demo data.',
+      prompt: `Write the executive commentary for the MIS pack from this context (what moved and why, top 3 risks, actions), using any approved department notes:\n${JSON.stringify(context)}`,
+      demo: () => demoCommentary(month),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude MIS commentary drafted', month);
+    misSt().set(s => ({ misReviews: { ...(s.misReviews || {}), [key]: { status: 'draft', text } } }));
+    Hub.kit.steps(el.querySelector('#steps2'), ['MIS closed', 'Claude draft', 'Review', 'Approved'], 2);
+    el.querySelector('#run2').style.display = 'none';
+    Hub.kit.review(el.querySelector('#rv2'), { slug: SLUG, item: { id: key, title: `MIS pack — ${month}` }, text, st: misSt(), docTitle: `MIS pack — ${month}`, onDecision: () => misPackTab(el) });
+  };
+}
+// kit.review expects st.get().reviews — proxy misReviews through a small adapter object.
+function misSt() {
+  return {
+    get: () => ({ reviews: st.get().misReviews || {} }),
+    set: patch => {
+      const cur = { reviews: st.get().misReviews || {} };
+      const next = Object.assign(cur, typeof patch === 'function' ? patch(cur) : patch);
+      st.set({ misReviews: next.reviews });
+      return next;
+    },
+  };
+}
+
+/* ================= wiring ================= */
+function renderView() {
+  const id = st.get().tab;
+  ({ dash: dashboard, variance: varianceTab, mis: misPackTab })[id](document.getElementById('view'));
+}
+
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  buildMonthSel();
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#monthSel', title: 'Month selector', text: 'Every tab reads from this month — it defaults to the latest close (Sep 2026). Change it and the dashboard, queue and MIS pack all update.' },
+      { sel: '#tabs', title: 'Three tabs', text: 'Dashboard for the month-end picture, Variance review for the explanation queue, MIS pack for the CFO commentary.' },
+      { sel: '#c2', title: 'Dashboard', text: 'Revenue vs AOP over 12 months, variance by department, and payor mix — including the international share climbing toward 20%.' },
+      { sel: '#tabs', title: 'Variance review', text: 'Click "Variance review" above: any department beyond ±5% variance this month becomes a queue item.' },
+      { sel: '#tabs', title: 'Claude drafts, a person approves', text: 'Open an item and run Claude — it drafts the explanation and questions for the department head. Edit as maker, then switch role to Approver to approve or return it.' },
+      { sel: '#tabs', title: 'MIS pack', text: 'Click "MIS pack": Claude writes the executive commentary using any approved variance notes, then it goes through the same review before a Word download. Export the table to Excel from here too.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'),
+    [{ id: 'dash', label: 'Dashboard' }, { id: 'variance', label: 'Variance review' }, { id: 'mis', label: 'MIS pack' }],
+    id => { st.set({ tab: id }); renderView(); }, st.get().tab);
 });
 </script>
 </body>

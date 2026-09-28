@@ -5,171 +5,321 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contract risk review</title>
 <link rel="stylesheet" href="../shared/hub.css">
+<style>
+  .kpi.bad .value { color: var(--bad); }
+  .clause-row { border-bottom: 1px solid var(--border); padding: 8px 0; }
+  .clause-row:last-child { border-bottom: 0; }
+  .clause-row p { margin: 4px 0 0; font-size: 13.5px; color: var(--muted); }
+  .clause-row .tag { margin-right: 4px; }
+  .clause-scroll { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+</style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>Contract risk review</h1>
-    <p>Paste contract clauses against the hospital's standard positions and get a clause-by-clause risk table before it goes for signature.</p>
+    <p>The Legal &amp; Secretarial intake and review desk: contracts in the pipeline, a clause-by-clause risk read against the hospital's standard positions, key obligation dates once signed, and a dashboard of what's open.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample contract</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="consultant">Visiting consultant agreement — Dr. R. Balasubramanian, Robotic Surgery</option>
-          <option value="lease">Equipment lease / reagent rental — Coral Diagnostics (analyser)</option>
-        </select>
-      </div>
-      <label>Contract clauses (editable, pasted extract)</label>
-      <textarea id="clauses" rows="12"></textarea>
-      <label>Hospital standard positions (editable)</label>
-      <textarea id="standard" rows="6"></textarea>
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Have Legal review before execution. Synthetic contract text for demonstration only — no real counterparties.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Have Legal review before execution. Synthetic contract data for demonstration only — no real counterparties, and nothing here is sent or posted to any hospital system.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'contract-review';
 Hub.mountHeader({ dept: 'Legal & Secretarial', title: 'Contract risk review' });
+const STAGE_ORDER = ['Intake', 'Reviewed', 'Redlines sent', 'Negotiating', 'Ready to sign', 'Signed'];
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, reviews: {}, stageBump: {}, playbookInput: '' });
+let DATA, TODAY;
 
-const SCENARIOS = {
-  consultant: {
-    clauses: `1. TERM: This agreement is for a period of 3 years from date of signing, renewable by mutual consent.
-2. REVENUE SHARE: Hospital shall pay the Consultant 65% of net collections from robotic surgery procedures performed by the Consultant, payable within 60 days of collection.
-3. INDEMNITY: The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.
-4. NON-COMPETE: The Consultant shall not practice robotic or minimally invasive surgery at any other hospital within Ernakulam district for a period of 2 years after termination of this agreement.
-5. EQUIPMENT: The Consultant shall have exclusive use of the da Vinci robotic surgical system during scheduled OT slots.
-6. TERMINATION: Either party may terminate this agreement with 90 days' written notice.`,
-    standard: `- Revenue share for visiting consultants (robotics/cardiology): standard band 40-55% of net collections.
-- Payment terms: within 30 days of collection.
-- Indemnity must be mutual, capped, and carved out for hospital-caused negligence (equipment failure, staff error).
-- Non-compete: max 1 year, restricted to directly competing NABH-accredited facility, not a blanket district-wide bar (restraint-of-trade risk under Indian Contract Act s.27).
-- Must include DPDP Act 2023 data protection clause for patient data access.
-- Jurisdiction: courts at Ernakulam, Kerala.
-- Termination for cause (misconduct, licence suspension) must be available with immediate effect, separate from the 90-day no-cause clause.`,
-  },
-  lease: {
-    clauses: `1. TERM: Lease of one (1) fully-automated biochemistry analyser for 5 years, with reagent rental (cost-per-test) model.
-2. MINIMUM COMMITMENT: Hospital commits to a minimum of 45,000 tests per year; shortfall billed at full reagent rate regardless of actual utilisation.
-3. MAINTENANCE: Vendor shall provide preventive maintenance quarterly. Breakdown response time: best-effort, no SLA specified.
-4. PRICE ESCALATION: Reagent pricing may be revised annually by the Vendor at its sole discretion.
-5. LIABILITY: Vendor's total liability under this agreement shall not exceed ₹1,00,000 in aggregate, irrespective of the cause of loss.
-6. EXIT: Hospital may not terminate before completion of 5 years except for Vendor's uncured material breach, with 6 months' cure period.
-7. GOVERNING LAW: This agreement shall be governed by the laws of Maharashtra, with courts at Mumbai having exclusive jurisdiction.`,
-    standard: `- Minimum test commitment should have a reasonableness cap and a volume-shortfall grace band (e.g. 15% tolerance) before penal billing.
-- Maintenance SLA required: response within 4 hours (critical equipment), resolution within 24-48 hours, with uptime guarantee (>=95%) and penalty credits below that.
-- Price escalation must be capped (e.g. max 5% p.a.) or linked to WPI, not vendor's sole discretion.
-- Liability cap must be proportionate to annual contract value (typically 1x-2x annual spend), not a flat token amount.
-- Exit clause must allow termination for hospital's convenience with reasonable notice (e.g. 6 months) subject to pro-rata settlement.
-- Jurisdiction must be Ernakulam, Kerala — not the vendor's home state.
-- Must include DPDP-compliant data handling clause if analyser integrates with LIS/patient data.`,
-  },
-};
-
-const KPI_DATA = {
-  consultant: [
-    { label: 'Clauses reviewed', value: '6' },
-    { label: 'High-severity flags', value: '3', delta: 'revenue share, indemnity, non-compete', cls: 'down' },
-    { label: 'Missing clauses', value: '2', delta: 'DPDP, jurisdiction', cls: 'down' },
-  ],
-  lease: [
-    { label: 'Clauses reviewed', value: '7' },
-    { label: 'High-severity flags', value: '4', delta: 'min. commitment, SLA, liability, jurisdiction', cls: 'down' },
-    { label: 'Missing clauses', value: '1', delta: 'DPDP', cls: 'down' },
-  ],
-};
-
-function renderKpis(key) {
-  const box = document.getElementById('kpis');
-  box.innerHTML = KPI_DATA[key].map(k => `
-    <div class="kpi"><div class="label">${Hub.esc(k.label)}</div><div class="value">${Hub.esc(k.value)}</div>
-    ${k.delta ? `<div class="delta ${k.cls || ''}">${Hub.esc(k.delta)}</div>` : ''}</div>`).join('');
+/* ---------- shared helpers ---------- */
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function parseDate(s) { return new Date(s + 'T00:00:00Z'); }
+function nextStage(s) { const i = STAGE_ORDER.indexOf(s); return STAGE_ORDER[Math.min(i + 1, STAGE_ORDER.length - 1)]; }
+function effectiveStage(c) { return (st.get().stageBump || {})[c.id] ? nextStage(c.stage) : c.stage; }
+function daysInLegal(c) { return daysBetween(parseDate(c.receivedDate), TODAY); }
+function reviewOf(id) { return (st.get().reviews || {})[id]; }
+function dueTag(dateStr) {
+  const d = daysBetween(TODAY, parseDate(dateStr));
+  if (d < 0) return { tag: 'bad', label: `Overdue ${Math.abs(d)}d` };
+  if (d <= 90) return { tag: 'warn', label: `Due in ${d}d` };
+  return { tag: 'ok', label: `In ${d}d` };
 }
 
-function loadScenario(key) {
-  const s = SCENARIOS[key];
-  document.getElementById('clauses').value = s.clauses;
-  document.getElementById('standard').value = s.standard;
-  renderKpis(key);
+/* ---------- local keyword check (quick flags, before Claude runs) ---------- */
+const RISK_KEYWORDS = [
+  { re: /sole discretion/i, label: 'Sole discretion', topic: 'Payment terms' },
+  { re: /automatically renews?|auto-renewal|auto renew/i, label: 'Auto-renewal', topic: 'Auto-renewal' },
+  { re: /no obligation to indemnify|shall have no obligation/i, label: 'One-sided indemnity', topic: 'Indemnity' },
+  { re: /courts at (mumbai|delhi|bangalore|chennai|hyderabad|pune)/i, label: 'Non-Kerala jurisdiction', topic: 'Jurisdiction & arbitration' },
+  { re: /best[- ]effort|no sla|without sla/i, label: 'No SLA', topic: 'Audit rights' },
+  { re: /minimum (of )?[\d,]+\s*tests|minimum commitment/i, label: 'Minimum commitment', topic: 'Payment terms' },
+  { re: /non-compete|restraint of trade|shall not practice/i, label: 'Non-compete', topic: 'Non-compete' },
+  { re: /flat|token amount|₹1,00,000 in aggregate/i, label: 'Flat liability cap', topic: 'Liability cap' },
+  { re: /patient data|health data|personal data/i, label: 'Patient/personal data', topic: 'DPDP data processing' },
+  { re: /penalty|liquidated damages/i, label: 'Penalty clause', topic: 'Payment terms' },
+  { re: /vendor's (sole )?discretion|landlord's sole discretion/i, label: 'Counterparty discretion', topic: 'Payment terms' },
+  { re: /exclusive jurisdiction/i, label: 'Jurisdiction clause', topic: 'Jurisdiction & arbitration' },
+  { re: /lock-in period/i, label: 'Lock-in', topic: 'Termination for convenience' },
+  { re: /without any liability cap|uncapped/i, label: 'Uncapped liability', topic: 'Liability cap' },
+  { re: /sole discretion on availability/i, label: 'Discretionary pricing', topic: 'Payment terms' },
+];
+function localFlags(text) { return RISK_KEYWORDS.filter(k => k.re.test(text)); }
+
+/* ---------- fallback wording for the Playbook comparator ---------- */
+const FALLBACK_WORDING = {
+  'Liability cap': `Liability under this agreement shall not exceed 1-2 times the annual contract value, except for gross negligence, wilful misconduct, or a breach of confidentiality/data-protection obligations, which remain uncapped.`,
+  'Indemnity': `Each party shall indemnify the other for loss arising from its own negligence or breach of this agreement; the Hospital's indemnity obligation is limited to loss caused by the Hospital's own acts or omissions and capped at the annual contract value.`,
+  'Termination for convenience': `Either party may terminate this agreement for convenience on 90-180 days' written notice, with pro-rata settlement of amounts due, in addition to termination for cause with immediate effect.`,
+  'Jurisdiction & arbitration': `This agreement is governed by the laws of Kerala. Any dispute is subject to the exclusive jurisdiction of the courts at Ernakulam, or, where arbitration is preferred, to arbitration seated at Kochi under the Arbitration and Conciliation Act, 1996.`,
+  'DPDP data processing': `The counterparty shall process personal or patient data solely for the purpose of this agreement, notify the Hospital of any data breach within 72 hours, and return or certify destruction of all such data within 30 days of termination, in accordance with the Digital Personal Data Protection Act, 2023.`,
+  'Payment terms': `Payments are due within 30 days of invoice or collection, as applicable. Any escalation or discretionary pricing shall be capped (e.g. 5% p.a. or WPI-linked) rather than left to either party's sole discretion.`,
+  'Auto-renewal': `This agreement shall not renew automatically beyond the stated term; the Hospital shall be given at least 60 days' written notice before any renewal window closes, and renewal shall require the Hospital's active written confirmation.`,
+  'Non-compete': `Any non-compete restriction shall be limited to a maximum of 1 year, and narrowly scoped to directly competing NABH-accredited facilities within a defined radius, not a blanket district- or state-wide restriction.`,
+  'Insurance': `The counterparty shall maintain adequate professional indemnity / public liability / cyber insurance for the risk involved, and shall name the Hospital as an additional insured where it operates on Hospital premises.`,
+  'Audit rights': `The Hospital retains the right to audit the counterparty's records, compliance and service levels on reasonable notice, at least annually, without needing the counterparty's consent on each occasion.`,
+};
+function comparePastedClause(text) {
+  const hits = localFlags(text);
+  if (!hits.length) {
+    return `## Comparison against the playbook\n\nNo direct keyword match against a specific standard position. This may be a clause type the current playbook doesn't cover (e.g. force majeure, notices, entire agreement), or wording that doesn't trip the usual risk phrases.\n\n**Recommendation:** review manually against the 10 standard positions listed on the left, focusing on payment terms, liability and jurisdiction if this clause touches any commercial or dispute-resolution terms.`;
+  }
+  const topics = [...new Set(hits.map(h => h.topic))];
+  return topics.map(topic => {
+    const pb = DATA.playbook.find(p => p.topic === topic);
+    return `### ${topic}\n\n**Flagged phrase(s):** ${hits.filter(h => h.topic === topic).map(h => `"${h.label}"`).join(', ')}\n\n**Hospital standard position:** ${pb.position}\n\n**Suggested fallback wording:**\n\n> ${FALLBACK_WORDING[topic]}`;
+  }).join('\n\n---\n\n') + `\n\n*Draft comparison — confirm the fallback wording fits the rest of the agreement before proposing it to the counterparty.*`;
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-loadScenario('consultant');
 
-const DEMO = {
-consultant: `## Clause-by-clause risk table
+/* ---------- Claude risk-table builder, computed from the selected contract ---------- */
+function buildRiskDemo(c) {
+  const pbByTopic = Object.fromEntries(DATA.playbook.map(p => [p.topic, p.position]));
+  const rows = c.clauses.map(cl => {
+    const risk = cl.risk || `No material deviation from the hospital's standard position.`;
+    const sev = cl.severity || 'None';
+    const pb = cl.playbook ? (pbByTopic[cl.playbook] || cl.playbook) : '—';
+    const redline = cl.redline || '—';
+    return `| ${cl.no}. ${cl.heading} | ${risk} | ${sev} | ${pb} | ${redline} |`;
+  }).join('\n');
+  const sevCounts = { High: 0, Medium: 0, Low: 0 };
+  c.clauses.forEach(cl => { if (cl.severity) sevCounts[cl.severity]++; });
+  const highlights = c.clauses.filter(cl => cl.severity === 'High').map(cl => `- **${cl.heading}:** ${cl.risk}`);
+  const missing = c.missingClauses.length
+    ? c.missingClauses.map(m => `- **${m.topic}** — ${m.note}`).join('\n')
+    : '- None — every standard playbook position is addressed in some form.';
+  const recommend = sevCounts.High > 0
+    ? `Hold execution and send the redlines above back to ${c.counterparty} before proceeding. None of the flagged items look like deal-breakers, but ${sevCounts.High} of them materially favour the counterparty over the hospital's standard template.`
+    : sevCounts.Medium > 0
+    ? `The commercial terms are broadly acceptable; negotiate the ${sevCounts.Medium} medium-severity item(s) above before signature, but this need not hold up the file materially.`
+    : `Clauses are largely aligned with the standard positions. Close out any missing-clause items below and proceed to signature.`;
+  return `## Clause-by-clause risk table
 
-| Clause | Risk | Severity | Suggested redline |
-|---|---|---|---|
-| 2. Revenue share (65%) | Above standard band (40-55%); erodes hospital margin on high-cost robotic consumables | High | Revise to 50% of net collections, or tiered (55% below volume threshold, 45% above, reflecting fixed-cost recovery) |
-| 2. Payment within 60 days | Slower than standard 30-day cycle; cash flow drag | Medium | Amend to "within 30 days of collection" |
-| 3. Indemnity (one-sided) | Consultant bears all risk, Hospital has zero indemnity obligation even for equipment failure or staff negligence | High | Make mutual: Hospital indemnifies Consultant for Hospital-caused equipment/staff negligence; cap each party's liability at contract value |
-| 4. Non-compete (district-wide, 2 yrs) | Blanket district bar likely unenforceable as unreasonable restraint of trade (Contract Act s.27); litigation risk if challenged | High | Narrow to 1 year, limited to NABH-accredited hospitals directly competing in robotic surgery within a 5 km radius, not entire Ernakulam district |
-| 5. Exclusive OT slot use | Operationally fine but should reference the OT scheduling policy to avoid disputes with other surgeons | Low | Add cross-reference to Hospital's OT allocation SOP |
-| 6. Termination (90 days, no cause) | No separate for-cause termination (misconduct, licence issues) | Medium | Add immediate-termination clause for licence suspension, criminal conviction, or NABH-flagged misconduct |
+| Clause | Risk | Severity | Playbook position | Suggested redline |
+|---|---|---|---|---|
+${rows}
 
 ## Missing clauses
 
-- **DPDP Act 2023 data protection clause** — Consultant will access patient EHR/imaging data; agreement is silent on data handling, breach notification, and post-termination data return/deletion obligations.
-- **Termination for cause** — only no-cause (90-day) termination exists; no immediate-effect clause for misconduct.
-- **Jurisdiction** — agreement does not specify governing law or courts; should explicitly state Ernakulam, Kerala to avoid forum disputes.
+${missing}
 
 ## Summary for approver
 
-This visiting consultant agreement carries **three high-severity commercial/legal risks**: an above-market 65% revenue share, a one-sided indemnity clause exposing the hospital to zero recourse, and a district-wide non-compete that is likely unenforceable and could expose the hospital to a wasted negotiating position if later challenged. Recommend returning to the Consultant's side with the redlines above before signature — none of these are deal-breakers but all materially favour the Consultant over the Hospital's standard template. DPDP and jurisdiction clauses must be added regardless of the outcome on commercial terms.`,
+This **${c.type.toLowerCase()}** with **${c.counterparty}** carries **${sevCounts.High} high-severity** and **${sevCounts.Medium} medium-severity** clause risk(s) against the hospital's standard positions${c.missingClauses.length ? `, and is missing ${c.missingClauses.length} standard clause(s) entirely` : ''}.
 
-lease: `## Clause-by-clause risk table
+${highlights.length ? highlights.join('\n') + '\n\n' : ''}**Recommendation:** ${recommend}`;
+}
 
-| Clause | Risk | Severity | Suggested redline |
-|---|---|---|---|
-| 2. Minimum 45,000 tests/yr, full penal billing on shortfall | No tolerance band; a slow quarter (e.g. due to a competing lab tie-up) results in full-rate billing on unused tests | High | Add 15% shortfall tolerance before penal billing; true up annually not per-quarter |
-| 3. Maintenance — best-effort, no SLA | Biochemistry analyser is critical-path for OPD/IPD reporting; undefined response time risks reporting delays | High | Add SLA: 4-hour response, 24-hour resolution, >=95% uptime guarantee with service credits below threshold |
-| 4. Annual price escalation at Vendor's sole discretion | Open-ended cost exposure over 5-year term | High | Cap escalation at 5% p.a. or CPI/WPI-linked, whichever is lower |
-| 5. Liability capped at ₹1,00,000 flat | Grossly disproportionate to likely annual spend (reagent rental typically ₹40-60 lakh/yr at this volume); inadequate cover for a reporting-error or equipment-damage event | High | Raise cap to 1x-2x annual contract value |
-| 6. No convenience exit; only for uncured breach with 6-month cure | Hospital locked in for 5 years even if a better-value vendor emerges | Medium | Add convenience termination after year 2, with 6 months' notice and pro-rata equipment buy-back/settlement |
-| 7. Governing law — Maharashtra, courts at Mumbai | Forces hospital to litigate outside Kerala; high cost and inconvenience for a Kochi-based dispute | High | Amend to Kerala law, courts at Ernakulam |
-
-## Missing clauses
-
-- **DPDP Act 2023 clause** — analyser likely interfaces with the LIS and patient records; no data-handling, access-control, or breach-notification terms present.
-- (Termination-for-cause and non-compete are not applicable to this equipment lease.)
-
-## Summary for approver
-
-This reagent rental agreement has **four high-severity terms** working against the hospital: an uncapped minimum-commitment penalty, no maintenance SLA on a critical analyser, unilateral price escalation, and a token liability cap. The Maharashtra jurisdiction clause should also be corrected as a matter of course. Recommend holding execution and sending the above redlines to Coral Diagnostics — these are standard asks for a 5-year reagent rental and should not require material commercial re-negotiation, but each materially shifts risk onto the hospital if left as-is.`
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const clauses = document.getElementById('clauses').value;
-  const standard = document.getElementById('standard').value;
-  const prompt = `You are assisting the Legal & Secretarial team at VPS Lakeshore Hospital, Kochi (LHRC) with a contract risk review before execution.
-
-Contract clauses (extract):
-${clauses}
-
-Hospital's standard positions:
-${standard}
-
-Provide: (1) a clause-by-clause risk table (clause, risk, severity tag High/Medium/Low, suggested redline), (2) missing clauses the agreement should have (DPDP Act 2023 data protection, termination for cause, jurisdiction — Ernakulam, Kerala — as relevant), (3) a short summary for the approving executive. Use ₹ formatting where relevant.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced in-house counsel at a 350-bed NABH-accredited Kerala hospital, reviewing vendor and consultant contracts for risk before signature.',
-    prompt, demo: DEMO[key], manualMinutes: 120,
+/* =====================================================================
+   TAB: Review queue
+   ===================================================================== */
+function queueTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Review queue — ${DATA.contracts.length} contracts</h2><div id="qTbl"></div></div>
+    <div class="card"><h2>Selected contract</h2><div id="qDetail"><p class="small">Pick a row from the queue.</p></div></div>
+  </div>`;
+  const rows = DATA.contracts.map(c => Object.assign({}, c, { effStage: effectiveStage(c), days: daysInLegal(c) }));
+  Hub.kit.table(el.querySelector('#qTbl'), {
+    rows, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'title', label: 'Contract', render: r => `${Hub.esc(r.title)}<br><span class="small">${Hub.esc(r.type)}</span>` },
+      { key: 'requestingDept', label: 'Dept' },
+      { key: 'value', label: 'Value', num: true, format: (v, r) => r.value ? Hub.inr(r.value) : r.valueLabel },
+      { key: 'effStage', label: 'Stage', render: r => `<span class="tag ${r.effStage === 'Signed' ? 'ok' : 'warn'}">${Hub.esc(r.effStage)}</span>` },
+      { key: 'days', label: 'Days in legal', num: true, render: r => r.effStage === 'Signed' ? '<span class="tag ok">Signed</span>' : `<span class="tag ${r.days > 45 ? 'bad' : r.days > 15 ? 'warn' : 'ok'}">${r.days}d</span>` },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
   });
+  let sel = DATA.contracts.find(c => c.id === st.get().selected);
+  if (!sel) { sel = DATA.contracts[0]; st.set({ selected: sel.id }); }
+  detail(sel);
+}
+
+function detail(c) {
+  const el = document.getElementById('qDetail');
+  if (!el) return; // the user may have switched tabs
+  const done = reviewOf(c.id);
+  const flagsCount = c.clauses.reduce((a, cl) => a + (localFlags(cl.text).length ? 1 : 0), 0);
+  el.innerHTML = `<div id="stSteps"></div>
+    <p><b>${Hub.esc(c.title)}</b></p>
+    <p class="small">${Hub.esc(c.counterparty)} (${Hub.esc(c.counterpartyType)}) · ${Hub.esc(c.term)} · ${c.value ? Hub.inr(c.value) : Hub.esc(c.valueLabel)}<br>
+      Requested by ${Hub.esc(c.requestingDept)} · received ${Hub.esc(c.receivedDate)} · <span class="tag ${effectiveStage(c) === 'Signed' ? 'ok' : 'warn'}">${Hub.esc(effectiveStage(c))}</span></p>
+    <h3 style="margin-top:14px">Clauses (${c.clauses.length}) · ${flagsCount} flagged by the local keyword check</h3>
+    <div class="clause-scroll" id="clauseList"></div>
+    <button class="primary" id="runBtn" style="margin-top:12px">Run with Claude — risk review</button>
+    <div class="claude-out" id="rOut" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+    <div id="rRev"></div>`;
+  Hub.kit.steps(el.querySelector('#stSteps'), STAGE_ORDER, STAGE_ORDER.indexOf(effectiveStage(c)));
+  el.querySelector('#clauseList').innerHTML = c.clauses.map(cl => {
+    const hits = localFlags(cl.text);
+    return `<div class="clause-row"><b>${cl.no}. ${Hub.esc(cl.heading)}</b> ${hits.length ? hits.map(h => `<span class="tag warn">${Hub.esc(h.label)}</span>`).join(' ') : ''}<p>${Hub.esc(cl.text)}</p></div>`;
+  }).join('');
+  const onDecision = status => {
+    if (status === 'approved') st.set(s => ({ stageBump: { ...(s.stageBump || {}), [c.id]: true } }));
+    queueTab(document.getElementById('view'));
+  };
+  if (done) Hub.kit.review(el.querySelector('#rRev'), { slug: SLUG, item: { id: c.id, title: `Risk review — ${c.title}` }, text: done.text, st, docTitle: `Risk review — ${c.id}`, onDecision });
+  el.querySelector('#runBtn').onclick = async () => {
+    const prompt = `You are in-house counsel at VPS Lakeshore Hospital, Kochi (LHRC), reviewing a contract before execution.
+
+Contract: ${JSON.stringify({ id: c.id, title: c.title, type: c.type, counterparty: c.counterparty, value: c.valueLabel, term: c.term, clauses: c.clauses.map(cl => ({ no: cl.no, heading: cl.heading, text: cl.text })) })}
+
+Hospital standard positions:
+${DATA.playbook.map(p => `- ${p.topic}: ${p.position}`).join('\n')}
+
+Provide: (1) a clause-by-clause risk table (clause, risk, severity High/Medium/Low/None, the relevant playbook position, suggested redline), (2) missing clauses versus the standard positions, (3) a short summary for the approving executive with a clear recommendation. Use ₹ formatting where relevant.`;
+    const text = await Hub.run({
+      out: '#rOut', button: '#runBtn', manualMinutes: 90,
+      system: 'You are an experienced in-house counsel at a 350-bed NABH-accredited Kerala hospital, reviewing vendor and consultant contracts for risk before signature.',
+      prompt, demo: () => buildRiskDemo(c),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Risk review drafted', c.id);
+    st.set(s => ({ reviews: { ...(s.reviews || {}), [c.id]: { status: 'draft', text } } }));
+    const stepsEl = document.getElementById('stSteps'), revEl = document.getElementById('rRev');
+    if (!stepsEl || !revEl) return; // tab switched while Claude was writing
+    Hub.kit.steps(stepsEl, STAGE_ORDER, STAGE_ORDER.indexOf(effectiveStage(c)));
+    Hub.kit.review(revEl, { slug: SLUG, item: { id: c.id, title: `Risk review — ${c.title}` }, text, st, docTitle: `Risk review — ${c.id}`, onDecision });
+  };
+}
+
+/* =====================================================================
+   TAB: Playbook
+   ===================================================================== */
+const DEFAULT_PASTE = `EXIT: Hospital may not terminate before completion of 5 years except for Vendor's uncured material breach, with 6 months' cure period.\nLIABILITY: Vendor's total liability under this agreement shall not exceed ₹1,00,000 in aggregate, irrespective of the cause of loss.`;
+function playbookTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Hospital standard positions</h2><div id="pbTbl"></div></div>
+    <div class="card">
+      <h2>Compare a clause</h2>
+      <p class="small">Paste a clause from any draft agreement. Claude checks it against the playbook and proposes fallback wording.</p>
+      <label for="pbClause">Clause text</label>
+      <textarea id="pbClause" rows="8">${Hub.esc(st.get().playbookInput || DEFAULT_PASTE)}</textarea>
+      <div class="row" style="margin-top:10px"><button type="button" id="pbRun">Compare against playbook</button></div>
+      <div class="claude-out" id="pbOut" style="margin-top:10px"></div>
+    </div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#pbTbl'), { rows: DATA.playbook, columns: [{ key: 'topic', label: 'Topic' }, { key: 'position', label: 'Standard position' }] });
+  const ta = el.querySelector('#pbClause');
+  ta.oninput = () => st.set({ playbookInput: ta.value });
+  el.querySelector('#pbRun').onclick = async () => {
+    const text = ta.value.trim();
+    if (!text) { alert('Paste a clause first.'); return; }
+    await Hub.run({
+      out: '#pbOut', button: '#pbRun', manualMinutes: 20,
+      system: `You are in-house counsel at VPS Lakeshore Hospital, Kochi, checking a proposed clause against the hospital's standard contracting positions.`,
+      prompt: `Hospital standard positions:\n${DATA.playbook.map(p => `- ${p.topic}: ${p.position}`).join('\n')}\n\nClause to check:\n${text}\n\nIdentify which standard position(s) this clause touches, note any deviation, and propose fallback wording the hospital could offer instead.`,
+      demo: () => comparePastedClause(text),
+    });
+    Hub.kit.log(SLUG, 'Compared clause against playbook');
+  };
+}
+
+/* =====================================================================
+   TAB: Obligations
+   ===================================================================== */
+function obligationsTab(el) {
+  el.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap">
+      <h2 style="margin:0">Key dates — signed contracts</h2>
+      <button type="button" id="obExport">Export to Excel</button>
+    </div>
+    <p class="small">Renewal, notice-deadline and price-escalation dates computed from each signed contract's term. Status is relative to today (${DATA.today}).</p>
+    <div id="obTbl"></div>
+  </div>`;
+  const rows = DATA.obligations.map(o => Object.assign({}, o, dueTag(o.date))).sort((a, b) => a.date < b.date ? -1 : 1);
+  Hub.kit.table(el.querySelector('#obTbl'), {
+    rows, search: true,
+    columns: [
+      { key: 'contractTitle', label: 'Contract' },
+      { key: 'type', label: 'Obligation' },
+      { key: 'date', label: 'Date' },
+      { key: 'description', label: 'Description' },
+      { key: 'label', label: 'Status', render: r => `<span class="tag ${r.tag}">${Hub.esc(r.label)}</span>` },
+    ],
+  });
+  el.querySelector('#obExport').onclick = () => {
+    Hub.kit.exportXlsx(rows.map(r => ({ Contract: r.contractTitle, Obligation: r.type, Date: r.date, Description: r.description, Status: r.label })), 'contract-obligations.xlsx', 'Obligations');
+    Hub.kit.log(SLUG, 'Exported obligations to Excel');
+  };
+}
+
+/* =====================================================================
+   TAB: Dashboard
+   ===================================================================== */
+function dashboardTab(el) {
+  const withEff = DATA.contracts.map(c => Object.assign({}, c, { effStage: effectiveStage(c) }));
+  const inReview = withEff.filter(c => c.effStage !== 'Signed');
+  const avgDays = inReview.length ? Math.round(inReview.reduce((a, c) => a + daysInLegal(c), 0) / inReview.length) : 0;
+  const highRisk = inReview.reduce((a, c) => a + c.clauses.filter(cl => cl.severity === 'High').length, 0);
+  const valueUnderReview = inReview.reduce((a, c) => a + (c.value || 0), 0) / 1e7;
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Contracts in review</div><div class="value">${inReview.length}</div></div>
+    <div class="kpi"><div class="label">Avg. days in legal</div><div class="value">${avgDays}</div></div>
+    <div class="kpi ${highRisk ? 'bad' : ''}"><div class="label">High-risk clauses open</div><div class="value">${highRisk}</div></div>
+    <div class="kpi"><div class="label">Value under review</div><div class="value">₹${valueUnderReview.toFixed(1)} Cr</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>`;
+
+  Hub.chart.bar(el.querySelector('#c1'), {
+    title: 'Contracts by stage', format: v => String(v),
+    data: STAGE_ORDER.map(s => ({ label: s, value: withEff.filter(c => c.effStage === s).length })),
+  });
+  const byDept = {};
+  DATA.contracts.forEach(c => byDept[c.requestingDept] = (byDept[c.requestingDept] || 0) + 1);
+  Hub.chart.hbar(el.querySelector('#c2'), {
+    title: 'Contracts by requesting department', format: v => String(v),
+    data: Object.entries(byDept).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })),
+  });
+}
+
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  TODAY = parseDate(d.today);
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#qTbl', title: 'The review queue', text: `${DATA.contracts.length} contracts in the pipeline — visiting consultant deals, equipment leases, CMC/AMC, outsourcing, IT SaaS, international facilitators, a property lease and an NDA — each with a stage and days-in-legal tag.` },
+      { sel: '#clauseList', title: 'Clauses, with a quick local check', text: 'Every clause is listed as filed. Tags here are a simple keyword scan — sole discretion, non-Kerala jurisdiction, uncapped liability — that runs instantly, before Claude even looks at it.' },
+      { sel: '#runBtn', title: 'Run with Claude', text: 'Claude reads every clause against the hospital\'s standard positions and produces a clause-by-clause risk table, missing clauses, and a summary for the approver.' },
+      { sel: '#rRev', title: 'Maker edits, approver decides', text: 'A legal associate edits the draft and submits it. Switch to Approver in the toolbar — the company secretary or GC approves or returns it. Approval advances the contract to its next stage.' },
+      { sel: '#tabs', title: 'Playbook, obligations, dashboard', text: 'Check any pasted clause against the playbook, track key dates once a contract is signed, and see the whole pipeline on the dashboard.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Review queue' },
+    { id: 'playbook', label: 'Playbook' },
+    { id: 'obligations', label: 'Obligations' },
+    { id: 'dash', label: 'Dashboard' },
+  ], id => {
+    st.set({ tab: id });
+    ({ queue: queueTab, playbook: playbookTab, obligations: obligationsTab, dash: dashboardTab }[id])(document.getElementById('view'));
+  }, st.get().tab);
 });
 </script>
 </body>

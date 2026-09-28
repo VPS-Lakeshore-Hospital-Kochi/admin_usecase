@@ -1,0 +1,1803 @@
+{
+ "generatedAt": "2026-09-28",
+ "hospital": "VPS Lakeshore Hospital, Kochi",
+ "currentTime": "09:10",
+ "wards": [
+  {
+   "name": "Cardiac ICU",
+   "bedType": "ICU",
+   "beds": 8
+  },
+  {
+   "name": "MICU",
+   "bedType": "ICU",
+   "beds": 8
+  },
+  {
+   "name": "Ortho ward",
+   "bedType": "Ortho",
+   "beds": 10
+  },
+  {
+   "name": "Oncology",
+   "bedType": "Onco",
+   "beds": 8
+  },
+  {
+   "name": "Transplant",
+   "bedType": "Transplant",
+   "beds": 6
+  },
+  {
+   "name": "General ward A",
+   "bedType": "General",
+   "beds": 10
+  },
+  {
+   "name": "General ward B",
+   "bedType": "General",
+   "beds": 10
+  },
+  {
+   "name": "General ward C",
+   "bedType": "General",
+   "beds": 10
+  },
+  {
+   "name": "General ward D",
+   "bedType": "General",
+   "beds": 10
+  },
+  {
+   "name": "Private rooms",
+   "bedType": "Private",
+   "beds": 8
+  },
+  {
+   "name": "International suite",
+   "bedType": "Suite",
+   "beds": 4
+  }
+ ],
+ "beds": [
+  {
+   "id": "TX-01",
+   "bedNo": "TX-01",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "LF",
+   "sex": "F",
+   "age": 12,
+   "payer": "International",
+   "admittedDate": "2026-09-11",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GD-07",
+   "bedNo": "GD-07",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "DB",
+   "sex": "F",
+   "age": 14,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "MI-03",
+   "bedNo": "MI-03",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "GP",
+   "sex": "M",
+   "age": 16,
+   "payer": "TPA",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-02",
+   "bedNo": "GB-02",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "PJ",
+   "sex": "F",
+   "age": 71,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": true,
+   "targetTime": "09:30",
+   "blockers": [
+    "Housekeeping",
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "IS-02",
+   "bedNo": "IS-02",
+   "ward": "International suite",
+   "bedType": "Suite",
+   "patientInitials": "BJ",
+   "sex": "M",
+   "age": 46,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "10:15",
+   "blockers": []
+  },
+  {
+   "id": "IS-04",
+   "bedNo": "IS-04",
+   "ward": "International suite",
+   "bedType": "Suite",
+   "patientInitials": "DD",
+   "sex": "F",
+   "age": 48,
+   "payer": "International",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-04",
+   "bedNo": "GB-04",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "MB",
+   "sex": "F",
+   "age": 17,
+   "payer": "TPA",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "CI-07",
+   "bedNo": "CI-07",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "JJ",
+   "sex": "M",
+   "age": 77,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-04",
+   "bedNo": "OR-04",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "LG",
+   "sex": "F",
+   "age": 60,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-10",
+   "bedNo": "OR-10",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "KH",
+   "sex": "F",
+   "age": 78,
+   "payer": "Cash",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "PR-04",
+   "bedNo": "PR-04",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "AC",
+   "sex": "M",
+   "age": 20,
+   "payer": "International",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": true,
+   "targetTime": "09:15",
+   "blockers": []
+  },
+  {
+   "id": "GA-02",
+   "bedNo": "GA-02",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "RJ",
+   "sex": "F",
+   "age": 72,
+   "payer": "Cash",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": true,
+   "targetTime": "09:00",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "GA-04",
+   "bedNo": "GA-04",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "AS",
+   "sex": "M",
+   "age": 72,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-08",
+   "bedNo": "OR-08",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "GN",
+   "sex": "M",
+   "age": 48,
+   "payer": "TPA",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "09:00",
+   "blockers": []
+  },
+  {
+   "id": "PR-01",
+   "bedNo": "PR-01",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "GJ",
+   "sex": "M",
+   "age": 42,
+   "payer": "Cash",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "PR-02",
+   "bedNo": "PR-02",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "PC",
+   "sex": "F",
+   "age": 9,
+   "payer": "TPA",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "TPA final approval pending",
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "CI-01",
+   "bedNo": "CI-01",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "RN",
+   "sex": "M",
+   "age": 76,
+   "payer": "TPA",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": true,
+   "targetTime": "11:30",
+   "blockers": [
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "ON-06",
+   "bedNo": "ON-06",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "PB",
+   "sex": "F",
+   "age": 53,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-09",
+   "bedNo": "GA-09",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "BL",
+   "sex": "M",
+   "age": 17,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": true,
+   "targetTime": "11:30",
+   "blockers": []
+  },
+  {
+   "id": "GA-10",
+   "bedNo": "GA-10",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "PV",
+   "sex": "F",
+   "age": 54,
+   "payer": "TPA",
+   "admittedDate": "2026-09-20",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-06",
+   "bedNo": "GA-06",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "DN",
+   "sex": "F",
+   "age": 44,
+   "payer": "Cash",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "ON-07",
+   "bedNo": "ON-07",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "MK",
+   "sex": "M",
+   "age": 66,
+   "payer": "TPA",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "PR-08",
+   "bedNo": "PR-08",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "AB",
+   "sex": "F",
+   "age": 77,
+   "payer": "Cash",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "09:30",
+   "blockers": [
+    "Housekeeping"
+   ]
+  },
+  {
+   "id": "GD-05",
+   "bedNo": "GD-05",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "SB",
+   "sex": "F",
+   "age": 23,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "MI-02",
+   "bedNo": "MI-02",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "GA",
+   "sex": "M",
+   "age": 27,
+   "payer": "TPA",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "ON-01",
+   "bedNo": "ON-01",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "MJ",
+   "sex": "M",
+   "age": 52,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GD-08",
+   "bedNo": "GD-08",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "BT",
+   "sex": "M",
+   "age": 65,
+   "payer": "Cash",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-05",
+   "bedNo": "OR-05",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "AT",
+   "sex": "M",
+   "age": 78,
+   "payer": "TPA",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "MI-04",
+   "bedNo": "MI-04",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "VM",
+   "sex": "M",
+   "age": 11,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": true,
+   "targetTime": "10:45",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "ON-04",
+   "bedNo": "ON-04",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "PE",
+   "sex": "F",
+   "age": 53,
+   "payer": "TPA",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-03",
+   "bedNo": "GB-03",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "TH",
+   "sex": "M",
+   "age": 77,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": true,
+   "targetTime": "13:15",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "MI-01",
+   "bedNo": "MI-01",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "JH",
+   "sex": "M",
+   "age": 59,
+   "payer": "TPA",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-01",
+   "bedNo": "GB-01",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "AP",
+   "sex": "F",
+   "age": 70,
+   "payer": "Cash",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": true,
+   "targetTime": "12:30",
+   "blockers": []
+  },
+  {
+   "id": "TX-04",
+   "bedNo": "TX-04",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "KB",
+   "sex": "F",
+   "age": 26,
+   "payer": "International",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "PR-06",
+   "bedNo": "PR-06",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "RN",
+   "sex": "F",
+   "age": 11,
+   "payer": "Cash",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GC-06",
+   "bedNo": "GC-06",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "RM",
+   "sex": "M",
+   "age": 43,
+   "payer": "Cash",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GC-09",
+   "bedNo": "GC-09",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "DH",
+   "sex": "F",
+   "age": 13,
+   "payer": "Cash",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-08",
+   "bedNo": "GA-08",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "VF",
+   "sex": "M",
+   "age": 50,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-20",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": [
+    "Discharge summary unsigned"
+   ]
+  },
+  {
+   "id": "IS-03",
+   "bedNo": "IS-03",
+   "ward": "International suite",
+   "bedType": "Suite",
+   "patientInitials": "RR",
+   "sex": "F",
+   "age": 19,
+   "payer": "TPA",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GC-07",
+   "bedNo": "GC-07",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "GR",
+   "sex": "M",
+   "age": 50,
+   "payer": "Cash",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GD-02",
+   "bedNo": "GD-02",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "ST",
+   "sex": "M",
+   "age": 40,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "TPA final approval pending",
+    "Reports awaited"
+   ]
+  },
+  {
+   "id": "TX-03",
+   "bedNo": "TX-03",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "GF",
+   "sex": "M",
+   "age": 82,
+   "payer": "TPA",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": true,
+   "targetTime": "12:30",
+   "blockers": []
+  },
+  {
+   "id": "ON-08",
+   "bedNo": "ON-08",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "GV",
+   "sex": "M",
+   "age": 57,
+   "payer": "TPA",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "09:15",
+   "blockers": [
+    "Discharge summary unsigned",
+    "Reports awaited"
+   ]
+  },
+  {
+   "id": "GC-05",
+   "bedNo": "GC-05",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "SJ",
+   "sex": "F",
+   "age": 58,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "CI-04",
+   "bedNo": "CI-04",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "DH",
+   "sex": "F",
+   "age": 48,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "09:15",
+   "blockers": [
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "TX-05",
+   "bedNo": "TX-05",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "VC",
+   "sex": "M",
+   "age": 21,
+   "payer": "International",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GC-08",
+   "bedNo": "GC-08",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "BT",
+   "sex": "M",
+   "age": 18,
+   "payer": "Cash",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": true,
+   "targetTime": "10:45",
+   "blockers": [
+    "Transport/relatives not arrived"
+   ]
+  },
+  {
+   "id": "CI-08",
+   "bedNo": "CI-08",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "MD",
+   "sex": "F",
+   "age": 26,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-07",
+   "bedNo": "GB-07",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "AH",
+   "sex": "M",
+   "age": 22,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": true,
+   "targetTime": "11:45",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GC-03",
+   "bedNo": "GC-03",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "RA",
+   "sex": "F",
+   "age": 25,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "ON-03",
+   "bedNo": "ON-03",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "DS",
+   "sex": "F",
+   "age": 11,
+   "payer": "Cash",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-05",
+   "bedNo": "GB-05",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "SJ",
+   "sex": "M",
+   "age": 71,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "CI-02",
+   "bedNo": "CI-02",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "AT",
+   "sex": "M",
+   "age": 49,
+   "payer": "TPA",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": [
+    "Discharge summary unsigned",
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "GD-04",
+   "bedNo": "GD-04",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "DH",
+   "sex": "F",
+   "age": 40,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-10",
+   "bedNo": "GB-10",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "DC",
+   "sex": "F",
+   "age": 63,
+   "payer": "TPA",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "09:00",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "GC-01",
+   "bedNo": "GC-01",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "MG",
+   "sex": "F",
+   "age": 77,
+   "payer": "Cash",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GC-02",
+   "bedNo": "GC-02",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "MR",
+   "sex": "F",
+   "age": 77,
+   "payer": "TPA",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "MI-08",
+   "bedNo": "MI-08",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "KM",
+   "sex": "F",
+   "age": 38,
+   "payer": "TPA",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "CI-05",
+   "bedNo": "CI-05",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "VS",
+   "sex": "M",
+   "age": 52,
+   "payer": "TPA",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "MI-06",
+   "bedNo": "MI-06",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "TM",
+   "sex": "M",
+   "age": 53,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": []
+  },
+  {
+   "id": "ON-05",
+   "bedNo": "ON-05",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "GT",
+   "sex": "M",
+   "age": 78,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "PR-03",
+   "bedNo": "PR-03",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "RB",
+   "sex": "F",
+   "age": 63,
+   "payer": "International",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "TX-06",
+   "bedNo": "TX-06",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "VT",
+   "sex": "M",
+   "age": 15,
+   "payer": "International",
+   "admittedDate": "2026-09-14",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-08",
+   "bedNo": "GB-08",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "DD",
+   "sex": "F",
+   "age": 61,
+   "payer": "Cash",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": true,
+   "targetTime": "10:00",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "PR-07",
+   "bedNo": "PR-07",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "GP",
+   "sex": "M",
+   "age": 80,
+   "payer": "International",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": true,
+   "targetTime": "10:00",
+   "blockers": [
+    "Discharge summary unsigned"
+   ]
+  },
+  {
+   "id": "GD-01",
+   "bedNo": "GD-01",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "MD",
+   "sex": "F",
+   "age": 27,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-01",
+   "bedNo": "GA-01",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "VA",
+   "sex": "M",
+   "age": 41,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "09:30",
+   "blockers": []
+  },
+  {
+   "id": "GD-09",
+   "bedNo": "GD-09",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "MM",
+   "sex": "M",
+   "age": 5,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": true,
+   "targetTime": "09:45",
+   "blockers": []
+  },
+  {
+   "id": "OR-09",
+   "bedNo": "OR-09",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "RD",
+   "sex": "F",
+   "age": 35,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": true,
+   "targetTime": "13:00",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GA-05",
+   "bedNo": "GA-05",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "LD",
+   "sex": "F",
+   "age": 37,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "10:00",
+   "blockers": [
+    "Transport/relatives not arrived"
+   ]
+  },
+  {
+   "id": "GB-09",
+   "bedNo": "GB-09",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "VE",
+   "sex": "M",
+   "age": 78,
+   "payer": "Cash",
+   "admittedDate": "2026-09-19",
+   "expectedDischargeToday": true,
+   "targetTime": "11:00",
+   "blockers": [
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "TX-02",
+   "bedNo": "TX-02",
+   "ward": "Transplant",
+   "bedType": "Transplant",
+   "patientInitials": "TM",
+   "sex": "M",
+   "age": 24,
+   "payer": "TPA",
+   "admittedDate": "2026-09-15",
+   "expectedDischargeToday": true,
+   "targetTime": "09:00",
+   "blockers": [
+    "TPA final approval pending",
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "ON-02",
+   "bedNo": "ON-02",
+   "ward": "Oncology",
+   "bedType": "Onco",
+   "patientInitials": "JS",
+   "sex": "M",
+   "age": 40,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": true,
+   "targetTime": "10:00",
+   "blockers": []
+  },
+  {
+   "id": "CI-03",
+   "bedNo": "CI-03",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "DH",
+   "sex": "F",
+   "age": 56,
+   "payer": "TPA",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GB-06",
+   "bedNo": "GB-06",
+   "ward": "General ward B",
+   "bedType": "General",
+   "patientInitials": "MD",
+   "sex": "M",
+   "age": 74,
+   "payer": "Cash",
+   "admittedDate": "2026-09-27",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-03",
+   "bedNo": "GA-03",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "DL",
+   "sex": "F",
+   "age": 58,
+   "payer": "TPA",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "Final bill not prepared"
+   ]
+  },
+  {
+   "id": "PR-05",
+   "bedNo": "PR-05",
+   "ward": "Private rooms",
+   "bedType": "Private",
+   "patientInitials": "AN",
+   "sex": "F",
+   "age": 66,
+   "payer": "TPA",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": true,
+   "targetTime": "10:00",
+   "blockers": [
+    "Final bill not prepared",
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "GC-04",
+   "bedNo": "GC-04",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "SN",
+   "sex": "M",
+   "age": 66,
+   "payer": "TPA",
+   "admittedDate": "2026-09-20",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GD-03",
+   "bedNo": "GD-03",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "SF",
+   "sex": "M",
+   "age": 40,
+   "payer": "Cash",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": true,
+   "targetTime": "10:30",
+   "blockers": [
+    "Reports awaited",
+    "Discharge summary unsigned"
+   ]
+  },
+  {
+   "id": "GD-06",
+   "bedNo": "GD-06",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "BP",
+   "sex": "M",
+   "age": 78,
+   "payer": "Cash",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": true,
+   "targetTime": "09:30",
+   "blockers": [
+    "Discharge summary unsigned"
+   ]
+  },
+  {
+   "id": "OR-01",
+   "bedNo": "OR-01",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "NS",
+   "sex": "F",
+   "age": 45,
+   "payer": "TPA",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GA-07",
+   "bedNo": "GA-07",
+   "ward": "General ward A",
+   "bedType": "General",
+   "patientInitials": "LD",
+   "sex": "F",
+   "age": 69,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-21",
+   "expectedDischargeToday": true,
+   "targetTime": "10:15",
+   "blockers": [
+    "TPA final approval pending"
+   ]
+  },
+  {
+   "id": "MI-05",
+   "bedNo": "MI-05",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "MM",
+   "sex": "M",
+   "age": 50,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-26",
+   "expectedDischargeToday": true,
+   "targetTime": "09:00",
+   "blockers": [
+    "Transport/relatives not arrived"
+   ]
+  },
+  {
+   "id": "GD-10",
+   "bedNo": "GD-10",
+   "ward": "General ward D",
+   "bedType": "General",
+   "patientInitials": "RL",
+   "sex": "F",
+   "age": 35,
+   "payer": "TPA",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "CI-06",
+   "bedNo": "CI-06",
+   "ward": "Cardiac ICU",
+   "bedType": "ICU",
+   "patientInitials": "SS",
+   "sex": "F",
+   "age": 63,
+   "payer": "Cash",
+   "admittedDate": "2026-09-23",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-02",
+   "bedNo": "OR-02",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "JK",
+   "sex": "M",
+   "age": 61,
+   "payer": "Cash",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-06",
+   "bedNo": "OR-06",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "SR",
+   "sex": "M",
+   "age": 8,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-07",
+   "bedNo": "OR-07",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "GF",
+   "sex": "M",
+   "age": 37,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-22",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "OR-03",
+   "bedNo": "OR-03",
+   "ward": "Ortho ward",
+   "bedType": "Ortho",
+   "patientInitials": "RG",
+   "sex": "M",
+   "age": 53,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-24",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "IS-01",
+   "bedNo": "IS-01",
+   "ward": "International suite",
+   "bedType": "Suite",
+   "patientInitials": "DG",
+   "sex": "F",
+   "age": 71,
+   "payer": "TPA",
+   "admittedDate": "2026-09-18",
+   "expectedDischargeToday": true,
+   "targetTime": "09:15",
+   "blockers": [
+    "Pharmacy return"
+   ]
+  },
+  {
+   "id": "MI-07",
+   "bedNo": "MI-07",
+   "ward": "MICU",
+   "bedType": "ICU",
+   "patientInitials": "VR",
+   "sex": "M",
+   "age": 4,
+   "payer": "Govt scheme",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  },
+  {
+   "id": "GC-10",
+   "bedNo": "GC-10",
+   "ward": "General ward C",
+   "bedType": "General",
+   "patientInitials": "AJ",
+   "sex": "F",
+   "age": 35,
+   "payer": "Cash",
+   "admittedDate": "2026-09-25",
+   "expectedDischargeToday": false,
+   "targetTime": null,
+   "blockers": []
+  }
+ ],
+ "waiting": [
+  {
+   "id": "W-01",
+   "source": "OT",
+   "patientInitials": "SR",
+   "sex": "M",
+   "age": 71,
+   "requiredBedType": "Onco",
+   "waitStart": "05:48",
+   "waitHours": 3,
+   "note": "Post-op, oncology recovery bed needed"
+  },
+  {
+   "id": "W-07",
+   "source": "Elective",
+   "patientInitials": "RK",
+   "sex": "F",
+   "age": 58,
+   "requiredBedType": "Transplant",
+   "waitStart": "07:07",
+   "waitHours": 1.8,
+   "note": "Planned admission, transplant work-up"
+  },
+  {
+   "id": "W-06",
+   "source": "ER",
+   "patientInitials": "DT",
+   "sex": "F",
+   "age": 12,
+   "requiredBedType": "Private",
+   "waitStart": "07:09",
+   "waitHours": 1.7,
+   "note": "Chest pain, ruled in for admission"
+  },
+  {
+   "id": "W-11",
+   "source": "ER",
+   "patientInitials": "PP",
+   "sex": "F",
+   "age": 42,
+   "requiredBedType": "Ortho",
+   "waitStart": "07:37",
+   "waitHours": 1.7,
+   "note": "Post-fall, needs ortho bed"
+  },
+  {
+   "id": "W-14",
+   "source": "ER",
+   "patientInitials": "RT",
+   "sex": "M",
+   "age": 10,
+   "requiredBedType": "Ortho",
+   "waitStart": "07:04",
+   "waitHours": 1.6,
+   "note": "Post-fall, needs ortho bed"
+  },
+  {
+   "id": "W-09",
+   "source": "Elective",
+   "patientInitials": "KM",
+   "sex": "F",
+   "age": 73,
+   "requiredBedType": "ICU",
+   "waitStart": "07:06",
+   "waitHours": 1.4,
+   "note": "Planned admission, high-risk monitoring"
+  },
+  {
+   "id": "W-10",
+   "source": "OT",
+   "patientInitials": "SP",
+   "sex": "M",
+   "age": 80,
+   "requiredBedType": "Transplant",
+   "waitStart": "07:25",
+   "waitHours": 1.4,
+   "note": "Post-transplant recovery, stepdown needed"
+  },
+  {
+   "id": "W-02",
+   "source": "Elective",
+   "patientInitials": "SG",
+   "sex": "M",
+   "age": 35,
+   "requiredBedType": "Private",
+   "waitStart": "08:40",
+   "waitHours": 0.8,
+   "note": "Planned admission, family requested private room"
+  },
+  {
+   "id": "W-13",
+   "source": "Elective",
+   "patientInitials": "KS",
+   "sex": "F",
+   "age": 34,
+   "requiredBedType": "ICU",
+   "waitStart": "08:40",
+   "waitHours": 0.8,
+   "note": "Planned admission, high-risk monitoring"
+  },
+  {
+   "id": "W-05",
+   "source": "OT",
+   "patientInitials": "SR",
+   "sex": "F",
+   "age": 50,
+   "requiredBedType": "ICU",
+   "waitStart": "08:05",
+   "waitHours": 0.6,
+   "note": "Post-op, needs ICU stepdown"
+  },
+  {
+   "id": "W-12",
+   "source": "Elective",
+   "patientInitials": "RB",
+   "sex": "F",
+   "age": 38,
+   "requiredBedType": "Ortho",
+   "waitStart": "08:35",
+   "waitHours": 0.6,
+   "note": "Planned joint surgery tomorrow morning"
+  },
+  {
+   "id": "W-08",
+   "source": "Elective",
+   "patientInitials": "DA",
+   "sex": "F",
+   "age": 24,
+   "requiredBedType": "ICU",
+   "waitStart": "08:59",
+   "waitHours": 0.5,
+   "note": "Planned admission, high-risk monitoring"
+  },
+  {
+   "id": "W-04",
+   "source": "Elective",
+   "patientInitials": "TN",
+   "sex": "M",
+   "age": 2,
+   "requiredBedType": "Ortho",
+   "waitStart": "08:32",
+   "waitHours": 0.4,
+   "note": "Planned joint surgery tomorrow morning"
+  },
+  {
+   "id": "W-15",
+   "source": "Elective",
+   "patientInitials": "SP",
+   "sex": "M",
+   "age": 70,
+   "requiredBedType": "Onco",
+   "waitStart": "08:52",
+   "waitHours": 0.2,
+   "note": "Planned admission, chemotherapy cycle"
+  },
+  {
+   "id": "W-03",
+   "source": "ER",
+   "patientInitials": "AR",
+   "sex": "F",
+   "age": 73,
+   "requiredBedType": "Private",
+   "waitStart": "08:04",
+   "waitHours": 0.1,
+   "note": "Chest pain, ruled in for admission"
+  }
+ ],
+ "metrics": [
+  {
+   "date": "2026-08-29",
+   "discharges": 31,
+   "pctBeforeNoon": 42,
+   "avgTAT": 4.3,
+   "erBoardingHours": 5.4
+  },
+  {
+   "date": "2026-08-30",
+   "discharges": 26,
+   "pctBeforeNoon": 32,
+   "avgTAT": 3.9,
+   "erBoardingHours": 3.2
+  },
+  {
+   "date": "2026-08-31",
+   "discharges": 22,
+   "pctBeforeNoon": 35,
+   "avgTAT": 2.6,
+   "erBoardingHours": 1.7
+  },
+  {
+   "date": "2026-09-01",
+   "discharges": 27,
+   "pctBeforeNoon": 63,
+   "avgTAT": 5.1,
+   "erBoardingHours": 2.4
+  },
+  {
+   "date": "2026-09-02",
+   "discharges": 31,
+   "pctBeforeNoon": 46,
+   "avgTAT": 2.8,
+   "erBoardingHours": 3.5
+  },
+  {
+   "date": "2026-09-03",
+   "discharges": 27,
+   "pctBeforeNoon": 34,
+   "avgTAT": 4.9,
+   "erBoardingHours": 3.3
+  },
+  {
+   "date": "2026-09-04",
+   "discharges": 31,
+   "pctBeforeNoon": 45,
+   "avgTAT": 4.8,
+   "erBoardingHours": 1.7
+  },
+  {
+   "date": "2026-09-05",
+   "discharges": 21,
+   "pctBeforeNoon": 25,
+   "avgTAT": 3.6,
+   "erBoardingHours": 3.4
+  },
+  {
+   "date": "2026-09-06",
+   "discharges": 19,
+   "pctBeforeNoon": 49,
+   "avgTAT": 5.7,
+   "erBoardingHours": 5.4
+  },
+  {
+   "date": "2026-09-07",
+   "discharges": 18,
+   "pctBeforeNoon": 45,
+   "avgTAT": 4.5,
+   "erBoardingHours": 5
+  },
+  {
+   "date": "2026-09-08",
+   "discharges": 18,
+   "pctBeforeNoon": 46,
+   "avgTAT": 4,
+   "erBoardingHours": 2
+  },
+  {
+   "date": "2026-09-09",
+   "discharges": 23,
+   "pctBeforeNoon": 51,
+   "avgTAT": 4.4,
+   "erBoardingHours": 3.3
+  },
+  {
+   "date": "2026-09-10",
+   "discharges": 25,
+   "pctBeforeNoon": 64,
+   "avgTAT": 4.5,
+   "erBoardingHours": 3.4
+  },
+  {
+   "date": "2026-09-11",
+   "discharges": 27,
+   "pctBeforeNoon": 50,
+   "avgTAT": 4.1,
+   "erBoardingHours": 4.9
+  },
+  {
+   "date": "2026-09-12",
+   "discharges": 18,
+   "pctBeforeNoon": 42,
+   "avgTAT": 4.7,
+   "erBoardingHours": 5.9
+  },
+  {
+   "date": "2026-09-13",
+   "discharges": 18,
+   "pctBeforeNoon": 25,
+   "avgTAT": 3.3,
+   "erBoardingHours": 3.5
+  },
+  {
+   "date": "2026-09-14",
+   "discharges": 18,
+   "pctBeforeNoon": 36,
+   "avgTAT": 2.9,
+   "erBoardingHours": 1.9
+  },
+  {
+   "date": "2026-09-15",
+   "discharges": 21,
+   "pctBeforeNoon": 36,
+   "avgTAT": 3.7,
+   "erBoardingHours": 1.6
+  },
+  {
+   "date": "2026-09-16",
+   "discharges": 19,
+   "pctBeforeNoon": 53,
+   "avgTAT": 5,
+   "erBoardingHours": 4.4
+  },
+  {
+   "date": "2026-09-17",
+   "discharges": 21,
+   "pctBeforeNoon": 48,
+   "avgTAT": 3.9,
+   "erBoardingHours": 2.5
+  },
+  {
+   "date": "2026-09-18",
+   "discharges": 21,
+   "pctBeforeNoon": 30,
+   "avgTAT": 5.1,
+   "erBoardingHours": 2.4
+  },
+  {
+   "date": "2026-09-19",
+   "discharges": 18,
+   "pctBeforeNoon": 33,
+   "avgTAT": 4.6,
+   "erBoardingHours": 3.7
+  },
+  {
+   "date": "2026-09-20",
+   "discharges": 18,
+   "pctBeforeNoon": 51,
+   "avgTAT": 3.5,
+   "erBoardingHours": 3.8
+  },
+  {
+   "date": "2026-09-21",
+   "discharges": 18,
+   "pctBeforeNoon": 36,
+   "avgTAT": 3.2,
+   "erBoardingHours": 4.4
+  },
+  {
+   "date": "2026-09-22",
+   "discharges": 18,
+   "pctBeforeNoon": 59,
+   "avgTAT": 3.9,
+   "erBoardingHours": 3.9
+  },
+  {
+   "date": "2026-09-23",
+   "discharges": 18,
+   "pctBeforeNoon": 32,
+   "avgTAT": 4.6,
+   "erBoardingHours": 1.8
+  },
+  {
+   "date": "2026-09-24",
+   "discharges": 19,
+   "pctBeforeNoon": 54,
+   "avgTAT": 4.9,
+   "erBoardingHours": 4.5
+  },
+  {
+   "date": "2026-09-25",
+   "discharges": 20,
+   "pctBeforeNoon": 40,
+   "avgTAT": 4.7,
+   "erBoardingHours": 4.2
+  },
+  {
+   "date": "2026-09-26",
+   "discharges": 18,
+   "pctBeforeNoon": 37,
+   "avgTAT": 5.1,
+   "erBoardingHours": 3.4
+  },
+  {
+   "date": "2026-09-27",
+   "discharges": 18,
+   "pctBeforeNoon": 42,
+   "avgTAT": 4.1,
+   "erBoardingHours": 5.2
+  }
+ ]
+}

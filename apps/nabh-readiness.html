@@ -6,325 +6,425 @@
 <title>NABH readiness &amp; policy Q&amp;A</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
-  .tabs button { border-radius:999px; }
-  .tabs button.active { background:var(--navy); border-color:var(--navy); color:#fff; }
-  .mode { display:none; }
-  .mode.active { display:block; }
-  td.doc { font-family: 'DM Sans', monospace; font-size:12.5px; white-space:nowrap; }
-  .chapter-badge { font-size:11px; font-weight:700; color:var(--muted); }
+  .qa-turn { margin-bottom: 14px; }
+  .qa-turn p { margin: 0 0 6px; }
+  .kpi.bad .value { color: var(--bad); }
+  .kpi.warn .value { color: var(--warn); }
+  .survey-ans-row td { vertical-align: middle; }
+  .survey-ans-row select { width: auto; min-width: 130px; }
+  .chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip-row label { margin: 0; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>NABH readiness &amp; policy Q&amp;A</h1>
-    <p>Maps the P&amp;P register to NABH 5th/6th edition chapters, flags overdue or missing documents, and answers "what does our policy say" questions with citations.</p>
+    <p>The Quality &amp; Accreditation P&amp;P register, gap/CAPA queue, mock-survey prep and a policy Q&amp;A assistant, in one place. Claude drafts; a named person reviews and approves.</p>
   </section>
-
-  <div class="kpis" id="kpis"></div>
-
-  <div class="tabs">
-    <button type="button" class="active" data-mode="gap">A · Gap scan</button>
-    <button type="button" data-mode="qa">B · Policy Q&amp;A</button>
-  </div>
-
-  <!-- MODE A: GAP SCAN -->
-  <div class="mode active" id="mode-gap">
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>P&amp;P register (sample, 15 documents)</h2>
-        <p class="small" style="color:var(--muted);margin-top:-6px">Editable — change a status or due date and re-run. Today's date used for scoring: 27 Sep 2026.</p>
-        <div class="table-wrap">
-          <table id="ppTable">
-            <thead><tr><th>Doc no. &amp; title</th><th>Chapter</th><th>Reviewed</th><th>Revision due</th><th>Status</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <label for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="baseline">Baseline register (mixed gaps)</option>
-          <option value="presurvey">2 weeks before mock survey (tighter)</option>
-        </select>
-        <div class="row" style="margin-top:14px">
-          <button class="primary" id="runGap">Run with Claude — chapter readiness &amp; 30-60-90 plan</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Claude output</h2>
-        <div class="claude-out" id="outGap"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODE B: POLICY Q&A -->
-  <div class="mode" id="mode-qa">
-    <div class="grid cols-2">
-      <div class="card">
-        <h2>Policy excerpts (sample)</h2>
-        <textarea id="policyText" style="min-height:260px"></textarea>
-        <label for="scenarioQA">Sample question</label>
-        <select id="scenarioQA">
-          <option value="autopulse">Who can authorise use of the Auto Pulse device outside ER?</option>
-          <option value="mercury">What's the spill procedure for mercury?</option>
-          <option value="custom">Custom question (type below)</option>
-        </select>
-        <label for="question">Question</label>
-        <textarea id="question" style="min-height:60px"></textarea>
-        <div class="row" style="margin-top:10px">
-          <button class="primary" id="runQA">Run with Claude — answer with citation</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>Claude output</h2>
-        <div class="claude-out" id="outQA"></div>
-      </div>
-    </div>
-  </div>
-
-  <p class="footer-note">Prototype for internal discussion · sample and anonymised data only · no patient-identifiable information.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Prototype for internal discussion · synthetic register and policy text · nothing here is sent or posted to any hospital system.</p>
 </main>
-
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'nabh-readiness';
 Hub.mountHeader({ dept: 'Quality & Accreditation', title: 'NABH readiness & policy Q&A' });
+const st = Hub.kit.state(SLUG, {
+  tab: 'gap', selectedGap: null, regFilter: 'all', regChapter: 'all',
+  surveyChapter: 'AAC', surveyDept: '', surveyAnswers: {}, qaTurns: [], reviews: {},
+});
+let DATA, TODAY;
 
-const TODAY = new Date('2026-09-27');
-
-// ---------- MODE A DATA ----------
-const REGISTER = {
-  baseline: [
-    { doc:'LHRC/P&P/HSM/11', title:'Hazardous Material Safety', chapter:'FMS', reviewed:'2026-05-05', due:'2029-05-05' },
-    { doc:'LHRC/P&P/ER/13', title:'Auto Pulse Mechanical CPR Device', chapter:'COP', reviewed:'2023-11-20', due:'2026-11-20' },
-    { doc:'LHRC/P&P/FS/02', title:'Fire Safety & Evacuation', chapter:'FMS', reviewed:'2023-08-10', due:'2026-08-10' },
-    { doc:'LHRC/P&P/BMW/01', title:'Biomedical Waste Management', chapter:'FMS', reviewed:'2024-01-15', due:'2027-01-15' },
-    { doc:'LHRC/P&P/HIC/04', title:'Hospital Infection Control Manual', chapter:'HIC', reviewed:'2023-06-01', due:'2026-06-01' },
-    { doc:'LHRC/P&P/MOM/07', title:'Management of Medication', chapter:'MOM', reviewed:'2024-03-22', due:'2027-03-22' },
-    { doc:'LHRC/P&P/PRE/03', title:'Patient Rights & Education Charter', chapter:'PRE', reviewed:'2023-09-05', due:'2026-09-05' },
-    { doc:'LHRC/P&P/HRM/09', title:'HR Credentialing & Privileging', chapter:'HRM', reviewed:'2024-02-14', due:'2027-02-14' },
-    { doc:'LHRC/P&P/IMS/06', title:'IT & Cybersecurity Policy', chapter:'IMS', reviewed:'2022-12-01', due:'2025-12-01' },
-    { doc:'LHRC/P&P/FMS/14', title:'Disaster Management Plan (Code Grey)', chapter:'FMS', reviewed:'2024-05-30', due:'2027-05-30' },
-    { doc:'LHRC/P&P/AAC/05', title:'Access, Assessment & Continuity of Care', chapter:'AAC', reviewed:'2023-10-11', due:'2026-10-11' },
-    { doc:'LHRC/P&P/PSQ/08', title:'Patient Safety Incident Reporting (CAPA)', chapter:'PSQ', reviewed:'2024-04-18', due:'2027-04-18' },
-    { doc:'LHRC/P&P/ROM/02', title:'Responsibilities of Management — Org Chart & DoA', chapter:'ROM', reviewed:'2023-07-25', due:'2026-07-25' },
-    { doc:'LHRC/P&P/COP/19', title:'Robotic Surgery Privileging & Consent', chapter:'COP', reviewed: null, due: null },
-    { doc:'LHRC/P&P/HIC/11', title:'Needle-Stick & Sharps Injury Protocol', chapter:'HIC', reviewed:'2024-06-02', due:'2027-06-02' },
-  ],
-  presurvey: [
-    { doc:'LHRC/P&P/HSM/11', title:'Hazardous Material Safety', chapter:'FMS', reviewed:'2026-05-05', due:'2029-05-05' },
-    { doc:'LHRC/P&P/ER/13', title:'Auto Pulse Mechanical CPR Device', chapter:'COP', reviewed:'2026-08-01', due:'2029-08-01' },
-    { doc:'LHRC/P&P/FS/02', title:'Fire Safety & Evacuation', chapter:'FMS', reviewed:'2026-07-01', due:'2029-07-01' },
-    { doc:'LHRC/P&P/BMW/01', title:'Biomedical Waste Management', chapter:'FMS', reviewed:'2024-01-15', due:'2027-01-15' },
-    { doc:'LHRC/P&P/HIC/04', title:'Hospital Infection Control Manual', chapter:'HIC', reviewed:'2023-06-01', due:'2026-11-15' },
-    { doc:'LHRC/P&P/MOM/07', title:'Management of Medication', chapter:'MOM', reviewed:'2024-03-22', due:'2027-03-22' },
-    { doc:'LHRC/P&P/PRE/03', title:'Patient Rights & Education Charter', chapter:'PRE', reviewed:'2026-09-01', due:'2029-09-01' },
-    { doc:'LHRC/P&P/HRM/09', title:'HR Credentialing & Privileging', chapter:'HRM', reviewed:'2024-02-14', due:'2027-02-14' },
-    { doc:'LHRC/P&P/IMS/06', title:'IT & Cybersecurity Policy', chapter:'IMS', reviewed:'2025-11-20', due:'2028-11-20' },
-    { doc:'LHRC/P&P/FMS/14', title:'Disaster Management Plan (Code Grey)', chapter:'FMS', reviewed:'2024-05-30', due:'2027-05-30' },
-    { doc:'LHRC/P&P/AAC/05', title:'Access, Assessment & Continuity of Care', chapter:'AAC', reviewed:'2023-10-11', due:'2026-10-15' },
-    { doc:'LHRC/P&P/PSQ/08', title:'Patient Safety Incident Reporting (CAPA)', chapter:'PSQ', reviewed:'2024-04-18', due:'2027-04-18' },
-    { doc:'LHRC/P&P/ROM/02', title:'Responsibilities of Management — Org Chart & DoA', chapter:'ROM', reviewed:'2026-08-20', due:'2029-08-20' },
-    { doc:'LHRC/P&P/COP/19', title:'Robotic Surgery Privileging & Consent', chapter:'COP', reviewed:'2026-09-10', due:'2029-09-10' },
-    { doc:'LHRC/P&P/HIC/11', title:'Needle-Stick & Sharps Injury Protocol', chapter:'HIC', reviewed:'2024-06-02', due:'2027-06-02' },
-  ],
-};
-
+/* ---------- shared helpers ---------- */
 function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function chapterName(code) { const c = DATA.chapters.find(x => x.code === code); return c ? c.name : code; }
 
-function statusOf(row) {
-  if (!row.due) return { tag:'bad', label:'Missing' };
-  const due = new Date(row.due);
-  const d = daysBetween(TODAY, due);
-  if (d < 0) return { tag:'bad', label:'Overdue ' + Math.abs(d) + 'd' };
-  if (d <= 90) return { tag:'warn', label:'Due in ' + d + 'd' };
-  return { tag:'ok', label:'Current' };
+function policyStatus(p) {
+  if (!p.due) return { key: 'missing', tag: 'bad', label: 'Missing' };
+  const d = daysBetween(TODAY, new Date(p.due + 'T00:00:00Z'));
+  if (d < 0) return { key: 'overdue', tag: 'bad', label: `Overdue ${Math.abs(d)}d` };
+  if (d <= 90) return { key: 'due-soon', tag: 'warn', label: `Due in ${d}d` };
+  return { key: 'current', tag: 'ok', label: 'Current' };
+}
+function withStatus(p) { return Object.assign({}, p, policyStatus(p)); }
+
+function reviewStatusOf(id) { return ((st.get().reviews || {})[id] || {}).status; }
+function queueLabel(rec) {
+  if (!rec) return { tag: 'warn', label: 'Open' };
+  return { draft: { tag: 'warn', label: 'Draft ready' }, submitted: { tag: 'warn', label: 'Submitted' },
+    approved: { tag: 'ok', label: 'Closed' }, returned: { tag: 'bad', label: 'Returned to maker' } }[rec.status] || { tag: 'warn', label: 'Open' };
 }
 
-function renderRegister(key) {
-  const rows = REGISTER[key];
-  document.querySelector('#ppTable tbody').innerHTML = rows.map(r => {
-    const s = statusOf(r);
-    return `<tr><td class="doc">${Hub.esc(r.doc)}<br><span style="font-weight:500;font-family:inherit">${Hub.esc(r.title)}</span></td>
-      <td><span class="chapter-badge">${r.chapter}</span></td>
-      <td>${r.reviewed || '—'}</td>
-      <td>${r.due || '—'}</td>
-      <td><span class="tag ${s.tag}">${s.label}</span></td></tr>`;
-  }).join('');
+/* =====================================================================
+   TAB: Register
+   ===================================================================== */
+function registerTab(el) {
+  el.innerHTML = `<div class="card">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap">
+      <h2 style="margin:0">P&amp;P register — ${DATA.policies.length} documents</h2>
+      <button type="button" id="regExport">Export to Excel</button>
+    </div>
+    <p class="small">Status is computed from today's date (${DATA.today}): current, due within 90 days, or overdue. Missing means no review/due date on file.</p>
+    <div class="row" style="margin:8px 0 12px">
+      <div style="min-width:180px"><label for="regFilter">Status</label>
+        <select id="regFilter">
+          <option value="all">All statuses</option>
+          <option value="current">Current</option>
+          <option value="due-soon">Due ≤90 days</option>
+          <option value="overdue">Overdue</option>
+          <option value="missing">Missing</option>
+        </select></div>
+      <div style="min-width:220px"><label for="regChapter">Chapter</label>
+        <select id="regChapter"><option value="all">All chapters</option>
+          ${DATA.chapters.map(c => `<option value="${c.code}">${c.code} — ${Hub.esc(c.name)}</option>`).join('')}
+        </select></div>
+    </div>
+    <div id="registerTbl"></div>
+  </div>`;
 
-  const total = rows.length;
-  const overdue = rows.filter(r => statusOf(r).label.startsWith('Overdue')).length;
-  const missing = rows.filter(r => statusOf(r).label === 'Missing').length;
-  const dueSoon = rows.filter(r => statusOf(r).label.startsWith('Due in')).length;
-  const current = total - overdue - missing - dueSoon;
-  const score = Math.round((current + dueSoon * 0.5) / total * 100);
-  document.getElementById('kpis').innerHTML = `
-    <div class="kpi"><div class="label">Documents tracked</div><div class="value">${total}</div></div>
-    <div class="kpi"><div class="label">Overdue</div><div class="value" style="color:var(--bad)">${overdue}</div></div>
-    <div class="kpi"><div class="label">Due in 90 days</div><div class="value" style="color:var(--warn)">${dueSoon}</div></div>
-    <div class="kpi"><div class="label">Missing</div><div class="value" style="color:var(--bad)">${missing}</div></div>
-    <div class="kpi"><div class="label">Overall readiness</div><div class="value">${score}%</div></div>`;
-  return rows;
+  const all = DATA.policies.map(withStatus);
+  function rowsFor() {
+    const f = document.getElementById('regFilter').value, c = document.getElementById('regChapter').value;
+    return all.filter(p => (f === 'all' || p.key === f) && (c === 'all' || p.chapter === c));
+  }
+  const handle = Hub.kit.table(el.querySelector('#registerTbl'), {
+    rows: rowsFor(), search: true,
+    columns: [
+      { key: 'id', label: 'Doc no. & title', render: r => `<span style="font-family:monospace;font-size:12.5px">${Hub.esc(r.id)}</span><br>${Hub.esc(r.title)}` },
+      { key: 'chapter', label: 'Chapter' },
+      { key: 'ownerDept', label: 'Owner dept' },
+      { key: 'reviewed', label: 'Reviewed', format: v => v || '—' },
+      { key: 'due', label: 'Revision due', format: v => v || '—' },
+      { key: 'version', label: 'Ver.', num: true },
+      { key: 'label', label: 'Status', render: r => `<span class="tag ${r.tag}">${Hub.esc(r.label)}</span>` },
+    ],
+  });
+  document.getElementById('regFilter').onchange = () => { st.set({ regFilter: document.getElementById('regFilter').value }); handle.update(rowsFor()); };
+  document.getElementById('regChapter').onchange = () => { st.set({ regChapter: document.getElementById('regChapter').value }); handle.update(rowsFor()); };
+  document.getElementById('regFilter').value = st.get().regFilter;
+  document.getElementById('regChapter').value = st.get().regChapter;
+  handle.update(rowsFor());
+  document.getElementById('regExport').onclick = () => {
+    Hub.kit.exportXlsx(rowsFor().map(r => ({
+      'Doc no.': r.id, Title: r.title, Chapter: r.chapter, 'Owner dept': r.ownerDept, 'Owner role': r.ownerRole,
+      Prepared: r.prepared || '', Reviewed: r.reviewed || '', 'Revision due': r.due || '', Version: r.version, Status: r.label,
+    })), 'nabh-pp-register.xlsx', 'P&P Register');
+    Hub.kit.log(SLUG, 'Exported P&P register to Excel');
+  };
 }
 
-function registerAsText(rows) {
-  return rows.map(r => {
-    const s = statusOf(r);
-    return `${r.doc} — ${r.title} | Chapter: ${r.chapter} | Last reviewed: ${r.reviewed || 'NEVER'} | Revision due: ${r.due || 'NOT SET'} | Status: ${s.label}`;
-  }).join('\n');
+/* =====================================================================
+   TAB: Gap & CAPA queue
+   ===================================================================== */
+function buildCapaDemo(g) {
+  const due = new Date(g.raisedOn + 'T00:00:00Z');
+  due.setUTCDate(due.getUTCDate() + (g.severity === 'High' ? 14 : g.severity === 'Medium' ? 30 : 45));
+  const dueStr = due.toISOString().slice(0, 10);
+  const rootCauses = {
+    High: 'a control that depends on a single person or a manual step with no cross-check, so the lapse went unnoticed until this audit',
+    Medium: 'the process exists but compliance is not routinely spot-checked, so drift accumulates between audits',
+    Low: 'a documentation or display gap rather than a clinical practice gap, but still a tracer risk if a surveyor asks',
+  };
+  return `## Draft CAPA — ${g.id}
+
+**Gap:** ${g.title}
+**Chapter:** ${g.chapter} — ${chapterName(g.chapter)}${g.policyId ? `\n**Linked policy:** ${g.policyId} — ${g.policyTitle}` : ''}
+**Severity:** ${g.severity}
+**Raised:** ${g.raisedOn}
+
+**Description on file:** ${g.description}
+
+### Root cause
+Most likely, ${rootCauses[g.severity] || rootCauses.Medium}. Recommend the ${g.ownerDept} team confirm this against the actual timeline before submitting — this is Claude's first read, not a finding.
+
+### Corrective action
+Fix the immediate instance: bring the specific record(s) named above up to date (re-issue, re-file, or re-train as applicable) and document that this was done, with a date and the responsible name.
+
+### Preventive action
+Add a routine check so this class of gap doesn't recur — e.g. a monthly spot-audit by ${g.ownerRole}, a checklist added to the existing round, or a system reminder ahead of the next revision/renewal date. Assign an owner and a recurrence interval, not just a one-time fix.
+
+### Owner and target date
+**Owner:** ${g.ownerRole}, ${g.ownerDept}
+**Target closure:** ${dueStr} (${g.severity === 'High' ? '14' : g.severity === 'Medium' ? '30' : '45'} days from the gap being raised, per severity)
+
+### Evidence to collect before closure
+- The corrected record(s) or a signed statement that the specific instance was fixed
+- Evidence the preventive check now exists (e.g. a checklist, an audit schedule, a training attendance sheet)
+- Sign-off from ${g.ownerRole}
+
+*Draft only — a maker at ${g.ownerDept} should edit this before it goes to the Quality Manager for approval.*`;
 }
 
-document.getElementById('scenario').addEventListener('change', e => renderRegister(e.target.value));
-let currentRows = renderRegister('baseline');
-
-const DEMO_GAP = {
-  baseline: `## Chapter-wise readiness — VPS Lakeshore, 27 Sep 2026
-
-| Chapter | Docs | Current | Due ≤90d | Overdue/Missing | Readiness |
-|---|---|---|---|---|---|
-| FMS (Facility Mgmt & Safety) | 4 | 1 | 2 | 1 | 63% |
-| COP (Care of Patients) | 2 | 0 | 0 | 2 | 25% |
-| HIC (Infection Control) | 2 | 1 | 1 | 0 | 75% |
-| MOM (Medication Mgmt) | 1 | 1 | 0 | 0 | 100% |
-| PRE (Patient Rights & Education) | 1 | 0 | 1 | 0 | 50% |
-| HRM (HR Management) | 1 | 1 | 0 | 0 | 100% |
-| IMS (Info Mgmt System) | 1 | 0 | 0 | 1 | 0% |
-| AAC (Access, Assessment, Continuity) | 1 | 0 | 1 | 0 | 50% |
-| PSQ (Patient Safety & QI) | 1 | 1 | 0 | 0 | 100% |
-| ROM (Responsibility of Mgmt) | 1 | 0 | 1 | 0 | 50% |
-| **Overall** | **15** | **5** | **6** | **4** | **~63%** |
-
-**Top gaps (in order of survey risk)**
-1. **LHRC/P&P/IMS/06 — IT & Cybersecurity Policy** — overdue since 01-Dec-2025 (300 days). High risk: any cyber-incident review during survey will surface an expired governing document. *Owner: IT Head.*
-2. **LHRC/P&P/COP/19 — Robotic Surgery Privileging & Consent** — no reviewed/due date on record at all. With robotic transplant volumes growing, assessors will specifically probe privileging criteria for the robot programme. *Owner: Medical Superintendent + Credentialing Committee.*
-3. **LHRC/P&P/ER/13 — Auto Pulse Mechanical CPR Device** — overdue since 20-Nov-2025. Device-specific SOPs are a common COP tracer item. *Owner: ER Head of Dept.*
-4. **LHRC/P&P/HIC/04 — Infection Control Manual** — overdue since 01-Jun-2026; HIC is almost always tracer-walked on Day 1. *Owner: Infection Control Officer.*
-5. **LHRC/P&P/FS/02 — Fire Safety** and **LHRC/P&P/ROM/02 — Org chart/DoA** — both overdue/near-overdue; fire safety mock drills are frequently cross-checked against the SOP revision date. *Owner: Facilities Manager / CEO Office.*
-
-**30-60-90 day remediation plan**
-
-| Phase | Action | Owner | Target |
-|---|---|---|---|
-| 0–30 days | Reconstitute and approve IMS/06 (cybersecurity) and ER/13 (Auto Pulse) in P&P Committee; backdate review trail with VAPT report and device AMC as annexures | IT Head, ER HOD | 27-Oct-2026 |
-| 0–30 days | Draft COP/19 (robotic privileging) from scratch using existing credentialing matrix + robot OEM competency checklist | Med. Superintendent | 27-Oct-2026 |
-| 31–60 days | Revise HIC/04 and FS/02; run one live fire-drill and one hand-hygiene audit as evidence of implementation, not just paper revision | ICO, Facilities Mgr | 26-Nov-2026 |
-| 31–60 days | Refresh ROM/02 org chart to reflect current Delegation of Authority; circulate for department-head sign-off | CEO Office | 26-Nov-2026 |
-| 61–90 days | Internal mock survey (2 assessors) across all 10 chapters; close residual CAPAs; re-run this gap scan | Quality Manager | 25-Dec-2026 |
-
-**Likely mock-surveyor questions**
-- "Show me the last review date of your cybersecurity policy and evidence of the last VAPT/penetration test." (IMS)
-- "Who is credentialed to operate the robotic surgical system, and what is the re-credentialing cycle?" (COP)
-- "Walk me through the Auto Pulse device's maintenance log and who is trained to use it outside the ER." (COP)
-- "When was your last full-scale fire evacuation drill, and where are the records?" (FMS)
-- "Show me your current approved organisation chart with delegation of financial and clinical authority." (ROM)`,
-  presurvey: `## Chapter-wise readiness — VPS Lakeshore, 27 Sep 2026 (pre-survey scenario)
-
-| Chapter | Docs | Current | Due ≤90d | Overdue/Missing | Readiness |
-|---|---|---|---|---|---|
-| FMS | 4 | 3 | 1 | 0 | 88% |
-| COP | 2 | 2 | 0 | 0 | 100% |
-| HIC | 2 | 1 | 1 | 0 | 75% |
-| MOM | 1 | 1 | 0 | 0 | 100% |
-| PRE | 1 | 1 | 0 | 0 | 100% |
-| HRM | 1 | 1 | 0 | 0 | 100% |
-| IMS | 1 | 1 | 0 | 0 | 100% |
-| AAC | 1 | 0 | 1 | 0 | 50% |
-| PSQ | 1 | 1 | 0 | 0 | 100% |
-| ROM | 1 | 1 | 0 | 0 | 100% |
-| **Overall** | **15** | **12** | **2** | **0** | **~93%** |
-
-**Top gaps ahead of the mock survey**
-1. **LHRC/P&P/AAC/05 — Access, Assessment & Continuity of Care** revision falls due 15-Oct-2026, inside the survey window — get the P&P Committee to approve it *before* survey day so the "current version" on file is unambiguous.
-2. **LHRC/P&P/HIC/04 — Infection Control Manual** due 15-Nov-2026 — same treatment; assessors dislike a policy that is "about to expire."
-3. No overdue or missing documents remain — good position; focus effort on **implementation evidence** (drill records, training attendance, incident logs) rather than paperwork.
-
-**30-60-90 day plan**
-| Phase | Action | Owner | Target |
-|---|---|---|---|
-| 0–15 days | Fast-track approval of AAC/05 and HIC/04 at next P&P Committee | Quality Manager | 12-Oct-2026 |
-| 0–30 days | Compile tracer evidence folders (drills, training logs, incident reports) for each of the 10 chapters | Dept HODs | 27-Oct-2026 |
-| 31–60 days | Run two full mock-tracer walks (COP + FMS focus) with an external NABH consultant | Quality Manager | 26-Nov-2026 |
-| 61–90 days | Final management review, close any CAPAs from mock survey | CEO, Quality Manager | 25-Dec-2026 |
-
-**Likely mock-surveyor questions**
-- "Your Infection Control Manual is due for revision in a few weeks — show me the draft under review."
-- "Demonstrate a recent AAC-related continuity-of-care case, from admission to discharge planning."
-- "Show evidence that staff have been trained on the revised robotic-surgery consent process."`,
-};
-
-document.getElementById('runGap').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const rows = REGISTER[key];
-  const prompt = `You are the Quality & Accreditation lead at VPS Lakeshore Hospital, Kochi preparing for NABH accreditation (5th/6th edition standards). Here is our current Policies & Procedures (P&P) register with status computed as of 27 Sep 2026:\n\n${registerAsText(rows)}\n\nProduce: (1) a chapter-wise readiness score table (chapters: AAC, COP, MOM, PRE, HIC, PSQ, ROM, FMS, HRM, IMS), (2) the top 5 gaps ranked by survey risk with named owners, (3) a 30-60-90 day remediation plan with owners and target dates, (4) 5 likely mock-surveyor questions tied to the weakest chapters.`;
-  Hub.run({
-    out: '#outGap', button: '#runGap',
-    system: 'You are an NABH (National Accreditation Board for Hospitals & Healthcare Providers, India) accreditation consultant advising a 350-bed multi-specialty hospital in Kochi, Kerala.',
-    prompt, demo: DEMO_GAP[key], manualMinutes: 300,
+function gapTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Gap &amp; CAPA queue</h2><div id="gapQueueTbl"></div></div>
+    <div class="card"><h2>Selected gap</h2><div id="gapDetail"><p class="small">Pick a row from the queue.</p></div></div>
+  </div>`;
+  const rows = DATA.gaps.map(g => Object.assign({}, g, queueLabel((st.get().reviews || {})[g.id])));
+  Hub.kit.table(el.querySelector('#gapQueueTbl'), {
+    rows, search: true, selectedKey: st.get().selectedGap,
+    columns: [
+      { key: 'id', label: 'ID' },
+      { key: 'title', label: 'Gap' },
+      { key: 'chapter', label: 'Chapter' },
+      { key: 'severity', label: 'Severity', render: r => `<span class="tag ${r.severity === 'High' ? 'bad' : r.severity === 'Medium' ? 'warn' : 'ok'}">${r.severity}</span>` },
+      { key: 'label', label: 'Status', render: r => `<span class="tag ${r.tag}">${Hub.esc(r.label)}</span>` },
+    ],
+    onRowClick: r => { st.set({ selectedGap: r.id }); gapDetail(r); },
   });
-});
+  let sel = DATA.gaps.find(g => g.id === st.get().selectedGap);
+  if (!sel) { sel = DATA.gaps[0]; st.set({ selectedGap: sel.id }); }
+  gapDetail(sel);
+}
 
-// ---------- MODE B DATA ----------
-const POLICY_TEXT = `LHRC/P&P/ER/13 — Auto Pulse Mechanical CPR Device (rev. 3, reviewed 05-05-2026)
-Section 4.2 — Authorised Use: The Auto Pulse device is approved for use within the Emergency Department and the Cath Lab only, by ER physicians and Critical Care physicians who have completed the vendor-certified competency module (valid 2 years). Section 4.3 — Use Outside ER: Deployment of the device outside the ER or Cath Lab (e.g., during in-hospital transport code blue) requires verbal authorisation from the ER Medical Officer on duty OR the Critical Care Consultant on call, to be countersigned within 24 hours. Nursing staff may not independently authorise use.
+function gapDetail(g) {
+  const el = document.getElementById('gapDetail');
+  const done = (st.get().reviews || {})[g.id];
+  el.innerHTML = `<div id="gapSteps"></div>
+    <p><b>${Hub.esc(g.title)}</b> · ${Hub.esc(g.chapter)} · <span class="tag ${g.severity === 'High' ? 'bad' : g.severity === 'Medium' ? 'warn' : 'ok'}">${g.severity}</span></p>
+    <p class="small">${Hub.esc(g.description)}</p>
+    <p class="small">Owner: <b>${Hub.esc(g.ownerRole)}</b>, ${Hub.esc(g.ownerDept)} · Raised ${Hub.esc(g.raisedOn)}${g.policyId ? ` · Linked policy: ${Hub.esc(g.policyId)}` : ''}</p>
+    <button class="primary" id="gapRun">Draft CAPA with Claude</button>
+    <div class="claude-out" id="gapOut" style="margin-top:10px">${done ? Hub.md(done.text) : ''}</div>
+    <div id="gapReview"></div>`;
+  Hub.kit.steps(el.querySelector('#gapSteps'), ['Open', 'Claude draft', 'Maker / approver review', 'Closed'],
+    done ? (done.status === 'approved' ? 3 : 2) : 0);
+  if (done) Hub.kit.review(el.querySelector('#gapReview'), { slug: SLUG, item: { id: g.id, title: `CAPA — ${g.title}` }, text: done.text, st, docTitle: `CAPA — ${g.id}`, onDecision: () => gapTab(document.getElementById("view")) });
+  el.querySelector('#gapRun').onclick = async () => {
+    const prompt = `You are drafting a CAPA (Corrective and Preventive Action) for an NABH-accredited hospital's quality department. Here is the gap on file:\n\n${JSON.stringify(g, null, 1)}\n\nDraft: root cause, corrective action, preventive action, an owner and target date, and the evidence that should be collected before closure. Keep it specific to this gap, not generic.`;
+    const text = await Hub.run({
+      out: '#gapOut', button: '#gapRun',
+      system: 'You are a quality & accreditation lead at a 350-bed NABH-accredited hospital in Kochi, drafting CAPAs for the internal gap register. All data is synthetic demo data.',
+      prompt, demo: () => buildCapaDemo(g), manualMinutes: 45,
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'CAPA drafted', g.id);
+    Hub.kit.steps(el.querySelector('#gapSteps'), ['Open', 'Claude draft', 'Maker / approver review', 'Closed'], 2);
+    Hub.kit.review(el.querySelector('#gapReview'), { slug: SLUG, item: { id: g.id, title: `CAPA — ${g.title}` }, text, st, docTitle: `CAPA — ${g.id}`, onDecision: () => gapTab(document.getElementById("view")) });
+  };
+}
 
-LHRC/P&P/HSM/11 — Hazardous Material Safety (rev. 4, reviewed 05-05-2026)
-Section 6 — Chemical Spill Response. Section 6.1 (Mercury spills, e.g., broken thermometer/sphygmomanometer): Evacuate the immediate area; do not use a vacuum cleaner or broom. Don PPE (nitrile gloves, N95). Use the designated Mercury Spill Kit (stored in each nursing station utility room) to contain droplets using the suction bulb/cardboard provided; place residue in the kit's sealed container; label as hazardous waste and hand over to the BMW (Biomedical Waste) contractor per LHRC/P&P/BMW/01. Ventilate the area for a minimum of 2 hours. Section 6.2 covers non-mercury chemical spills (housekeeping chemicals) — refer to MSDS on file with Housekeeping Supervisor.
+/* =====================================================================
+   TAB: Mock survey
+   ===================================================================== */
+function surveyDemo(chapterCode, dept) {
+  const bank = DATA.surveyBank[chapterCode] || [];
+  const ps = DATA.policies.filter(p => p.chapter === chapterCode).map(withStatus);
+  const current = ps.filter(p => p.key === 'current').length, dueSoon = ps.filter(p => p.key === 'due-soon').length;
+  const bad = ps.length - current - dueSoon;
+  const score = ps.length ? Math.round((current + dueSoon * 0.5) / ps.length * 100) : 0;
+  return `## Mock survey — ${chapterName(chapterCode)} (${chapterCode}) · ${dept}
 
-LHRC/P&P/HIC/04 — Hospital Infection Control Manual (rev. 6, reviewed 01-06-2023 — REVISION OVERDUE since 01-06-2026)
-Section 9 — Sharps and Needle-stick Injuries: Report to Infection Control Officer within 1 hour; post-exposure prophylaxis per protocol in Annexure C.`;
+**Chapter readiness: ${score}%** — ${current} of ${ps.length} documents current, ${dueSoon} due within 90 days, ${bad} overdue or missing.
 
-document.getElementById('policyText').value = POLICY_TEXT;
+| Doc no. | Title | Status |
+|---|---|---|
+${ps.map(p => `| ${p.id} | ${p.title} | ${p.label} |`).join('\n')}
 
-const QA_QUESTIONS = {
-  autopulse: 'Who can authorise use of the Auto Pulse device outside the ER?',
-  mercury: "What's the spill procedure for mercury?",
-  custom: '',
-};
-document.getElementById('scenarioQA').addEventListener('change', e => {
-  document.getElementById('question').value = QA_QUESTIONS[e.target.value] || '';
-});
-document.getElementById('question').value = QA_QUESTIONS.autopulse;
+### Surveyor-style questions for ${dept}
+${bank.map((b, i) => `${i + 1}. **${b.q}**\n   *Evidence to have ready:* ${b.evidence}`).join('\n')}
 
-const DEMO_QA = {
-  autopulse: `**Answer** (citing LHRC/P&P/ER/13, Section 4.3 — Use Outside ER):
+**Suggested focus before survey day:** ${bad > 0 ? `close the ${bad} overdue/missing document(s) above first — an expired governing policy is the fastest way to fail a tracer on this chapter.` : `documents are in order; rehearse producing the evidence listed against each question above, since assessors judge implementation, not just paperwork.`}`;
+}
 
-Outside the Emergency Department or Cath Lab, use of the Auto Pulse device requires **verbal authorisation from either the ER Medical Officer on duty or the Critical Care Consultant on call**, which must then be **countersigned in writing within 24 hours**.
+function surveyTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Generate a mock survey</h2>
+      <p class="small">Pick an NABH chapter and the department being assessed. Claude generates surveyor-style questions, the evidence to show, and a readiness score from the register.</p>
+      <label for="surveyChapter">Chapter</label>
+      <select id="surveyChapter">${DATA.chapters.map(c => `<option value="${c.code}">${c.code} — ${Hub.esc(c.name)}</option>`).join('')}</select>
+      <label for="surveyDept">Department</label>
+      <select id="surveyDept">${DATA.departments.map(d => `<option value="${Hub.esc(d.dept)}">${Hub.esc(d.dept)}</option>`).join('')}</select>
+      <div class="row" style="margin-top:12px"><button type="button" id="surveyRun">Generate mock survey</button></div>
+      <div class="claude-out" id="surveyOut" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>Recorded answers</h2>
+      <p class="small">Record readiness per question for this chapter + department. Saved to this browser.</p>
+      <div id="surveyAnswers"></div>
+    </div>
+  </div>`;
+  const chSel = document.getElementById('surveyChapter'), depSel = document.getElementById('surveyDept');
+  chSel.value = st.get().surveyChapter;
+  depSel.value = st.get().surveyDept || DATA.departments[0].dept;
+  st.set({ surveyDept: depSel.value });
+  renderSurveyAnswers();
 
-- Nursing staff are explicitly **not** permitted to authorise use independently (Section 4.3).
-- Within the ER/Cath Lab itself, only ER physicians and Critical Care physicians with a current (≤2-year) vendor competency certification may operate the device (Section 4.2).
+  function renderSurveyAnswers() {
+    const box = document.getElementById('surveyAnswers');
+    if (!box) return; // the user may have switched tabs while a Claude call was still resolving
+    const ch = chSel.value, dep = depSel.value, key = `${ch}|${dep}`;
+    const bank = DATA.surveyBank[ch] || [];
+    const saved = (st.get().surveyAnswers || {})[key] || {};
+    box.innerHTML = bank.length ? `<div class="table-wrap"><table><thead><tr><th>Question</th><th>Readiness</th></tr></thead><tbody>
+      ${bank.map((b, i) => `<tr class="survey-ans-row"><td>${Hub.esc(b.q)}</td><td>
+        <select data-i="${i}">
+          <option value="">Not recorded</option>
+          <option value="Ready" ${saved[i] === 'Ready' ? 'selected' : ''}>Ready</option>
+          <option value="Partly" ${saved[i] === 'Partly' ? 'selected' : ''}>Partly ready</option>
+          <option value="Not ready" ${saved[i] === 'Not ready' ? 'selected' : ''}>Not ready</option>
+        </select></td></tr>`).join('')}
+      </tbody></table></div>` : '<p class="small">Generate a mock survey to see questions here.</p>';
+    document.querySelectorAll('#surveyAnswers select').forEach(s => s.onchange = () => {
+      st.set(cur => { const sa = Object.assign({}, cur.surveyAnswers); sa[key] = Object.assign({}, sa[key], { [s.dataset.i]: s.value }); return { surveyAnswers: sa }; });
+      Hub.kit.log(SLUG, 'Recorded mock-survey answer', `${ch} / ${dep} Q${Number(s.dataset.i) + 1}: ${s.value || 'cleared'}`);
+    });
+  }
+  chSel.onchange = () => { st.set({ surveyChapter: chSel.value }); renderSurveyAnswers(); };
+  depSel.onchange = () => { st.set({ surveyDept: depSel.value }); renderSurveyAnswers(); };
+  document.getElementById('surveyRun').onclick = async () => {
+    const ch = chSel.value, dep = depSel.value;
+    const ps = DATA.policies.filter(p => p.chapter === ch).map(withStatus);
+    const prompt = `You are preparing ${dep} at VPS Lakeshore Hospital, Kochi for an NABH mock survey on the ${chapterName(ch)} (${ch}) chapter. Register status:\n\n${ps.map(p => `${p.id} — ${p.title} — ${p.label}`).join('\n')}\n\nGenerate 3-5 surveyor-style questions a NABH assessor would likely ask this department on this chapter, the evidence to have ready for each, and a readiness score with rationale.`;
+    await Hub.run({
+      out: '#surveyOut', button: '#surveyRun',
+      system: 'You are an NABH accreditation consultant running a mock survey rehearsal for a 350-bed hospital in Kochi, Kerala.',
+      prompt, demo: () => surveyDemo(ch, dep), manualMinutes: 60,
+    });
+    renderSurveyAnswers();
+  };
+}
 
-**Note:** the policy does not specify what happens if neither the ER MO nor the Critical Care Consultant is reachable within a clinically necessary window (e.g. a code blue in a general ward). This is a gap — recommend the P&P Committee add an escalation clause (e.g., default to the on-call Duty Manager or Code Blue team leader) at the next revision (due 20-11-2026).`,
-  mercury: `**Answer** (citing LHRC/P&P/HSM/11, Section 6.1 — Chemical Spill Response, Mercury Spills):
+/* =====================================================================
+   TAB: Policy Q&A
+   ===================================================================== */
+const QA_KEYWORDS = [
+  { abbr: 'ER', words: ['auto pulse', 'mechanical cpr', 'cpr device', 'outside the er', 'outside er'] },
+  { abbr: 'FS', words: ['fire', 'evacuation', 'fire drill', 'fire extinguisher'] },
+  { abbr: 'BMW', words: ['biomedical waste', 'bmw', 'waste segregation', 'colour cod', 'color cod'] },
+  { abbr: 'HSM', words: ['mercury', 'spill', 'hazardous material'] },
+  { abbr: 'MOM', words: ['medication storage', 'cold chain', 'temperature log', 'lasa', 'look-alike'] },
+  { abbr: 'PRE', words: ['patient rights', 'refuse treatment', 'right to information'] },
+  { abbr: 'CON', words: ['informed consent', 'consent form', 'high-risk consent', 'video consent', 'photo consent'] },
+  { abbr: 'RES', words: ['restraint', 'seclusion'] },
+  { abbr: 'HRM', words: ['credential', 'privileging', 'primary source', 'locum'] },
+  { abbr: 'IMS', words: ['downtime', 'emr down', 'his down', 'cybersecurity', 'system down'] },
+  { abbr: 'DMP', words: ['code grey', 'code yellow', 'disaster', 'mass casualty'] },
+  { abbr: 'NSI', words: ['needle', 'sharps', 'needle-stick', 'pep', 'needlestick'] },
+];
+function excerptFor(abbr) { return DATA.excerpts.find(e => e.id.includes(`/${abbr}/`)); }
+function excerptAsBullets(text) {
+  return text.split('\n').filter(Boolean).map(l => `- ${l}`).join('\n');
+}
+function buildDemoAnswer(question) {
+  const q = question.toLowerCase();
+  const match = QA_KEYWORDS.find(k => k.words.some(w => q.includes(w)));
+  const excerpt = match && excerptFor(match.abbr);
+  if (!excerpt) {
+    return `I couldn't find anything in the loaded policy excerpts that answers this directly. None of the ${DATA.excerpts.length} excerpted policies on file cover it.\n\n**This is a policy silence, not a "no"** — check the full document with the owning department, or flag it for the P&P Committee to address at the next revision.`;
+  }
+  return `**Answer** (citing ${excerpt.id} — ${excerpt.title}, ${excerpt.section}):\n\n${excerptAsBullets(excerpt.text)}\n\n_Answered strictly from the excerpt on file. If this doesn't fully cover the question, the full document should be checked with ${DATA.policies.find(p => p.id === excerpt.id) ? DATA.policies.find(p => p.id === excerpt.id).ownerDept : 'the owning department'}._`;
+}
+const QA_SYSTEM = () => `You are a policy compliance assistant for VPS Lakeshore Hospital, Kochi, a NABH-accredited hospital. Answer strictly from the following excerpted policies — never invent content that is not in them. Always cite the exact document number and section. If the excerpts do not fully answer the question, say so explicitly rather than guessing.\n\n${DATA.excerpts.map(e => `${e.id} — ${e.title}\n${e.section}\n${e.text}`).join('\n\n---\n\n')}`;
 
-1. Evacuate the immediate area immediately.
-2. **Do not** use a vacuum cleaner or broom — this aerosolises mercury vapour.
-3. Don PPE: nitrile gloves and an N95 mask.
-4. Use the **designated Mercury Spill Kit** (stationed in every nursing station utility room) — use the suction bulb/cardboard provided to contain droplets.
-5. Place all residue in the kit's sealed container, label it hazardous waste, and hand it to the BMW contractor per **LHRC/P&P/BMW/01**.
-6. Ventilate the area for a **minimum of 2 hours** before allowing re-entry.
+function qaAddTurn(question) {
+  const wrap = document.createElement('div');
+  wrap.className = 'qa-turn';
+  const id = 'qaOut-' + Math.random().toString(36).slice(2);
+  wrap.innerHTML = `<p><b>${Hub.esc(question)}</b></p><div class="claude-out" id="${id}"></div>`;
+  document.getElementById('qaThread').appendChild(wrap);
+  return document.getElementById(id);
+}
 
-**Note:** this section (6.1) covers mercury specifically. For any other chemical/housekeeping spill, the policy directs staff to Section 6.2 and the relevant MSDS on file with the Housekeeping Supervisor — the excerpt provided does not include the full MSDS index, so confirm the specific chemical there if it isn't mercury.`,
-};
+function qaTab(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Ask about policy</h2>
+      <p class="small">Multi-turn — follow-up questions keep the earlier answers as context. Answers cite the document number and section, or say when the excerpts are silent.</p>
+      <div id="qaThread"></div>
+      <label for="qaInput">Your question</label>
+      <textarea id="qaInput" data-upload="off" style="min-height:70px" placeholder="e.g. Who can authorise use of the Auto Pulse device outside the ER?"></textarea>
+      <div class="row" style="margin-top:8px"><button type="button" id="qaAsk">Ask Claude</button><button type="button" id="qaClear">Clear chat</button></div>
+    </div>
+    <div class="card">
+      <h2>Policy excerpts loaded (${DATA.excerpts.length})</h2>
+      <p class="small">Reference only — this is the exact text Claude is answering from.</p>
+      <textarea id="qaExcerpts" data-upload="off" readonly style="min-height:320px;font-size:13px">${Hub.esc(DATA.excerpts.map(e => `${e.id} — ${e.title}\n${e.section}\n${e.text}`).join('\n\n'))}</textarea>
+    </div>
+  </div>`;
+  (st.get().qaTurns || []).forEach(t => { qaAddTurn(t.q).innerHTML = Hub.md(t.a); });
+  const input = document.getElementById('qaInput');
+  document.getElementById('qaAsk').onclick = async () => {
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    const prior = st.get().qaTurns || [];
+    const messages = [];
+    prior.forEach(t => { messages.push({ role: 'user', content: t.q }); messages.push({ role: 'assistant', content: t.a }); });
+    messages.push({ role: 'user', content: q });
+    const out = qaAddTurn(q);
+    const text = await Hub.run({ out, button: '#qaAsk', system: QA_SYSTEM(), messages, demo: () => buildDemoAnswer(q), manualMinutes: 15 });
+    if (!text) return;
+    st.set(s => ({ qaTurns: [...(s.qaTurns || []), { q, a: text }] }));
+    Hub.kit.log(SLUG, 'Policy Q&A answered', q.slice(0, 60));
+  };
+  document.getElementById('qaClear').onclick = () => { if (confirm('Clear this chat?')) { st.set({ qaTurns: [] }); qaTab(el); } };
+}
 
-document.getElementById('runQA').addEventListener('click', () => {
-  const text = document.getElementById('policyText').value;
-  const q = document.getElementById('question').value.trim();
-  const scKey = document.getElementById('scenarioQA').value;
-  const prompt = `Here are excerpts from VPS Lakeshore Hospital's approved policies and procedures:\n\n${text}\n\nQuestion: ${q}\n\nAnswer strictly from the excerpts above, citing the exact policy document number and section. If the excerpts do not fully answer the question, say so explicitly and note what is missing rather than guessing.`;
-  Hub.run({
-    out: '#outQA', button: '#runQA',
-    system: 'You are a policy compliance assistant for a NABH-accredited hospital. Only answer from the supplied policy text; be precise about citations and explicit about silences/gaps.',
-    prompt, demo: DEMO_QA[scKey] || DEMO_QA.autopulse, manualMinutes: 20,
+/* =====================================================================
+   TAB: Dashboard
+   ===================================================================== */
+function dashboardTab(el) {
+  const all = DATA.policies.map(withStatus);
+  const current = all.filter(p => p.key === 'current').length;
+  const overdue = all.filter(p => p.key === 'overdue').length;
+  const missing = all.filter(p => p.key === 'missing').length;
+  const openCapas = DATA.gaps.filter(g => reviewStatusOf(g.id) !== 'approved').length;
+  const pctCurrent = Math.round(current / all.length * 100);
+
+  el.innerHTML = `<div class="kpis" id="dashKpis">
+    <div class="kpi"><div class="label">Policies current</div><div class="value">${pctCurrent}%</div></div>
+    <div class="kpi ${overdue ? 'bad' : ''}"><div class="label">Overdue</div><div class="value">${overdue}</div></div>
+    <div class="kpi ${missing ? 'bad' : ''}"><div class="label">Missing</div><div class="value">${missing}</div></div>
+    <div class="kpi ${openCapas ? 'warn' : ''}"><div class="label">Open CAPAs</div><div class="value">${openCapas}</div></div>
+  </div>
+  <div class="grid cols-2"><div class="card" id="chStatus"></div><div class="card" id="chSeverity"></div></div>`;
+
+  const labels = DATA.chapters.map(c => c.code);
+  const seriesFor = key => labels.map(code => all.filter(p => p.chapter === code && p.key === key).length);
+  Hub.chart.stacked(el.querySelector('#chStatus'), {
+    title: 'P&P status by chapter', labels,
+    series: [
+      { name: 'Current', values: seriesFor('current') },
+      { name: 'Due ≤90d', values: seriesFor('due-soon') },
+      { name: 'Overdue/missing', values: labels.map(code => all.filter(p => p.chapter === code && (p.key === 'overdue' || p.key === 'missing')).length) },
+    ],
+    format: v => String(v),
   });
-});
+  const sevCounts = ['High', 'Medium', 'Low'].map(s => ({ label: s, value: DATA.gaps.filter(g => g.severity === s && reviewStatusOf(g.id) !== 'approved').length }));
+  Hub.chart.bar(el.querySelector('#chSeverity'), { title: 'Open CAPAs by severity', data: sevCounts, format: v => String(v) });
+}
 
-// ---------- TAB SWITCHING ----------
-document.querySelectorAll('.tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
-    document.getElementById('mode-' + btn.dataset.mode).classList.add('active');
+/* ---------- boot ---------- */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  TODAY = new Date(d.today + 'T00:00:00Z');
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#toolbar', title: 'Maker or approver', text: 'Switch role here — a quality executive drafts, a quality manager approves. Reset and the activity log live here too.' },
+      { sel: '#gapQueueTbl', title: 'Gap & CAPA queue', text: 'Every open gap from internal audits, in one queue, with severity and status.' },
+      { sel: '#gapRun', title: 'Draft with Claude', text: 'Claude drafts a CAPA — root cause, corrective and preventive action, owner, due date, evidence — from the gap on file.' },
+      { sel: '#gapReview', title: 'Review before it counts', text: 'The maker edits the draft, then submits. Switch to Approver to approve or return it — closing the loop.' },
+      { sel: '#registerTbl', title: 'The P&P register', text: '60 policies across all 10 NABH chapters, with status computed from today\'s date. Filter, or export to Excel.' },
+      { sel: '#surveyOut', title: 'Mock survey', text: 'Pick a chapter and a department — Claude generates surveyor-style questions, the evidence to show, and a readiness score.' },
+      { sel: '#dashKpis', title: 'Dashboard', text: 'Overall readiness, overdue documents and open CAPAs, at a glance.' },
+    ],
   });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'register', label: 'Register' },
+    { id: 'gap', label: 'Gap & CAPA' },
+    { id: 'survey', label: 'Mock survey' },
+    { id: 'qa', label: 'Policy Q&A' },
+    { id: 'dash', label: 'Dashboard' },
+  ], id => {
+    st.set({ tab: id });
+    ({ register: registerTab, gap: gapTab, survey: surveyTab, qa: qaTab, dash: dashboardTab }[id])(document.getElementById('view'));
+  }, st.get().tab);
 });
 </script>
 </body>

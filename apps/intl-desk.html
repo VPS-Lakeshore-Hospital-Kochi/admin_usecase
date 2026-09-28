@@ -6,224 +6,410 @@
 <title>International patient desk assistant</title>
 <link rel="stylesheet" href="../shared/hub.css">
 <style>
-  .fact { font-size:13px; padding:4px 0; border-bottom:1px solid var(--border); }
+  /* local additions: kit.js has no fact-list or chat components — built here, brand tokens only */
+  .fact { font-size:13px; padding:5px 0; border-bottom:1px solid var(--border); }
   .fact:last-child { border-bottom:none; }
   .fact b { color: var(--navy); }
+  .chat-log { display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; padding-right:2px; }
+  .chat-msg.user { align-self:flex-end; background:var(--navy); color:#fff; border-radius:16px 16px 4px 16px; padding:8px 14px; max-width:82%; }
+  .chat-msg.assistant { max-width:92%; }
+  .chat-quick { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  .chat-quick button { font-size:12px; padding:5px 12px; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <section class="page-head">
     <h1>International patient desk assistant</h1>
-    <p>Draft replies to international enquiries — in the enquirer's language plus English — with estimates, document checklists and CRM notes.</p>
+    <p>Enquiries from the Maldives, GCC, East Africa and South Asia, worked as a queue: Claude drafts the reply, estimate and document checklist; a desk coordinator edits and the desk head approves before the stage moves on. Nothing is sent to any enquirer from this demo.</p>
   </section>
-
-  <div class="grid cols-2">
-    <div class="card">
-      <h2>Sample enquiry</h2>
-      <div class="row">
-        <label style="margin:0" for="scenario">Scenario</label>
-        <select id="scenario">
-          <option value="maldives">Email — Maldives family, liver transplant enquiry</option>
-          <option value="oman">WhatsApp (Arabic) — Oman patient, knee replacement enquiry</option>
-        </select>
-      </div>
-      <label>Incoming enquiry (editable)</label>
-      <textarea id="enquiry" rows="9"></textarea>
-
-      <label>Hospital facts on file</label>
-      <div id="facts"></div>
-
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="runBtn">Run with Claude</button>
-      </div>
-    </div>
-    <div class="card">
-      <h2>Claude output</h2>
-      <div class="claude-out" id="out"></div>
-    </div>
-  </div>
-
-  <p class="footer-note">Synthetic enquiries for demonstration only. Patient names and message content are fictional.</p>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+  <p class="footer-note">Synthetic enquiries for demonstration only — fictional senders and facilitators, no real patients or partners.</p>
 </main>
 
 <script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
 <script>
+const SLUG = 'intl-desk';
 Hub.mountHeader({ dept: 'International Patients', title: 'International patient desk assistant' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, visaSelected: null, chatId: null, chat: {}, reviews: {}, stageOverride: {} });
+let DATA;
 
-const FACTS = {
-  maldives: [
-    ['Package (living-donor liver transplant)', '₹22–26 lakh, incl. donor + recipient surgery, 21-day recipient stay'],
-    ['Pre-transplant workup', '~5–7 days, both donor and recipient, before surgery date is confirmed'],
-    ['Typical total stay in Kochi', '4–5 weeks (recipient); donor discharged in ~10–12 days'],
-    ['Medical visa invitation letter', 'Hospital issues signed invitation letter within 24 hrs of confirmed booking, for visa application at Indian Mission, Malé'],
-    ['Airport pickup', 'Complimentary pickup from Cochin International Airport (COK) for confirmed transplant cases'],
-    ['Interpreter', 'Dhivehi-English interpreter available on request, no extra charge for transplant patients'],
-    ['Accommodation', 'Partnered guest house 5 min from hospital, ₹1,800–2,500/night, family discount for 2+ weeks'],
-  ],
-  oman: [
-    ['Package (unilateral total knee replacement)', '₹3.8–4.5 lakh, incl. implant, 5-day stay, physiotherapy'],
-    ['Pre-op workup', '1–2 days on arrival before surgery date'],
-    ['Typical total stay in Kochi', '10–12 days including post-op physiotherapy review'],
-    ['Medical visa invitation letter', 'Hospital issues Arabic + English invitation letter within 24 hrs of confirmed booking'],
-    ['Airport pickup', 'Complimentary pickup from Cochin International Airport (COK)'],
-    ['Interpreter', 'Arabic-English interpreter available on request, no extra charge'],
-    ['Accommodation', 'Partnered service apartments near hospital, ₹2,200–3,000/night'],
-  ],
-};
-
-const SCENARIOS = {
-  maldives: `Subject: Liver transplant enquiry for my father
-
-Dear Sir/Madam,
-
-My father (62 yrs) has been diagnosed with liver cirrhosis and the doctors in Malé have recommended a living-donor liver transplant. I am willing to be the donor (his son, 34 yrs, blood group compatible). We were told VPS Lakeshore has a good transplant program.
-
-Could you please tell us:
-1. The approximate total cost for both of us (donor + recipient)
-2. How long we would need to stay in Kochi
-3. What visa process we need to follow
-4. Whether someone can help us at the airport, since neither of us has travelled to India before
-
-We would like to move quickly if possible. Thank you.
-
-Regards,
-Ahmed Fahad (Malé, Maldives)`,
-  oman: `[WhatsApp message, in Arabic — translated for internal reference]
-
-"مرحبا، والدتي تعاني من ألم شديد في الركبة اليمنى والطبيب هنا في مسقط قال إنها تحتاج إلى استبدال الركبة. سمعنا أن مستشفى Lakeshore في كوتشي جيد جدا لهذه العمليات. كم تكلفة العملية؟ وكم يوم يجب أن نبقى؟ وهل يوجد من يتحدث العربية هناك؟ نحتاج الرد بسرعة من فضلكم."
-
-(Translation: Hello, my mother has severe pain in her right knee and the doctor here in Muscat said she needs a knee replacement. We heard Lakeshore hospital in Kochi is very good for this. What is the cost of the operation? How many days should we stay? Is there someone who speaks Arabic there? We need a quick reply please.)`,
-};
-
-function loadScenario(key) {
-  document.getElementById('enquiry').value = SCENARIOS[key];
-  document.getElementById('facts').innerHTML = FACTS[key].map(([k, v]) =>
-    `<div class="fact"><b>${Hub.esc(k)}:</b> ${Hub.esc(v)}</div>`).join('');
+/* ---------- shared helpers ---------- */
+function effStage(e) { return st.get().stageOverride[e.id] || e.stage; }
+const STAGE_ORDER = () => DATA.stages;
+function slaTag(hrs) {
+  return hrs > 24 ? `<span class="tag bad">${Math.round(hrs)}h since contact</span>` : `<span class="tag ok">${Math.round(hrs)}h since contact</span>`;
 }
-document.getElementById('scenario').addEventListener('change', e => loadScenario(e.target.value));
-loadScenario('maldives');
+function stageTag(s) {
+  const cls = s === 'Admitted' ? 'ok' : s === 'Lost' ? 'bad' : 'warn';
+  return `<span class="tag ${cls}">${Hub.esc(s)}</span>`;
+}
+function factsList() {
+  const f = DATA.hospitalFacts;
+  return `<div class="fact"><b>Packages:</b> ${f.packages.map(p => `${Hub.esc(p.specialty)} ${p.bandInr}`).join(' · ')}</div>
+    <div class="fact"><b>Medical visa letter:</b> issued within 24h of confirmed booking; patient + one attendant; e-Visa turnaround 3–5 working days.</div>
+    <div class="fact"><b>Airport pickup:</b> ${Hub.esc(f.airportPickup)}</div>
+    <div class="fact"><b>Interpreters:</b> ${f.interpreters.map(Hub.esc).join(', ')}</div>
+    <div class="fact"><b>Accommodation:</b> ${f.accommodation.map(a => `${a.name} (${a.distance}, ${a.rate})`).join(' · ')}</div>
+    <div class="fact"><b>Payment options:</b> ${f.paymentOptions.slice(0, 3).map(Hub.esc).join('; ')}</div>`;
+}
 
-const DEMO = {
-maldives: `## Reply (English)
+/* ================= TAB A: ENQUIRIES QUEUE ================= */
+function queue(el) {
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Enquiry queue</h2>
+        <button type="button" id="expQ">Export pipeline to Excel</button></div>
+      <p class="small">SLA: reply within 24 hours of last contact. ${DATA.enquiries.length} enquiries over the last 3 weeks.</p>
+      <div id="tbl"></div>
+    </div>
+    <div class="card"><h2>Selected enquiry</h2><div id="detail"><p class="small">Pick a row from the queue.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.enquiries, search: true, selectedKey: st.get().selected,
+    columns: [
+      { key: 'id', label: 'ID' }, { key: 'country', label: 'Country' }, { key: 'specialty', label: 'Specialty' },
+      { key: 'channel', label: 'Channel' },
+      { key: 'stage', label: 'Stage', render: r => stageTag(effStage(r)) },
+      { key: 'lastContactHoursAgo', label: 'Last contact', num: true, render: r => slaTag(r.lastContactHoursAgo) },
+    ],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
+  });
+  el.querySelector('#expQ').onclick = () => {
+    Hub.kit.exportXlsx(DATA.enquiries.map(e => ({
+      ID: e.id, Country: e.country, Language: e.language, Channel: e.channel, Sender: e.sender, Specialty: e.specialty,
+      Stage: effStage(e), 'Reports attached': e.reportsAttached ? 'Y' : 'N', 'Estimate (INR)': e.estimateInr, 'Estimate (USD)': e.estimateUsd,
+      Facilitator: e.facilitator, 'Commission %': e.commissionPct, 'Received': e.receivedDate, 'Last contact': e.lastContactDate, 'Hours since contact': e.lastContactHoursAgo,
+    })), 'intl-desk-pipeline.xlsx', 'Pipeline');
+    Hub.kit.log(SLUG, 'Exported pipeline to Excel');
+  };
+  const sel = DATA.enquiries.find(e => e.id === st.get().selected) || DATA.enquiries[0];
+  if (sel) { st.set({ selected: sel.id }); detail(sel); }
+}
 
-Dear Mr. Fahad,
+function checklistFor(e) {
+  const base = ['Passport copy (patient + attendant, 6+ months validity)', 'Recent medical reports / imaging relevant to the diagnosis', 'Passport-size photographs (for visa application)', 'Medical visa invitation letter (issued by hospital on booking confirmation)'];
+  if (e.specialtyKey === 'liver') base.push("Donor's blood group and health screening reports", 'Proof of relationship (donor eligibility)');
+  if (e.specialtyKey === 'onco') base.push('Histopathology / biopsy report', 'Prior treatment summary, if any');
+  if (e.specialtyKey === 'cardiac') base.push('ECG, echo and angiogram reports if already done');
+  if (e.specialtyKey === 'ivf') base.push("Both partners' hormonal and fertility work-up reports");
+  if (!e.reportsAttached) base.unshift('**Reports not yet received — request before Claude can firm up the estimate.**');
+  return base;
+}
 
-Thank you for reaching out to VPS Lakeshore Hospital, Kochi regarding your father's liver transplant. We understand the urgency and are glad to assist.
+function estimateInclusions(e) {
+  const inc = ['Surgeon and OT/anaesthesia charges', 'Standard room category for the quoted band', 'Routine investigations during admission'];
+  const exc = ['Non-payable consumables (as per standard list)', 'Extended ICU stay beyond the typical range', 'Any additional procedure found necessary after evaluation'];
+  if (e.specialtyKey === 'liver') { inc.push('Donor evaluation and donor surgery'); exc.push('Post-transplant immunosuppressant medication after discharge'); }
+  if (e.specialtyKey === 'ivf') { exc.push('Additional cycles beyond the first, if required'); }
+  return { inc, exc };
+}
 
-**Estimated package:** ₹22–26 lakh (combined donor + recipient surgery, based on standard evaluation; final quote after reports review).
-**Stay in Kochi:** Approximately 4–5 weeks for your father; you (as donor) would be discharged in 10–12 days.
-**Visa:** Once your evaluation reports are shared and dates confirmed, our International Desk issues a medical visa invitation letter within 24 hours — this is submitted to the Indian High Commission in Malé.
-**Airport:** Complimentary pickup from Cochin International Airport is arranged for confirmed transplant cases; a Dhivehi-English interpreter will also be available throughout your stay at no extra cost.
+function replyDemo(e) {
+  const { inc, exc } = estimateInclusions(e);
+  const lo = Math.round(e.estimateInr * 0.9 / 1000) * 1000, hi = Math.round(e.estimateInr * 1.12 / 1000) * 1000;
+  const usdLo = Math.round(lo / 83.5), usdHi = Math.round(hi / 83.5);
+  const checklist = checklistFor(e);
+  const nativeNote = e.language === 'English' ? '' : `\n\n## Reply (${e.language})\n\n*[Reply below drafted for professional ${e.language} translation before dispatch; content mirrors the English reply: estimate, stay, visa, document requests.]*`;
+  return `## Reply (English)
 
-Please share your father's recent liver function tests, imaging reports, and both your passport copies so our transplant team can begin the compatibility evaluation.
+Dear ${e.sender.split(' ')[0]},
+
+Thank you for reaching out to VPS Lakeshore Hospital, Kochi about ${e.specialty.toLowerCase()}. We understand you would like to move quickly, and are glad to assist.
+
+**Estimated cost:** ₹${(lo / 100000).toFixed(1)}–${(hi / 100000).toFixed(1)} lakh (approx. $${usdLo.toLocaleString('en-IN')}–${usdHi.toLocaleString('en-IN')}), based on standard evaluation — a firm quote follows once we review the reports.
+**Typical stay in Kochi:** as per our standard band for ${e.specialty.toLowerCase()}; confirmed once the treatment plan is set.
+**Visa:** once dates are confirmed, our International Desk issues a signed medical visa invitation letter within 24 hours, for you and one attendant.
+**Airport & interpreter:** complimentary pickup from Cochin International Airport (COK), and an interpreter can be arranged at no extra charge.
+
+Please share the documents listed below so our specialist can begin the evaluation.
 
 Warm regards,
 International Patient Desk, VPS Lakeshore Hospital, Kochi
+${nativeNote}
 
-## Reply (Dhivehi — for outbound translation)
-
-*[To be sent via professional Dhivehi translation service before dispatch; content mirrors the English reply above: package estimate, stay duration, visa process, airport/interpreter support, and document request.]*
-
-## Estimate summary
+## Estimate range
 
 | Item | Estimate |
 |---|---|
-| Donor + recipient surgery package | ₹22–26 lakh |
-| Recipient stay | 4–5 weeks |
-| Donor stay | 10–12 days |
-| Accommodation (family, 4 weeks) | ~₹50,000–70,000 |
+| ${e.specialty} package | ₹${(lo / 100000).toFixed(1)}–${(hi / 100000).toFixed(1)} lakh |
+| In USD (approx.) | $${usdLo.toLocaleString('en-IN')}–${usdHi.toLocaleString('en-IN')} |
+
+**Inclusions:** ${inc.join('; ')}.
+**Exclusions:** ${exc.join('; ')}.
 
 ## Document checklist
-- [ ] Both passports (validity 6+ months)
-- [ ] Father's liver function tests, imaging (USG/CT/MRI), cirrhosis workup reports from Malé
-- [ ] Donor (son) blood group and basic health screening reports
-- [ ] Passport-size photographs (both) for visa application
-- [ ] Medical visa invitation letter (to be issued by hospital on confirmation)
-- [ ] Proof of relationship (for donor eligibility as per transplant regulations)
+${checklist.map(c => `- [ ] ${c}`).join('\n')}
 
 ## Next steps
-1. Request the above reports via email/WhatsApp within 48 hours.
-2. On receipt, transplant team completes preliminary compatibility review (2–3 days).
-3. Issue formal cost estimate and medical visa invitation letter.
-4. Coordinate travel dates and airport pickup once visa is approved.
+1. Request the documents above via ${e.channel.toLowerCase()} within 48 hours.
+2. On receipt, the treating specialist gives a preliminary opinion and firms up the estimate.
+3. Issue the medical visa invitation letter once travel dates are agreed.
+4. Confirm airport pickup, interpreter and accommodation ahead of arrival.
 
 ## CRM note
-*Enquiry: Living-donor liver transplant, father (62)/son (34) donor pair, Malé, Maldives. High intent, wants to move quickly. Awaiting reports for compatibility review. Priority: High. Next follow-up: 48 hrs.*`,
-oman: `## Reply (Arabic)
+*${e.specialty} enquiry via ${e.channel.toLowerCase()}${e.facilitator !== 'Direct enquiry' ? ` (facilitator: ${e.facilitator}, ${e.commissionPct}% commission)` : ''}. Reports ${e.reportsAttached ? 'on file' : 'requested, not yet received'}. Country: ${e.country}. Priority: ${e.lastContactHoursAgo > 24 ? 'High — SLA breached, reply overdue' : 'Standard'}. Next follow-up: 48 hrs.*`;
+}
 
-عزيزتنا،
+function detail(e) {
+  const el = document.getElementById('detail');
+  const done = st.get().reviews[e.id];
+  const stepIdx = done ? (done.status === 'approved' ? 3 : 2) : 1;
+  el.innerHTML = `<div id="steps"></div>
+    <p><b>${Hub.esc(e.sender)}</b> · ${Hub.esc(e.country)} · ${Hub.esc(e.language)} · via ${Hub.esc(e.channel)}<br>
+    <span class="small">${Hub.esc(e.specialty)} · Reports ${e.reportsAttached ? 'attached' : 'not attached'} · Est. ${Hub.inr(e.estimateInr)} / $${e.estimateUsd.toLocaleString('en-IN')} · Received ${Hub.esc(e.receivedDate)} · ${Hub.esc(e.facilitator)}${e.facilitator !== 'Direct enquiry' ? ` (${e.commissionPct}% commission)` : ''}</span></p>
+    <div class="card" style="padding:10px 12px;margin:8px 0"><p class="small" style="margin:2px 0"><b>Message</b></p><p style="white-space:pre-wrap;margin:0;font-size:14px">${Hub.esc(e.summary)}</p></div>
+    <button class="primary" id="run">Run with Claude — draft reply</button>
+    <div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Enquiry received', 'Claude draft', 'Review', 'Stage advanced'], stepIdx);
+  if (done) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: e.id, title: `${e.id} — ${e.sender}` }, text: done.text, st, docTitle: `Reply — ${e.id}`, onDecision: (status) => onDecided(e, status) });
+  el.querySelector('#run').onclick = async () => {
+    const prompt = JSON.stringify({
+      enquiry: e.id, sender: e.sender, country: e.country, language: e.language, channel: e.channel, specialty: e.specialty,
+      message: e.summary, reportsAttached: e.reportsAttached, estimateBandInr: e.estimateInr, facilitator: e.facilitator,
+      hospitalFacts: DATA.hospitalFacts,
+    }, null, 1);
+    const text = await Hub.run({
+      out: '#out', button: '#run', manualMinutes: 30,
+      system: 'You are the International Patient Desk coordinator at VPS Lakeshore Hospital, Kochi, a 350-bed NABH-accredited hospital. Draft replies in the enquirer\'s own language plus an English translation, with an estimate range, document checklist and next steps. Use the hospital facts given; never invent facts not in the data.',
+      prompt: `Draft a full reply package for this enquiry:\n\n${prompt}\n\nProvide: (1) reply in the enquirer's language + English, (2) estimate range with inclusions/exclusions, (3) document checklist, (4) next steps, (5) a short internal CRM note.`,
+      demo: () => replyDemo(e),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted reply', e.id);
+    Hub.kit.steps(el.querySelector('#steps'), ['Enquiry received', 'Claude draft', 'Review', 'Stage advanced'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: e.id, title: `${e.id} — ${e.sender}` }, text, st, docTitle: `Reply — ${e.id}`, onDecision: (status) => onDecided(e, status) });
+  };
+}
+function onDecided(e, status) {
+  if (status === 'approved') {
+    const order = STAGE_ORDER();
+    const cur = effStage(e);
+    const idx = order.indexOf(cur);
+    const next = (cur === 'New' || cur === 'Replied') ? 'Estimate sent' : (idx >= 0 && idx < order.length - 2 ? order[idx + 1] : cur);
+    st.set(s => ({ stageOverride: { ...s.stageOverride, [e.id]: next } }));
+    Hub.kit.log(SLUG, 'Stage advanced', `${e.id} → ${next}`);
+  }
+  detail(e);
+}
 
-شكراً لتواصلكم مع مستشفى VPS Lakeshore في كوتشي بخصوص عملية استبدال الركبة لوالدتكم. يسعدنا مساعدتكم.
-
-**التكلفة التقديرية:** ٣.٨ إلى ٤.٥ لكه روبية هندية (تشمل الغرسة، الإقامة ٥ أيام، والعلاج الطبيعي).
-**مدة الإقامة في كوتشي:** حوالي ١٠ إلى ١٢ يوماً شاملة المتابعة بعد العملية.
-**اللغة:** يتوفر لدينا مترجم عربي-إنجليزي طوال فترة إقامتكم دون أي رسوم إضافية.
-**التأشيرة:** بعد تأكيد الموعد، نقوم بإصدار خطاب دعوة طبي بالعربية والإنجليزية خلال ٢٤ ساعة.
-
-يرجى إرسال تقارير الأشعة والفحوصات الطبية لوالدتكم حتى يتمكن فريقنا الطبي من تقديم تقييم أولي.
-
-مع خالص التقدير،
-مكتب المرضى الدوليين، مستشفى VPS Lakeshore
-
-## Reply (English translation)
-
-Dear Sir/Madam,
-
-Thank you for contacting VPS Lakeshore Hospital, Kochi about your mother's knee replacement. We are happy to assist.
-
-**Estimated cost:** ₹3.8–4.5 lakh (includes implant, 5-day stay, physiotherapy).
-**Stay in Kochi:** Approximately 10–12 days including post-op follow-up.
-**Language:** An Arabic-English interpreter is available throughout your stay at no extra charge.
-**Visa:** Once the appointment is confirmed, we issue a medical visa invitation letter in Arabic and English within 24 hours.
-
-Please share your mother's knee X-rays and any recent medical reports so our orthopaedic team can provide a preliminary assessment.
-
-Warm regards,
-International Patient Desk, VPS Lakeshore Hospital
-
-## Estimate summary
-
-| Item | Estimate |
-|---|---|
-| Knee replacement package | ₹3.8–4.5 lakh |
-| Total stay | 10–12 days |
-| Accommodation (10 nights) | ~₹22,000–30,000 |
-
-## Document checklist
-- [ ] Passport (validity 6+ months) for patient and one attendant
-- [ ] Recent knee X-rays / MRI reports from Muscat
-- [ ] Physician referral letter noting knee replacement recommendation
-- [ ] Passport-size photographs for visa application
-- [ ] Medical visa invitation letter (to be issued on booking confirmation)
-
-## Next steps
-1. Request X-rays/MRI and referral letter via WhatsApp within 24 hours.
-2. Orthopaedic team reviews and confirms surgery suitability and firm quote.
-3. Issue medical visa invitation letter in Arabic and English.
-4. Confirm travel dates, arrange airport pickup and interpreter.
-
-## CRM note
-*Enquiry: Right knee replacement, mother (age unspecified), via WhatsApp in Arabic, Muscat, Oman. Requested quick response. Priority: Medium-High. Next follow-up: 24 hrs, pending X-rays.*`,
-};
-
-document.getElementById('runBtn').addEventListener('click', () => {
-  const key = document.getElementById('scenario').value;
-  const enquiry = document.getElementById('enquiry').value;
-  const factsText = FACTS[key].map(([k, v]) => `${k}: ${v}`).join('\n');
-  const prompt = `You are the International Patient Desk at VPS Lakeshore Hospital, Kochi. An enquiry has come in:
-
-${enquiry}
-
-Hospital facts on file:
-${factsText}
-
-Provide: (1) a reply in the enquirer's own language, (2) the same reply translated to English, (3) an estimate summary table, (4) a document checklist (passport, medical reports, visa etc), (5) next steps, (6) a short internal CRM note. Use ₹ lakh formatting for costs.`;
-  Hub.run({
-    out: '#out', button: '#runBtn',
-    system: 'You are an experienced international patient coordinator at a 350-bed Kerala hospital handling enquiries from Maldives, GCC and Africa.',
-    prompt, demo: DEMO[key], manualMinutes: 45,
+/* ================= TAB B: VISA & TRAVEL ================= */
+function visaTravel(el) {
+  const eligible = DATA.enquiries.filter(e => ['Estimate sent', 'Visa letter'].includes(effStage(e)));
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card"><h2>Visa letter queue</h2>
+      <p class="small">${eligible.length} enquiries at Estimate sent / Visa letter stage. Claude drafts the medical visa invitation letter for patient + attendant.</p>
+      <div id="vtbl"></div></div>
+    <div class="card"><h2>Selected case</h2><div id="vdetail"><p class="small">Pick a row.</p></div></div>
+  </div>`;
+  Hub.kit.table(el.querySelector('#vtbl'), {
+    rows: eligible, search: true, selectedKey: st.get().visaSelected,
+    columns: [
+      { key: 'id', label: 'ID' }, { key: 'sender', label: 'Patient' }, { key: 'country', label: 'Country' },
+      { key: 'specialty', label: 'Specialty' }, { key: 'stage', label: 'Stage', render: r => stageTag(effStage(r)) },
+    ],
+    onRowClick: r => { st.set({ visaSelected: r.id }); visaDetail(r); },
   });
+  const sel = eligible.find(e => e.id === st.get().visaSelected) || eligible[0];
+  if (sel) { st.set({ visaSelected: sel.id }); visaDetail(sel); } else document.getElementById('vdetail').innerHTML = '<p class="small">No enquiries at this stage yet — approve a reply in the Enquiries tab to move one here.</p>';
+}
+function visaLetterDemo(e) {
+  const today = '28 September 2026';
+  return `## Medical visa invitation letter — ${e.id}
+
+**Date:** ${today}
+**To:** The Indian Mission / Visa Officer concerned
+
+Sub: **Medical visa invitation for ${e.sender} and one attendant**
+
+This is to confirm that **${e.sender}**, a patient from ${e.country}, has been evaluated and accepted for **${e.specialty.toLowerCase()}** at VPS Lakeshore Hospital, Kochi, Kerala, India — a 350-bed NABH-accredited multi-specialty hospital.
+
+The estimated cost of treatment is **${Hub.inr(e.estimateInr)}** (approx. **$${e.estimateUsd.toLocaleString('en-IN')}**), and the estimated duration of stay in India is in line with our standard band for this procedure. The patient is advised to travel with **one attendant**.
+
+We request the concerned authority to grant a medical visa to the patient and attendant to enable timely treatment.
+
+For any verification, please contact the International Patient Desk, VPS Lakeshore Hospital, Kochi.
+
+Yours sincerely,
+International Patient Desk
+VPS Lakeshore Hospital & Research Centre Ltd, Kochi
+
+---
+*Attendant details, exact passport numbers and travel dates to be added by the desk coordinator before this letter is issued. Draft only — review before signature.*`;
+}
+function visaDetail(e) {
+  const el = document.getElementById('vdetail');
+  const rv = st.get().reviews['visa-' + e.id];
+  el.innerHTML = `<p><b>${Hub.esc(e.sender)}</b> · ${Hub.esc(e.country)} · ${Hub.esc(e.specialty)} · Est. ${Hub.inr(e.estimateInr)}</p>
+    <div class="row"><button class="primary" id="vrun">Draft medical visa invitation letter</button></div>
+    <div class="claude-out" id="vout" style="margin-top:10px"></div><div id="vrv"></div>`;
+  if (rv) Hub.kit.review(el.querySelector('#vrv'), { slug: SLUG, item: { id: 'visa-' + e.id, title: `Visa letter — ${e.id}` }, text: rv.text, st, docTitle: `Visa invitation letter ${e.id}`, onDecision: () => visaStageAdvance(e) });
+  el.querySelector('#vrun').onclick = async () => {
+    const text = await Hub.run({
+      out: '#vout', button: '#vrun', manualMinutes: 20,
+      system: 'You draft medical visa invitation letters for VPS Lakeshore Hospital, Kochi, addressed to the Indian Mission, for international patients and one attendant. Be formal and specific; never invent passport numbers or dates not supplied.',
+      prompt: JSON.stringify({ patient: e.sender, country: e.country, specialty: e.specialty, estimateInr: e.estimateInr, estimateUsd: e.estimateUsd }),
+      demo: () => visaLetterDemo(e),
+    });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude drafted visa invitation letter', e.id);
+    Hub.kit.review(el.querySelector('#vrv'), { slug: SLUG, item: { id: 'visa-' + e.id, title: `Visa letter — ${e.id}` }, text, st, docTitle: `Visa invitation letter ${e.id}`, onDecision: () => visaStageAdvance(e) });
+  };
+}
+function visaStageAdvance(e) {
+  const rv = st.get().reviews['visa-' + e.id];
+  if (rv && rv.status === 'approved' && effStage(e) === 'Estimate sent') {
+    st.set(s => ({ stageOverride: { ...s.stageOverride, [e.id]: 'Visa letter' } }));
+    Hub.kit.log(SLUG, 'Stage advanced', `${e.id} → Visa letter`);
+  }
+  visaTravel(document.getElementById('view'));
+}
+
+/* ================= TAB C: CONVERSATION ================= */
+function factsBrief() {
+  const f = DATA.hospitalFacts;
+  return `Packages: ${f.packages.map(p => `${p.specialty} ${p.bandInr} (${p.bandUsd})`).join('; ')}.
+Visa: ${f.visaProcess.join(' ')}
+Airport pickup: ${f.airportPickup}
+Interpreters: ${f.interpreters.join(', ')}.
+Accommodation: ${f.accommodation.map(a => `${a.name} — ${a.distance}, ${a.rate}, ${a.note}`).join('; ')}.
+Payment options: ${f.paymentOptions.join('; ')}.
+${f.general}`;
+}
+function convAnswer(e, q) {
+  const lq = ' ' + q.toLowerCase() + ' ';
+  const f = DATA.hospitalFacts;
+  const pkg = f.packages.find(p => p.specialty === e.specialty);
+  if (/visa/.test(lq)) return `**Short answer:** for ${e.sender}'s ${e.specialty.toLowerCase()} case, once travel dates are confirmed we issue a signed medical visa invitation letter (patient + one attendant) within 24 hours. ${f.visaProcess[3]} You can start the visa application as soon as you have the letter and your passports.`;
+  if (/cost|price|estimate|package|fee/.test(lq)) return `**Short answer:** our current band for ${e.specialty.toLowerCase()} is **${pkg ? pkg.bandInr : Hub.inr(e.estimateInr)}** (${pkg ? pkg.bandUsd : '$' + e.estimateUsd}). Your specific estimate is around **${Hub.inr(e.estimateInr)}** — the surgeon will confirm a firm quote after reviewing your reports.`;
+  if (/stay|days|duration|long/.test(lq)) return `**Short answer:** stay length depends on the treatment plan the specialist sets after reviewing your reports; our team will confirm exact dates once the evaluation is complete, and we'll factor that into your visa letter and travel plan.`;
+  if (/interpreter|language|translat/.test(lq)) return `**Short answer:** we can arrange an interpreter in ${f.interpreters.filter(l => l !== e.language).concat(e.language).slice(0, 3).join(', ')} at no extra charge — just let us know your preferred language when you confirm travel dates.`;
+  if (/airport|pickup|arrival/.test(lq)) return `**Short answer:** ${f.airportPickup}`;
+  if (/stay|hotel|accommodat|room/.test(lq)) return `**Short answer:** nearby options include ${f.accommodation.map(a => `${a.name} (${a.rate})`).join(', ')} — the desk can arrange a booking once your dates are confirmed.`;
+  if (/pay|payment|transfer|card|wire/.test(lq)) return `**Short answer:** we accept ${f.paymentOptions.slice(0, 3).join('; ')}. An advance of 25–30% confirms your booking.`;
+  return `I don't have a specific answer wired for "${q}" in this demo. Try asking about cost, visa process, stay duration, interpreters, airport pickup, accommodation or payment options — those are matched to the hospital facts on file.`;
+}
+function conversation(el) {
+  const id = st.get().chatId || DATA.enquiries[0].id;
+  const e = DATA.enquiries.find(x => x.id === id) || DATA.enquiries[0];
+  const chat = (st.get().chat || {})[e.id] || [];
+  el.innerHTML = `<div class="grid cols-2">
+    <div class="card">
+      <h2>Enquirer</h2>
+      <label for="convPick">Selected enquiry</label>
+      <select id="convPick">${DATA.enquiries.map(x => `<option value="${Hub.esc(x.id)}" ${x.id === e.id ? 'selected' : ''}>${Hub.esc(x.id)} — ${Hub.esc(x.sender)} (${Hub.esc(x.country)}, ${Hub.esc(x.specialty)})</option>`).join('')}</select>
+      <p class="small" style="margin-top:8px">Answers are keyword-matched to the hospital facts block below, so different questions give different, specific answers.</p>
+      <h3>Hospital facts on file</h3>
+      <div id="facts"></div>
+    </div>
+    <div class="card">
+      <h2>Conversation with ${Hub.esc(e.sender)}</h2>
+      <div class="chat-quick">
+        <button type="button" data-q="What is the estimated cost?">Cost?</button>
+        <button type="button" data-q="How does the medical visa process work?">Visa process?</button>
+        <button type="button" data-q="Is an interpreter available?">Interpreter?</button>
+        <button type="button" data-q="What payment options do you accept?">Payment options?</button>
+      </div>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="row" style="margin-top:10px"><textarea id="chatInput" data-upload="off" style="min-height:60px" placeholder="Ask a follow-up question…"></textarea></div>
+      <div class="row" style="margin-top:6px"><button class="primary" id="chatSend">Send</button><button type="button" id="chatClear">Clear chat</button></div>
+    </div>
+  </div>`;
+  el.querySelector('#facts').innerHTML = factsList();
+  el.querySelector('#convPick').onchange = ev => { st.set({ chatId: ev.target.value }); conversation(document.getElementById('view')); };
+  const log = el.querySelector('#chatLog');
+  function renderChat() {
+    const cur = (st.get().chat || {})[e.id] || [];
+    log.innerHTML = cur.map(m => m.role === 'user'
+      ? `<div class="chat-msg user">${Hub.esc(m.content)}</div>`
+      : `<div class="chat-msg assistant claude-out">${Hub.md(m.content)}</div>`).join('') || '<p class="small">Ask a question to start.</p>';
+    log.scrollTop = log.scrollHeight;
+  }
+  renderChat();
+  el.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { el.querySelector('#chatInput').value = b.dataset.q; send(); });
+  el.querySelector('#chatSend').onclick = send;
+  el.querySelector('#chatClear').onclick = () => { st.set(s => ({ chat: { ...(s.chat || {}), [e.id]: [] } })); conversation(document.getElementById('view')); };
+  async function send() {
+    const ta = el.querySelector('#chatInput'), q = ta.value.trim();
+    if (!q) return;
+    const btn = el.querySelector('#chatSend'); btn.disabled = true;
+    const cur = (st.get().chat || {})[e.id] || [];
+    cur.push({ role: 'user', content: q }); st.set(s => ({ chat: { ...(s.chat || {}), [e.id]: cur } })); renderChat(); ta.value = '';
+    const holder = document.createElement('div'); holder.className = 'chat-msg assistant claude-out';
+    holder.innerHTML = '<p class="thinking">Claude is working</p>'; log.appendChild(holder); log.scrollTop = log.scrollHeight;
+    const text = await Hub.ask({
+      system: `You are the International Patient Desk assistant at VPS Lakeshore Hospital, Kochi, answering follow-up questions from ${e.sender} (${e.country}) about their ${e.specialty.toLowerCase()} enquiry (estimate ${Hub.inr(e.estimateInr)}). Use only these hospital facts, and say plainly when something isn't confirmed yet:\n${factsBrief()}`,
+      messages: cur.map(m => ({ role: m.role, content: m.content })),
+      demo: convAnswer(e, q),
+      onText: partial => { const l2 = document.getElementById('chatLog'); if (!l2 || !l2.contains(holder)) return; holder.innerHTML = Hub.md(partial); l2.scrollTop = l2.scrollHeight; },
+    });
+    if (!document.getElementById('chatLog')) return; // switched tabs mid-stream
+    const after = (st.get().chat || {})[e.id] || [];
+    after.push({ role: 'assistant', content: text });
+    st.set(s => ({ chat: { ...(s.chat || {}), [e.id]: after } }));
+    renderChat();
+    const b2 = document.getElementById('chatSend'); if (b2) b2.disabled = false;
+  }
+}
+
+/* ================= TAB D: DASHBOARD ================= */
+function dashboard(el) {
+  const all = DATA.enquiries;
+  const admitted = all.filter(e => effStage(e) === 'Admitted').length;
+  const lost = all.filter(e => effStage(e) === 'Lost').length;
+  const decided = admitted + lost + all.filter(e => effStage(e) === 'Travel booked').length;
+  const conv = Math.round(100 * admitted / all.length);
+  const active = all.filter(e => !['Lost'].includes(effStage(e)));
+  const pipelineCr = active.reduce((a, e) => a + e.estimateInr, 0) / 1e7;
+  const withReply = all.filter(e => e.replyHours != null);
+  const avgReply = withReply.reduce((a, e) => a + e.replyHours, 0) / withReply.length;
+
+  const byCountry = {};
+  all.forEach(e => { byCountry[e.country] = (byCountry[e.country] || 0) + 1; });
+  const countryData = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+
+  const bySpec = {};
+  all.forEach(e => { bySpec[e.specialty] = (bySpec[e.specialty] || 0) + 1; });
+  const specData = Object.entries(bySpec).map(([label, value]) => ({ label, value }));
+
+  el.innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="label">Enquiries (3 weeks)</div><div class="value">${all.length}</div></div>
+    <div class="kpi"><div class="label">Conversion to admission</div><div class="value">${conv}%</div></div>
+    <div class="kpi"><div class="label">Pipeline value</div><div class="value">₹${pipelineCr.toFixed(2)} Cr</div></div>
+    <div class="kpi"><div class="label">Avg reply time</div><div class="value">${avgReply.toFixed(1)} h</div></div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" id="c1"></div>
+    <div class="card" id="c2"></div>
+  </div>
+  <div class="card" id="c3" style="margin-top:16px"></div>
+  <p class="small" style="margin-top:10px">International revenue is currently ~14% of hospital revenue; leadership goal is 20%. This pipeline is one lever toward that goal.</p>`;
+  Hub.chart.hbar(el.querySelector('#c1'), { title: 'Enquiries by country', data: countryData });
+  Hub.chart.bar(el.querySelector('#c2'), { title: 'Enquiries by specialty', data: specData });
+  Hub.chart.line(el.querySelector('#c3'), { title: 'Weekly enquiries', sub: 'last 3 weeks + current week', labels: DATA.weekLabels, series: [{ name: 'Enquiries', values: DATA.weekCounts }] });
+}
+
+/* ================= BOOT ================= */
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), {
+    slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [
+      { sel: '#tbl', title: 'The enquiry queue', text: '40 enquiries from the Maldives, GCC, East Africa, Nigeria and Bangladesh, tagged with stage and hours since last contact — the SLA is 24 hours.' },
+      { sel: '#run', title: 'Claude drafts the reply', text: 'Reply in the enquirer\'s language plus English, an estimate range with inclusions/exclusions, a document checklist and next steps — all computed from the selected enquiry.' },
+      { sel: '#rv', title: 'Maker edits, approver approves', text: 'The desk coordinator edits the draft; switch to Approver in the toolbar for the desk head to approve. Approving moves the enquiry to its next stage.' },
+      { sel: '#tabs', title: 'Visa & travel', text: 'Once an enquiry reaches Estimate sent or Visa letter, Claude drafts the medical visa invitation letter for patient and attendant here.' },
+      { sel: '#tabs', title: 'Conversation', text: 'A running chat with the selected enquirer over the hospital facts — cost, visa, interpreters, accommodation, payment options.' },
+      { sel: '#tabs', title: 'Dashboard', text: 'Enquiries, conversion to admission, pipeline value and average reply time, against the 20% international-revenue goal.' },
+    ],
+  });
+  Hub.kit.tabs(document.getElementById('tabs'), [
+    { id: 'queue', label: 'Enquiries' }, { id: 'visa', label: 'Visa & travel' },
+    { id: 'conv', label: 'Conversation' }, { id: 'dash', label: 'Dashboard' },
+  ], id => { st.set({ tab: id }); ({ queue, visa: visaTravel, conv: conversation, dash: dashboard }[id])(document.getElementById('view')); }, st.get().tab);
 });
 </script>
 </body>

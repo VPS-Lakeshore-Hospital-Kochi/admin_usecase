@@ -1,0 +1,4628 @@
+{
+ "generatedAt": "2026-09-27",
+ "weeks": 8,
+ "themes": [
+  {
+   "key": "radiology-wait",
+   "label": "Radiology wait times",
+   "dept": "Radiology"
+  },
+  {
+   "key": "billing-delay",
+   "label": "Discharge billing delay",
+   "dept": "Billing & discharge"
+  },
+  {
+   "key": "tpa-delay",
+   "label": "TPA / insurance approval delay",
+   "dept": "Insurance desk (TPA)"
+  },
+  {
+   "key": "parking",
+   "label": "Parking availability",
+   "dept": "Facilities"
+  },
+  {
+   "key": "lift-wait",
+   "label": "Lift waiting time",
+   "dept": "Facilities"
+  },
+  {
+   "key": "food-temp",
+   "label": "Food temperature / quality",
+   "dept": "Dietetics & catering"
+  },
+  {
+   "key": "nursing-praise",
+   "label": "Nursing care (praise)",
+   "dept": "Nursing"
+  },
+  {
+   "key": "doctor-praise",
+   "label": "Doctor consult (praise)",
+   "dept": "Medical / clinical"
+  },
+  {
+   "key": "intl-coordination",
+   "label": "International patient coordination",
+   "dept": "International patient desk"
+  },
+  {
+   "key": "front-desk-queue",
+   "label": "Front desk / OP queue",
+   "dept": "Front office / OP"
+  },
+  {
+   "key": "housekeeping",
+   "label": "Housekeeping",
+   "dept": "Housekeeping"
+  },
+  {
+   "key": "communication-updates",
+   "label": "Family communication during wait",
+   "dept": "Nursing / ward"
+  }
+ ],
+ "items": [
+  {
+   "id": "FB-0293",
+   "date": "2026-09-27",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Registration kiosk froze twice while I was entering details, had to start over. Staff helped but the machine itself needs maintenance.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Anoop",
+   "contact": "Mobile on file · +91 995xxx-xx392",
+   "owner": "Front office / OP",
+   "sla": "Front office / OP — duty manager to open a second counter within 1 hour at peak times",
+   "dueDate": "2026-09-28"
+  },
+  {
+   "id": "FB-0226",
+   "date": "2026-09-27",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Ancy, went out of their way to make my grandfather comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 969xxx-xx325"
+  },
+  {
+   "id": "FB-0288",
+   "date": "2026-09-26",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my daughter's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 952xxx-xx387"
+  },
+  {
+   "id": "FB-0287",
+   "date": "2026-09-26",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Bill had some duplicate charges which took 5 hours to sort out at discharge. Staff resolved it eventually but this delay could be avoided with better checking beforehand.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Vishnu",
+   "contact": "Email on file · p.1286@mailmask.example",
+   "owner": "Billing & discharge",
+   "sla": "Billing & discharge — send revised bill and apology call within 3 hours; flag for TAT review",
+   "dueDate": "2026-09-27"
+  },
+  {
+   "id": "FB-0201",
+   "date": "2026-09-26",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my grandfather's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 983xxx-xx300"
+  },
+  {
+   "id": "FB-0109",
+   "date": "2026-09-26",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Rasheed were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 975xxx-xx208"
+  },
+  {
+   "id": "FB-0077",
+   "date": "2026-09-26",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my grandfather post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1076@mailmask.example"
+  },
+  {
+   "id": "FB-0240",
+   "date": "2026-09-25",
+   "source": "WhatsApp",
+   "rating": 3,
+   "department": "Housekeeping",
+   "text": "Room cleaning was good overall, small request — please avoid strong-smelling cleaning agents right after meals.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 921xxx-xx339"
+  },
+  {
+   "id": "FB-0220",
+   "date": "2026-09-25",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Deepa, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 952xxx-xx319"
+  },
+  {
+   "id": "FB-0179",
+   "date": "2026-09-25",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Maternity ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 927xxx-xx278"
+  },
+  {
+   "id": "FB-0171",
+   "date": "2026-09-25",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Was told TPA approval usually takes 2 hours, ours took 5. No update given, we found out only when we asked at the counter directly.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 933xxx-xx270",
+   "owner": "Insurance desk (TPA)",
+   "sla": "Insurance desk (TPA) — insurance desk to call patient within 2 hours with a status update",
+   "dueDate": "2026-09-26"
+  },
+  {
+   "id": "FB-0128",
+   "date": "2026-09-25",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Susan Koshy was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 946xxx-xx227"
+  },
+  {
+   "id": "FB-0115",
+   "date": "2026-09-25",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 914xxx-xx214"
+  },
+  {
+   "id": "FB-0095",
+   "date": "2026-09-25",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 949xxx-xx194"
+  },
+  {
+   "id": "FB-0080",
+   "date": "2026-09-25",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Thomas and team for the care during my grandmother's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 913xxx-xx179"
+  },
+  {
+   "id": "FB-0046",
+   "date": "2026-09-25",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Soumya, went out of their way to make my wife comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 941xxx-xx145"
+  },
+  {
+   "id": "FB-0276",
+   "date": "2026-09-24",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Bincy and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 924xxx-xx375"
+  },
+  {
+   "id": "FB-0100",
+   "date": "2026-09-24",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Visitor parking always full by mid-morning. Suggest a token system or overflow lot, current situation is frustrating for follow-up visits.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 984xxx-xx199"
+  },
+  {
+   "id": "FB-0068",
+   "date": "2026-09-24",
+   "source": "International patient email",
+   "rating": 3,
+   "department": "Housekeeping",
+   "text": "Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 943xxx-xx167"
+  },
+  {
+   "id": "FB-0020",
+   "date": "2026-09-24",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Cardiology ward. Sister Soumya was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1019@mailmask.example"
+  },
+  {
+   "id": "FB-0010",
+   "date": "2026-09-24",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Thomas was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1009@mailmask.example"
+  },
+  {
+   "id": "FB-0255",
+   "date": "2026-09-23",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Reshma, went out of their way to make my son comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1254@mailmask.example"
+  },
+  {
+   "id": "FB-0230",
+   "date": "2026-09-23",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Litty, went out of their way to make my husband comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Email on file · p.1229@mailmask.example"
+  },
+  {
+   "id": "FB-0057",
+   "date": "2026-09-23",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Varkey was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1056@mailmask.example"
+  },
+  {
+   "id": "FB-0027",
+   "date": "2026-09-23",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Susan Koshy were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1026@mailmask.example"
+  },
+  {
+   "id": "FB-0008",
+   "date": "2026-09-23",
+   "source": "WhatsApp",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "International patient desk was responsive over email before arrival, but on the ground the same information was not passed to the ward staff, we had to repeat everything.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 987xxx-xx107"
+  },
+  {
+   "id": "FB-0254",
+   "date": "2026-09-22",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my father post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1253@mailmask.example"
+  },
+  {
+   "id": "FB-0161",
+   "date": "2026-09-22",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Reshma and the Maternity ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 918xxx-xx260"
+  },
+  {
+   "id": "FB-0154",
+   "date": "2026-09-22",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in ICU. Sister Reshma was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 982xxx-xx253"
+  },
+  {
+   "id": "FB-0146",
+   "date": "2026-09-22",
+   "source": "WhatsApp",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Email on file · p.1145@mailmask.example"
+  },
+  {
+   "id": "FB-0139",
+   "date": "2026-09-22",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Pillai were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Email on file · p.1138@mailmask.example"
+  },
+  {
+   "id": "FB-0058",
+   "date": "2026-09-22",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Susan Koshy were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1057@mailmask.example"
+  },
+  {
+   "id": "FB-0300",
+   "date": "2026-09-21",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Pillai was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Email on file · p.1299@mailmask.example"
+  },
+  {
+   "id": "FB-0164",
+   "date": "2026-09-21",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 932xxx-xx263"
+  },
+  {
+   "id": "FB-0047",
+   "date": "2026-09-21",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Thomas and team for the care during my father's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1046@mailmask.example"
+  },
+  {
+   "id": "FB-0166",
+   "date": "2026-09-19",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my daughter's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 973xxx-xx265"
+  },
+  {
+   "id": "FB-0125",
+   "date": "2026-09-19",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Food temperature is an issue by the time it reaches upper floors, tray covers help but not enough. Suggest hot-case trolleys.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 993xxx-xx224"
+  },
+  {
+   "id": "FB-0117",
+   "date": "2026-09-19",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1116@mailmask.example"
+  },
+  {
+   "id": "FB-0028",
+   "date": "2026-09-19",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my grandmother post surgery. Constant updates given to family by Sister Deepa, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 924xxx-xx127"
+  },
+  {
+   "id": "FB-0009",
+   "date": "2026-09-19",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Sister Litty and the Surgery ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 961xxx-xx108"
+  },
+  {
+   "id": "FB-0002",
+   "date": "2026-09-19",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Ortho ward, especially Sister Deepa. She explained everything patiently and checked on my grandfather every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 921xxx-xx101"
+  },
+  {
+   "id": "FB-0296",
+   "date": "2026-09-18",
+   "source": "IP discharge form",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1295@mailmask.example"
+  },
+  {
+   "id": "FB-0202",
+   "date": "2026-09-18",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Pillai were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1201@mailmask.example"
+  },
+  {
+   "id": "FB-0151",
+   "date": "2026-09-18",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Varkey was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 968xxx-xx250"
+  },
+  {
+   "id": "FB-0133",
+   "date": "2026-09-18",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "OP kiosk queue was very long today, token system not working properly, had to ask staff manually which slowed things further.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 991xxx-xx232",
+   "owner": "Front office / OP",
+   "sla": "Front office / OP — duty manager to open a second counter within 1 hour at peak times",
+   "dueDate": "2026-09-19"
+  },
+  {
+   "id": "FB-0290",
+   "date": "2026-09-17",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my husband post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 959xxx-xx389"
+  },
+  {
+   "id": "FB-0162",
+   "date": "2026-09-17",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 975xxx-xx261"
+  },
+  {
+   "id": "FB-0121",
+   "date": "2026-09-17",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Dietetics & catering",
+   "text": "Food served in General ward was cold by the time it reached the room, especially dinner. Taste was fine, just needs to be served hot.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1120@mailmask.example"
+  },
+  {
+   "id": "FB-0105",
+   "date": "2026-09-17",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Cardiology ward. Sister Litty was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1104@mailmask.example"
+  },
+  {
+   "id": "FB-0087",
+   "date": "2026-09-17",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Cardiology ward, especially Sister Reshma. She explained everything patiently and checked on my husband every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 912xxx-xx186"
+  },
+  {
+   "id": "FB-0274",
+   "date": "2026-09-16",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Deepa was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 964xxx-xx373"
+  },
+  {
+   "id": "FB-0253",
+   "date": "2026-09-16",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Ancy, went out of their way to make my husband comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 967xxx-xx352"
+  },
+  {
+   "id": "FB-0217",
+   "date": "2026-09-16",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "My son from Doha was made to wait almost 1 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 985xxx-xx316"
+  },
+  {
+   "id": "FB-0051",
+   "date": "2026-09-16",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Bincy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1050@mailmask.example"
+  },
+  {
+   "id": "FB-0021",
+   "date": "2026-09-16",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my mother post surgery. Constant updates given to family by Sister Deepa, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 918xxx-xx120"
+  },
+  {
+   "id": "FB-0016",
+   "date": "2026-09-16",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Deepa and the Ortho ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Email on file · p.1015@mailmask.example"
+  },
+  {
+   "id": "FB-0012",
+   "date": "2026-09-16",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Front office / OP",
+   "text": "OP kiosk queue was very long today, token system not working properly, had to ask staff manually which slowed things further.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 952xxx-xx111",
+   "owner": "Front office / OP",
+   "sla": "Front office / OP — duty manager to open a second counter within 1 hour at peak times",
+   "dueDate": "2026-09-17"
+  },
+  {
+   "id": "FB-0238",
+   "date": "2026-09-15",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Ancy. She explained everything patiently and checked on my grandmother every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 965xxx-xx337"
+  },
+  {
+   "id": "FB-0214",
+   "date": "2026-09-14",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Lift near ICU was very slow, we waited close to 30 min with a wheelchair patient. Staff helped where they could but the lift itself needs servicing.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 946xxx-xx313"
+  },
+  {
+   "id": "FB-0204",
+   "date": "2026-09-14",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1203@mailmask.example"
+  },
+  {
+   "id": "FB-0200",
+   "date": "2026-09-14",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Parking is the one thing that needs urgent attention — spent 60 minutes circling before finding a spot. Everything else about the visit was fine.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 982xxx-xx299"
+  },
+  {
+   "id": "FB-0168",
+   "date": "2026-09-14",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "Booked ultrasound for 16:00, actual scan was 5 hours after. This is very difficult for elderly patients who are asked to hold water beforehand. Kindly look into this.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 917xxx-xx267",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-09-15"
+  },
+  {
+   "id": "FB-0163",
+   "date": "2026-09-14",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Surgery ward. Sister Ancy was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Email on file · p.1162@mailmask.example"
+  },
+  {
+   "id": "FB-0101",
+   "date": "2026-09-14",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Nair were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 972xxx-xx200"
+  },
+  {
+   "id": "FB-0299",
+   "date": "2026-09-13",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 989xxx-xx398"
+  },
+  {
+   "id": "FB-0292",
+   "date": "2026-09-13",
+   "source": "WhatsApp",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "We travelled from Doha for my son's consult, the OP appointment got pushed by 90 minutes without any message to us, we were already worried about flight timing. Doctor consult itself was good and thorough.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 995xxx-xx391"
+  },
+  {
+   "id": "FB-0262",
+   "date": "2026-09-13",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Surgery ward. Sister Jaseela was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 922xxx-xx361"
+  },
+  {
+   "id": "FB-0197",
+   "date": "2026-09-13",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Insurance desk staff is courteous but understaffed in the evenings — my claim query sat pending for 6 hours before anyone picked it up.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1196@mailmask.example"
+  },
+  {
+   "id": "FB-0135",
+   "date": "2026-09-13",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Bincy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 933xxx-xx234"
+  },
+  {
+   "id": "FB-0093",
+   "date": "2026-09-13",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Maternity ward. Sister Jaseela was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1092@mailmask.example"
+  },
+  {
+   "id": "FB-0280",
+   "date": "2026-09-12",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Cardiology ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 978xxx-xx379"
+  },
+  {
+   "id": "FB-0229",
+   "date": "2026-09-12",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Front office / OP",
+   "text": "Front desk had only one counter open during peak hour, waited 50 minutes just to register. Please open more counters 9-11am.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Mobile on file · +91 991xxx-xx328"
+  },
+  {
+   "id": "FB-0108",
+   "date": "2026-09-12",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my father post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1107@mailmask.example"
+  },
+  {
+   "id": "FB-0098",
+   "date": "2026-09-12",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 981xxx-xx197"
+  },
+  {
+   "id": "FB-0097",
+   "date": "2026-09-12",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Ancy was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 919xxx-xx196"
+  },
+  {
+   "id": "FB-0069",
+   "date": "2026-09-12",
+   "source": "OP kiosk",
+   "rating": 1,
+   "department": "Billing & discharge",
+   "text": "Billing counter at discharge is a mess, no proper queue system, had to wait 1 min after doctor cleared discharge. Staff were polite but process is broken.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 951xxx-xx168",
+   "owner": "Billing & discharge",
+   "sla": "Billing & discharge — send revised bill and apology call within 3 hours; flag for TAT review",
+   "dueDate": "2026-09-13"
+  },
+  {
+   "id": "FB-0260",
+   "date": "2026-09-11",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "My daughter from Male was made to wait almost 1 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1259@mailmask.example",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-09-12"
+  },
+  {
+   "id": "FB-0236",
+   "date": "2026-09-11",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 938xxx-xx335"
+  },
+  {
+   "id": "FB-0075",
+   "date": "2026-09-11",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Rasheed was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 999xxx-xx174"
+  },
+  {
+   "id": "FB-0286",
+   "date": "2026-09-10",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Soumya and the ICU team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 989xxx-xx385"
+  },
+  {
+   "id": "FB-0285",
+   "date": "2026-09-10",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Ancy. She explained everything patiently and checked on my husband every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 922xxx-xx384"
+  },
+  {
+   "id": "FB-0228",
+   "date": "2026-09-10",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Housekeeping",
+   "text": "Room cleaning was good overall, small request — please avoid strong-smelling cleaning agents right after meals.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 962xxx-xx327"
+  },
+  {
+   "id": "FB-0183",
+   "date": "2026-09-10",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "Booked ultrasound for 14:45, actual scan was 2 hours after. This is very difficult for elderly patients who are asked to hold water beforehand. Kindly look into this.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 934xxx-xx282",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-09-11"
+  },
+  {
+   "id": "FB-0143",
+   "date": "2026-09-10",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my son post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 915xxx-xx242"
+  },
+  {
+   "id": "FB-0107",
+   "date": "2026-09-10",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Nair was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 965xxx-xx206"
+  },
+  {
+   "id": "FB-0079",
+   "date": "2026-09-10",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Housekeeping",
+   "text": "Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1078@mailmask.example"
+  },
+  {
+   "id": "FB-0019",
+   "date": "2026-09-10",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in ICU. Sister Anitha was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 998xxx-xx118"
+  },
+  {
+   "id": "FB-0235",
+   "date": "2026-09-09",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Visitor parking always full by mid-morning. Suggest a token system or overflow lot, current situation is frustrating for follow-up visits.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 975xxx-xx334"
+  },
+  {
+   "id": "FB-0172",
+   "date": "2026-09-09",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Pillai were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1171@mailmask.example"
+  },
+  {
+   "id": "FB-0149",
+   "date": "2026-09-09",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Maternity ward, especially Sister Reshma. She explained everything patiently and checked on my grandfather every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1148@mailmask.example"
+  },
+  {
+   "id": "FB-0126",
+   "date": "2026-09-09",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Email on file · p.1125@mailmask.example"
+  },
+  {
+   "id": "FB-0037",
+   "date": "2026-09-09",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Varkey and team for the care during my grandmother's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 962xxx-xx136"
+  },
+  {
+   "id": "FB-0225",
+   "date": "2026-09-08",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Nursing / ward",
+   "text": "Ultrasound department made my mother wait with full bladder for over an hour past the slot time, she was in a lot of discomfort. Nobody came to update the family waiting outside.",
+   "themes": [
+    "communication-updates"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 963xxx-xx324"
+  },
+  {
+   "id": "FB-0137",
+   "date": "2026-09-08",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Maternity ward, especially Sister Anitha. She explained everything patiently and checked on my mother every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 914xxx-xx236"
+  },
+  {
+   "id": "FB-0044",
+   "date": "2026-09-08",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Billing team took more than 2 hours to finalise discharge summary and final bill after doctor said we can go home. Overall stay was ok but discharge process needs improvement.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1043@mailmask.example"
+  },
+  {
+   "id": "FB-0031",
+   "date": "2026-09-08",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Deepa. She explained everything patiently and checked on my son every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1030@mailmask.example"
+  },
+  {
+   "id": "FB-0205",
+   "date": "2026-09-07",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Thomas was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 971xxx-xx304"
+  },
+  {
+   "id": "FB-0170",
+   "date": "2026-09-07",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Cashless approval process needs work — 1 hours wait and finally had to arrange cash deposit as backup. TPA desk was helpful once we reached them but too hard to reach.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 974xxx-xx269",
+   "owner": "Insurance desk (TPA)",
+   "sla": "Insurance desk (TPA) — insurance desk to call patient within 2 hours with a status update",
+   "dueDate": "2026-09-08"
+  },
+  {
+   "id": "FB-0042",
+   "date": "2026-09-07",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Soumya, went out of their way to make my husband comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1041@mailmask.example"
+  },
+  {
+   "id": "FB-0040",
+   "date": "2026-09-07",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Appointment was at 16:15 but token was called almost 2 hours later, no announcement of the delay at the front desk.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1039@mailmask.example"
+  },
+  {
+   "id": "FB-0252",
+   "date": "2026-09-06",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Thomas and team for the care during my father's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1251@mailmask.example"
+  },
+  {
+   "id": "FB-0207",
+   "date": "2026-09-06",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Litty. She explained everything patiently and checked on my daughter every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 926xxx-xx306"
+  },
+  {
+   "id": "FB-0157",
+   "date": "2026-09-06",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Lift waiting time on ground floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 978xxx-xx256"
+  },
+  {
+   "id": "FB-0131",
+   "date": "2026-09-06",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my son's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 912xxx-xx230"
+  },
+  {
+   "id": "FB-0094",
+   "date": "2026-09-06",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Varkey was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Email on file · p.1093@mailmask.example"
+  },
+  {
+   "id": "FB-0041",
+   "date": "2026-09-06",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Thomas was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1040@mailmask.example"
+  },
+  {
+   "id": "FB-0005",
+   "date": "2026-09-06",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "OP kiosk queue was very long today, token system not working properly, had to ask staff manually which slowed things further.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1004@mailmask.example"
+  },
+  {
+   "id": "FB-0148",
+   "date": "2026-09-05",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Sister Ancy and the Cardiology ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1147@mailmask.example"
+  },
+  {
+   "id": "FB-0266",
+   "date": "2026-09-04",
+   "source": "International patient email",
+   "rating": 4,
+   "department": "International patient desk",
+   "text": "Overall treatment for my consultation was good, doctor was patient with our questions. Coordination between OP and lab could be smoother, we had to explain our case twice.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 968xxx-xx365"
+  },
+  {
+   "id": "FB-0211",
+   "date": "2026-09-04",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Deepa. She explained everything patiently and checked on my grandmother every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 969xxx-xx310"
+  },
+  {
+   "id": "FB-0191",
+   "date": "2026-09-04",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Thomas was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 957xxx-xx290"
+  },
+  {
+   "id": "FB-0122",
+   "date": "2026-09-04",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 949xxx-xx221"
+  },
+  {
+   "id": "FB-0084",
+   "date": "2026-09-04",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Housekeeping",
+   "text": "Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 963xxx-xx183"
+  },
+  {
+   "id": "FB-0078",
+   "date": "2026-09-04",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Bincy, went out of their way to make my father comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 981xxx-xx177"
+  },
+  {
+   "id": "FB-0066",
+   "date": "2026-09-04",
+   "source": "IP discharge form",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Cardiology ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 943xxx-xx165"
+  },
+  {
+   "id": "FB-0004",
+   "date": "2026-09-04",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Litty, went out of their way to make my son comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 921xxx-xx103"
+  },
+  {
+   "id": "FB-0273",
+   "date": "2026-09-03",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Deepa and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1272@mailmask.example"
+  },
+  {
+   "id": "FB-0242",
+   "date": "2026-09-03",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my mother post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 914xxx-xx341"
+  },
+  {
+   "id": "FB-0195",
+   "date": "2026-09-03",
+   "source": "Google review",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "Visa support letter took longer than promised, almost 6 days, which delayed our travel booking from Dar es Salaam. Please speed this up for international patients.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 928xxx-xx294"
+  },
+  {
+   "id": "FB-0194",
+   "date": "2026-09-03",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "My wife from Hulhumale was made to wait almost 5 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 971xxx-xx293",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-09-04"
+  },
+  {
+   "id": "FB-0104",
+   "date": "2026-09-03",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Bincy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 986xxx-xx203"
+  },
+  {
+   "id": "FB-0024",
+   "date": "2026-09-03",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Cardiology ward. Sister Soumya was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 922xxx-xx123"
+  },
+  {
+   "id": "FB-0291",
+   "date": "2026-09-02",
+   "source": "International patient email",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Menon and team for the care during my father's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 914xxx-xx390"
+  },
+  {
+   "id": "FB-0212",
+   "date": "2026-09-02",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Nursing / ward",
+   "text": "Ultrasound department made my wife wait with full bladder for over an hour past the slot time, she was in a lot of discomfort. Nobody came to update the family waiting outside.",
+   "themes": [
+    "communication-updates"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1211@mailmask.example"
+  },
+  {
+   "id": "FB-0210",
+   "date": "2026-09-02",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Ancy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 928xxx-xx309"
+  },
+  {
+   "id": "FB-0036",
+   "date": "2026-09-02",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Bincy, went out of their way to make my wife comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1035@mailmask.example"
+  },
+  {
+   "id": "FB-0234",
+   "date": "2026-09-01",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Varkey were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 975xxx-xx333"
+  },
+  {
+   "id": "FB-0158",
+   "date": "2026-09-01",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in ICU. Sister Soumya was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1157@mailmask.example"
+  },
+  {
+   "id": "FB-0152",
+   "date": "2026-09-01",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in ICU, especially Sister Anitha. She explained everything patiently and checked on my son every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 961xxx-xx251"
+  },
+  {
+   "id": "FB-0113",
+   "date": "2026-09-01",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Bincy, went out of their way to make my father comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1112@mailmask.example"
+  },
+  {
+   "id": "FB-0089",
+   "date": "2026-09-01",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "Radiology slot given was 15:15 but scan happened almost 5 hours late. My wife was in a lot of discomfort waiting with full bladder as instructed. Second time this has happened here.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1088@mailmask.example",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-09-02"
+  },
+  {
+   "id": "FB-0272",
+   "date": "2026-08-31",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Rasheed was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 942xxx-xx371"
+  },
+  {
+   "id": "FB-0167",
+   "date": "2026-08-31",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Food temperature is an issue by the time it reaches upper floors, tray covers help but not enough. Suggest hot-case trolleys.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 945xxx-xx266"
+  },
+  {
+   "id": "FB-0085",
+   "date": "2026-08-31",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Bincy and the Surgery ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 969xxx-xx184"
+  },
+  {
+   "id": "FB-0050",
+   "date": "2026-08-31",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my father post surgery. Constant updates given to family by Sister Soumya, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 982xxx-xx149"
+  },
+  {
+   "id": "FB-0268",
+   "date": "2026-08-30",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my wife's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 964xxx-xx367"
+  },
+  {
+   "id": "FB-0088",
+   "date": "2026-08-30",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Susan Koshy was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 957xxx-xx187"
+  },
+  {
+   "id": "FB-0049",
+   "date": "2026-08-30",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Reshma was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1048@mailmask.example"
+  },
+  {
+   "id": "FB-0189",
+   "date": "2026-08-29",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Mobile on file · +91 922xxx-xx288"
+  },
+  {
+   "id": "FB-0142",
+   "date": "2026-08-29",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Pillai was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 985xxx-xx241"
+  },
+  {
+   "id": "FB-0096",
+   "date": "2026-08-29",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in ICU, especially Sister Reshma. She explained everything patiently and checked on my wife every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Email on file · p.1095@mailmask.example"
+  },
+  {
+   "id": "FB-0063",
+   "date": "2026-08-29",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Sister Jaseela and the Cardiology ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 914xxx-xx162"
+  },
+  {
+   "id": "FB-0056",
+   "date": "2026-08-29",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Soumya. She explained everything patiently and checked on my son every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1055@mailmask.example"
+  },
+  {
+   "id": "FB-0279",
+   "date": "2026-08-28",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my mother post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 947xxx-xx378"
+  },
+  {
+   "id": "FB-0247",
+   "date": "2026-08-28",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Soumya was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 989xxx-xx346"
+  },
+  {
+   "id": "FB-0120",
+   "date": "2026-08-28",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Maternity ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1119@mailmask.example"
+  },
+  {
+   "id": "FB-0059",
+   "date": "2026-08-28",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Nair were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 995xxx-xx158"
+  },
+  {
+   "id": "FB-0284",
+   "date": "2026-08-27",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "X-ray department is always crowded in the morning. Waited over 6 hour past appointment time, staff was polite but nobody explained the queue.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 975xxx-xx383",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-08-28"
+  },
+  {
+   "id": "FB-0264",
+   "date": "2026-08-27",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "OP kiosk queue was very long today, token system not working properly, had to ask staff manually which slowed things further.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Anoop",
+   "contact": "Mobile on file · +91 981xxx-xx363",
+   "owner": "Front office / OP",
+   "sla": "Front office / OP — duty manager to open a second counter within 1 hour at peak times",
+   "dueDate": "2026-08-28"
+  },
+  {
+   "id": "FB-0224",
+   "date": "2026-08-27",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Rasheed were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1223@mailmask.example"
+  },
+  {
+   "id": "FB-0182",
+   "date": "2026-08-27",
+   "source": "IP discharge form",
+   "rating": 1,
+   "department": "Insurance desk (TPA)",
+   "text": "Insurance desk staff is courteous but understaffed in the evenings — my claim query sat pending for 5 hours before anyone picked it up.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 945xxx-xx281",
+   "owner": "Insurance desk (TPA)",
+   "sla": "Insurance desk (TPA) — insurance desk to call patient within 2 hours with a status update",
+   "dueDate": "2026-08-28"
+  },
+  {
+   "id": "FB-0181",
+   "date": "2026-08-27",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Thomas was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 939xxx-xx280"
+  },
+  {
+   "id": "FB-0176",
+   "date": "2026-08-27",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Rasheed was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 972xxx-xx275"
+  },
+  {
+   "id": "FB-0127",
+   "date": "2026-08-27",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Nair were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Email on file · p.1126@mailmask.example"
+  },
+  {
+   "id": "FB-0112",
+   "date": "2026-08-27",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1111@mailmask.example"
+  },
+  {
+   "id": "FB-0090",
+   "date": "2026-08-27",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Food temperature is an issue by the time it reaches upper floors, tray covers help but not enough. Suggest hot-case trolleys.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 913xxx-xx189"
+  },
+  {
+   "id": "FB-0035",
+   "date": "2026-08-27",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Nair were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 978xxx-xx134"
+  },
+  {
+   "id": "FB-0267",
+   "date": "2026-08-26",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Menon was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1266@mailmask.example"
+  },
+  {
+   "id": "FB-0257",
+   "date": "2026-08-26",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Maternity ward. Sister Ancy was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1256@mailmask.example"
+  },
+  {
+   "id": "FB-0250",
+   "date": "2026-08-26",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Please streamline discharge billing. We were told 30 min but ended up waiting 5 hours with a tired patient in the room, other family members had to leave for work.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1249@mailmask.example",
+   "owner": "Billing & discharge",
+   "sla": "Billing & discharge — send revised bill and apology call within 3 hours; flag for TAT review",
+   "dueDate": "2026-08-27"
+  },
+  {
+   "id": "FB-0071",
+   "date": "2026-08-26",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Rasheed was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 953xxx-xx170"
+  },
+  {
+   "id": "FB-0256",
+   "date": "2026-08-25",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Visitor parking always full by mid-morning. Suggest a token system or overflow lot, current situation is frustrating for follow-up visits.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 998xxx-xx355"
+  },
+  {
+   "id": "FB-0227",
+   "date": "2026-08-25",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Dietetics & catering",
+   "text": "Food served in ICU was cold by the time it reached the room, especially dinner. Taste was fine, just needs to be served hot.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 974xxx-xx326"
+  },
+  {
+   "id": "FB-0216",
+   "date": "2026-08-25",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Lift waiting time on ground floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 921xxx-xx315"
+  },
+  {
+   "id": "FB-0196",
+   "date": "2026-08-25",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Nair was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1195@mailmask.example"
+  },
+  {
+   "id": "FB-0052",
+   "date": "2026-08-25",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Surgery ward, especially Sister Bincy. She explained everything patiently and checked on my husband every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 983xxx-xx151"
+  },
+  {
+   "id": "FB-0034",
+   "date": "2026-08-25",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Maternity ward, especially Sister Jaseela. She explained everything patiently and checked on my father every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 989xxx-xx133"
+  },
+  {
+   "id": "FB-0007",
+   "date": "2026-08-25",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "Lift waiting time on 3rd floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Email on file · p.1006@mailmask.example"
+  },
+  {
+   "id": "FB-0239",
+   "date": "2026-08-24",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Appointment was at 11:00 but token was called almost 4 hours later, no announcement of the delay at the front desk.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 924xxx-xx338",
+   "owner": "Front office / OP",
+   "sla": "Front office / OP — duty manager to open a second counter within 1 hour at peak times",
+   "dueDate": "2026-08-25"
+  },
+  {
+   "id": "FB-0193",
+   "date": "2026-08-24",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Ancy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1192@mailmask.example"
+  },
+  {
+   "id": "FB-0169",
+   "date": "2026-08-24",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Cardiology ward. Sister Reshma was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 951xxx-xx268"
+  },
+  {
+   "id": "FB-0144",
+   "date": "2026-08-24",
+   "source": "IP discharge form",
+   "rating": 3,
+   "department": "Housekeeping",
+   "text": "Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 965xxx-xx243"
+  },
+  {
+   "id": "FB-0111",
+   "date": "2026-08-24",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Pillai and team for the care during my father's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1110@mailmask.example"
+  },
+  {
+   "id": "FB-0053",
+   "date": "2026-08-24",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Susan Koshy was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 924xxx-xx152"
+  },
+  {
+   "id": "FB-0232",
+   "date": "2026-08-23",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Nair was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1231@mailmask.example"
+  },
+  {
+   "id": "FB-0188",
+   "date": "2026-08-23",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Nair was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1187@mailmask.example"
+  },
+  {
+   "id": "FB-0245",
+   "date": "2026-08-22",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my wife's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 977xxx-xx344"
+  },
+  {
+   "id": "FB-0070",
+   "date": "2026-08-22",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in ICU. Sister Ancy was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1069@mailmask.example"
+  },
+  {
+   "id": "FB-0213",
+   "date": "2026-08-21",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Rasheed and team for the care during my daughter's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1212@mailmask.example"
+  },
+  {
+   "id": "FB-0186",
+   "date": "2026-08-21",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Litty, went out of their way to make my grandfather comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 998xxx-xx285"
+  },
+  {
+   "id": "FB-0073",
+   "date": "2026-08-21",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Rasheed was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 946xxx-xx172"
+  },
+  {
+   "id": "FB-0032",
+   "date": "2026-08-21",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Billing & discharge",
+   "text": "Billing counter at discharge is a mess, no proper queue system, had to wait 4 min after doctor cleared discharge. Staff were polite but process is broken.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 916xxx-xx131"
+  },
+  {
+   "id": "FB-0251",
+   "date": "2026-08-20",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my grandfather post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1250@mailmask.example"
+  },
+  {
+   "id": "FB-0206",
+   "date": "2026-08-20",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Nair and team for the care during my son's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1205@mailmask.example"
+  },
+  {
+   "id": "FB-0014",
+   "date": "2026-08-20",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Insurance desk staff is courteous but understaffed in the evenings — my claim query sat pending for 6 hours before anyone picked it up.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 962xxx-xx113",
+   "owner": "Insurance desk (TPA)",
+   "sla": "Insurance desk (TPA) — insurance desk to call patient within 2 hours with a status update",
+   "dueDate": "2026-08-21"
+  },
+  {
+   "id": "FB-0011",
+   "date": "2026-08-20",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Varkey and team for the care during my wife's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Email on file · p.1010@mailmask.example"
+  },
+  {
+   "id": "FB-0001",
+   "date": "2026-08-20",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Anitha and the Ortho ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 922xxx-xx100"
+  },
+  {
+   "id": "FB-0278",
+   "date": "2026-08-19",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Susan Koshy was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 997xxx-xx377"
+  },
+  {
+   "id": "FB-0270",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Billing & discharge",
+   "text": "Bill had some duplicate charges which took 4 hours to sort out at discharge. Staff resolved it eventually but this delay could be avoided with better checking beforehand.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Divya",
+   "contact": "Email on file · p.1269@mailmask.example",
+   "owner": "Billing & discharge",
+   "sla": "Billing & discharge — send revised bill and apology call within 3 hours; flag for TAT review",
+   "dueDate": "2026-08-20"
+  },
+  {
+   "id": "FB-0248",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Discharge was approved by doctor at 15:00 but final bill copy was ready only 5 hours later. Had to keep calling billing desk, nobody proactively updated us.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 982xxx-xx347"
+  },
+  {
+   "id": "FB-0243",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Surgery ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 962xxx-xx342"
+  },
+  {
+   "id": "FB-0231",
+   "date": "2026-08-19",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my husband post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1230@mailmask.example"
+  },
+  {
+   "id": "FB-0215",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Jaseela, went out of their way to make my mother comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1214@mailmask.example"
+  },
+  {
+   "id": "FB-0209",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "X-ray department is always crowded in the morning. Waited over 1 hour past appointment time, staff was polite but nobody explained the queue.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 931xxx-xx308",
+   "owner": "Radiology",
+   "sla": "Radiology — call the patient within 2 hours; review morning slot spacing at the next huddle",
+   "dueDate": "2026-08-20"
+  },
+  {
+   "id": "FB-0208",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "Booked ultrasound for 9:15, actual scan was 4 hours after. This is very difficult for elderly patients who are asked to hold water beforehand. Kindly look into this.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 944xxx-xx307"
+  },
+  {
+   "id": "FB-0130",
+   "date": "2026-08-19",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Pillai were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1129@mailmask.example"
+  },
+  {
+   "id": "FB-0072",
+   "date": "2026-08-19",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Deepa and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 983xxx-xx171"
+  },
+  {
+   "id": "FB-0043",
+   "date": "2026-08-19",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Litty, went out of their way to make my father comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1042@mailmask.example"
+  },
+  {
+   "id": "FB-0023",
+   "date": "2026-08-19",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Dietetics & catering",
+   "text": "Food served in ICU was cold by the time it reached the room, especially dinner. Taste was fine, just needs to be served hot.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1022@mailmask.example"
+  },
+  {
+   "id": "FB-0263",
+   "date": "2026-08-18",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Cardiology ward, especially Sister Deepa. She explained everything patiently and checked on my father every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1262@mailmask.example"
+  },
+  {
+   "id": "FB-0153",
+   "date": "2026-08-18",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Pillai was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 988xxx-xx252"
+  },
+  {
+   "id": "FB-0145",
+   "date": "2026-08-18",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Nair was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1144@mailmask.example"
+  },
+  {
+   "id": "FB-0102",
+   "date": "2026-08-18",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Susan Koshy was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 979xxx-xx201"
+  },
+  {
+   "id": "FB-0038",
+   "date": "2026-08-18",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "X-ray department is always crowded in the morning. Waited over 2 hour past appointment time, staff was polite but nobody explained the queue.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 931xxx-xx137"
+  },
+  {
+   "id": "FB-0013",
+   "date": "2026-08-18",
+   "source": "International patient email",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Ancy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1012@mailmask.example"
+  },
+  {
+   "id": "FB-0282",
+   "date": "2026-08-17",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Varkey and team for the care during my grandfather's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 961xxx-xx381"
+  },
+  {
+   "id": "FB-0281",
+   "date": "2026-08-17",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "Booked ultrasound for 8:15, actual scan was 3 hours after. This is very difficult for elderly patients who are asked to hold water beforehand. Kindly look into this.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 934xxx-xx380"
+  },
+  {
+   "id": "FB-0249",
+   "date": "2026-08-17",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "International patient desk",
+   "text": "Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for our diet were limited.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 943xxx-xx348"
+  },
+  {
+   "id": "FB-0184",
+   "date": "2026-08-17",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Rasheed was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 993xxx-xx283"
+  },
+  {
+   "id": "FB-0298",
+   "date": "2026-08-16",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Pillai and team for the care during my grandmother's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 934xxx-xx397"
+  },
+  {
+   "id": "FB-0177",
+   "date": "2026-08-16",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Menon was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 991xxx-xx276"
+  },
+  {
+   "id": "FB-0123",
+   "date": "2026-08-16",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Discharge was approved by doctor at 13:15 but final bill copy was ready only 1 hours later. Had to keep calling billing desk, nobody proactively updated us.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1122@mailmask.example"
+  },
+  {
+   "id": "FB-0055",
+   "date": "2026-08-16",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Sister Soumya and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1054@mailmask.example"
+  },
+  {
+   "id": "FB-0033",
+   "date": "2026-08-16",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Reshma, went out of their way to make my father comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1032@mailmask.example"
+  },
+  {
+   "id": "FB-0022",
+   "date": "2026-08-16",
+   "source": "OP kiosk",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "We travelled from Nairobi for my husband's consult, the OP appointment got pushed by 90 minutes without any message to us, we were already worried about flight timing. Doctor consult itself was good and thorough.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 962xxx-xx121"
+  },
+  {
+   "id": "FB-0017",
+   "date": "2026-08-16",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Litty and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 996xxx-xx116"
+  },
+  {
+   "id": "FB-0271",
+   "date": "2026-08-15",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Front desk had only one counter open during peak hour, waited 60 minutes just to register. Please open more counters 9-11am.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 955xxx-xx370"
+  },
+  {
+   "id": "FB-0221",
+   "date": "2026-08-15",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Soumya, went out of their way to make my father comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 963xxx-xx320"
+  },
+  {
+   "id": "FB-0218",
+   "date": "2026-08-15",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my father post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1217@mailmask.example"
+  },
+  {
+   "id": "FB-0198",
+   "date": "2026-08-15",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Susan Koshy and team for the care during my husband's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 911xxx-xx297"
+  },
+  {
+   "id": "FB-0147",
+   "date": "2026-08-15",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Maternity ward. Sister Deepa was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1146@mailmask.example"
+  },
+  {
+   "id": "FB-0103",
+   "date": "2026-08-15",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Discharge was approved by doctor at 12:30 but final bill copy was ready only 3 hours later. Had to keep calling billing desk, nobody proactively updated us.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 957xxx-xx202"
+  },
+  {
+   "id": "FB-0086",
+   "date": "2026-08-15",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Consult with Dr. Thomas was detailed and reassuring, explained the reports line by line. Front desk coordination was smooth too.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 935xxx-xx185"
+  },
+  {
+   "id": "FB-0178",
+   "date": "2026-08-14",
+   "source": "WhatsApp",
+   "rating": 1,
+   "department": "Insurance desk (TPA)",
+   "text": "Cashless approval process needs work — 4 hours wait and finally had to arrange cash deposit as backup. TPA desk was helpful once we reached them but too hard to reach.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 964xxx-xx277"
+  },
+  {
+   "id": "FB-0119",
+   "date": "2026-08-14",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 992xxx-xx218"
+  },
+  {
+   "id": "FB-0030",
+   "date": "2026-08-14",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Dr. Pillai was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 948xxx-xx129"
+  },
+  {
+   "id": "FB-0297",
+   "date": "2026-08-13",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my daughter post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 936xxx-xx396"
+  },
+  {
+   "id": "FB-0283",
+   "date": "2026-08-13",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Cashless approval process needs work — 6 hours wait and finally had to arrange cash deposit as backup. TPA desk was helpful once we reached them but too hard to reach.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Email on file · p.1282@mailmask.example"
+  },
+  {
+   "id": "FB-0244",
+   "date": "2026-08-13",
+   "source": "WhatsApp",
+   "rating": 1,
+   "department": "Billing & discharge",
+   "text": "Bill had some duplicate charges which took 2 hours to sort out at discharge. Staff resolved it eventually but this delay could be avoided with better checking beforehand.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Salim",
+   "contact": "Mobile on file · +91 934xxx-xx343"
+  },
+  {
+   "id": "FB-0237",
+   "date": "2026-08-13",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Ortho ward, especially Sister Litty. She explained everything patiently and checked on my grandmother every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 966xxx-xx336"
+  },
+  {
+   "id": "FB-0156",
+   "date": "2026-08-13",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Menon was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 962xxx-xx255"
+  },
+  {
+   "id": "FB-0140",
+   "date": "2026-08-13",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Was told TPA approval usually takes 2 hours, ours took 5. No update given, we found out only when we asked at the counter directly.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1139@mailmask.example"
+  },
+  {
+   "id": "FB-0116",
+   "date": "2026-08-13",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Housekeeping",
+   "text": "Room was clean, AC working fine. Only issue was housekeeping came very early morning 5:30am to clean when patient was sleeping. Otherwise fine stay.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 964xxx-xx215"
+  },
+  {
+   "id": "FB-0110",
+   "date": "2026-08-13",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in General ward, especially Sister Reshma. She explained everything patiently and checked on my daughter every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Mobile on file · +91 973xxx-xx209"
+  },
+  {
+   "id": "FB-0106",
+   "date": "2026-08-13",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Facilities",
+   "text": "Lift waiting time on 2nd floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 927xxx-xx205"
+  },
+  {
+   "id": "FB-0081",
+   "date": "2026-08-13",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Cashless approval process needs work — 1 hours wait and finally had to arrange cash deposit as backup. TPA desk was helpful once we reached them but too hard to reach.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Mobile on file · +91 921xxx-xx180"
+  },
+  {
+   "id": "FB-0294",
+   "date": "2026-08-12",
+   "source": "IP discharge form",
+   "rating": 1,
+   "department": "Insurance desk (TPA)",
+   "text": "Was told TPA approval usually takes 2 hours, ours took 4. No update given, we found out only when we asked at the counter directly.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 958xxx-xx393"
+  },
+  {
+   "id": "FB-0259",
+   "date": "2026-08-12",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Pillai and team for the care during my mother's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1258@mailmask.example"
+  },
+  {
+   "id": "FB-0062",
+   "date": "2026-08-12",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Thomas was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Email on file · p.1061@mailmask.example"
+  },
+  {
+   "id": "FB-0006",
+   "date": "2026-08-12",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Billing team took more than 4 hours to finalise discharge summary and final bill after doctor said we can go home. Overall stay was ok but discharge process needs improvement.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 998xxx-xx105"
+  },
+  {
+   "id": "FB-0203",
+   "date": "2026-08-11",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "International patient desk",
+   "text": "Overall treatment for my consultation was good, doctor was patient with our questions. Coordination between OP and lab could be smoother, we had to explain our case twice.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1202@mailmask.example"
+  },
+  {
+   "id": "FB-0190",
+   "date": "2026-08-11",
+   "source": "WhatsApp",
+   "rating": 1,
+   "department": "Facilities",
+   "text": "No parking space near OP block after 10am, had to park far and walk with an elderly patient. Valet counter was unmanned.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 916xxx-xx289"
+  },
+  {
+   "id": "FB-0150",
+   "date": "2026-08-11",
+   "source": "International patient email",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Susan Koshy was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 971xxx-xx249"
+  },
+  {
+   "id": "FB-0141",
+   "date": "2026-08-11",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Insurance desk (TPA)",
+   "text": "Was told TPA approval usually takes 2 hours, ours took 1. No update given, we found out only when we asked at the counter directly.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Teena",
+   "contact": "Email on file · p.1140@mailmask.example"
+  },
+  {
+   "id": "FB-0067",
+   "date": "2026-08-11",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Please streamline discharge billing. We were told 30 min but ended up waiting 1 hours with a tired patient in the room, other family members had to leave for work.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 924xxx-xx166"
+  },
+  {
+   "id": "FB-0065",
+   "date": "2026-08-11",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Varkey were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 955xxx-xx164"
+  },
+  {
+   "id": "FB-0060",
+   "date": "2026-08-11",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Nair were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Email on file · p.1059@mailmask.example"
+  },
+  {
+   "id": "FB-0025",
+   "date": "2026-08-11",
+   "source": "WhatsApp",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Sister Reshma and the ICU team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Email on file · p.1024@mailmask.example"
+  },
+  {
+   "id": "FB-0246",
+   "date": "2026-08-10",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Bincy, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 944xxx-xx345"
+  },
+  {
+   "id": "FB-0192",
+   "date": "2026-08-10",
+   "source": "WhatsApp",
+   "rating": 1,
+   "department": "Front office / OP",
+   "text": "OP kiosk queue was very long today, token system not working properly, had to ask staff manually which slowed things further.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 917xxx-xx291"
+  },
+  {
+   "id": "FB-0174",
+   "date": "2026-08-10",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Registration kiosk froze twice while I was entering details, had to start over. Staff helped but the machine itself needs maintenance.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Rahul",
+   "contact": "Email on file · p.1173@mailmask.example"
+  },
+  {
+   "id": "FB-0155",
+   "date": "2026-08-10",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Deepa, went out of their way to make my grandmother comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1154@mailmask.example"
+  },
+  {
+   "id": "FB-0129",
+   "date": "2026-08-10",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Facilities",
+   "text": "Lift waiting time on 2nd floor OP block is too much, especially mornings 9-11am. Elderly patients struggling to stand and wait. One lift was out of service for almost a week.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 918xxx-xx228"
+  },
+  {
+   "id": "FB-0026",
+   "date": "2026-08-10",
+   "source": "OP kiosk",
+   "rating": 1,
+   "department": "Nursing / ward",
+   "text": "During my daughter's procedure we were not given any update for 2 hours, had to keep going to the nursing station ourselves to ask.",
+   "themes": [
+    "communication-updates"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1025@mailmask.example"
+  },
+  {
+   "id": "FB-0219",
+   "date": "2026-08-09",
+   "source": "Google review",
+   "rating": 1,
+   "department": "Nursing / ward",
+   "text": "During my mother's procedure we were not given any update for 5 hours, had to keep going to the nursing station ourselves to ask.",
+   "themes": [
+    "communication-updates"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 996xxx-xx318"
+  },
+  {
+   "id": "FB-0180",
+   "date": "2026-08-09",
+   "source": "IP discharge form",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Cardiology ward, especially Sister Bincy. She explained everything patiently and checked on my daughter every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1179@mailmask.example"
+  },
+  {
+   "id": "FB-0138",
+   "date": "2026-08-09",
+   "source": "OP kiosk",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my grandmother post surgery. Constant updates given to family by Sister Jaseela, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 947xxx-xx237"
+  },
+  {
+   "id": "FB-0136",
+   "date": "2026-08-09",
+   "source": "WhatsApp",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Please streamline discharge billing. We were told 30 min but ended up waiting 4 hours with a tired patient in the room, other family members had to leave for work.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 989xxx-xx235"
+  },
+  {
+   "id": "FB-0118",
+   "date": "2026-08-09",
+   "source": "Google review",
+   "rating": 3,
+   "department": "Housekeeping",
+   "text": "Room cleaning was good overall, small request — please avoid strong-smelling cleaning agents right after meals.",
+   "themes": [
+    "housekeeping"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 916xxx-xx217"
+  },
+  {
+   "id": "FB-0091",
+   "date": "2026-08-09",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Dietetics & catering",
+   "text": "Breakfast came almost an hour late two days in a row in Ortho ward. Rest of the stay was comfortable.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Mobile on file · +91 945xxx-xx190"
+  },
+  {
+   "id": "FB-0082",
+   "date": "2026-08-09",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Maternity ward, especially Sister Litty. She explained everything patiently and checked on my grandmother every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Jaseem",
+   "contact": "Email on file · p.1081@mailmask.example"
+  },
+  {
+   "id": "FB-0054",
+   "date": "2026-08-09",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my son post surgery. Constant updates given to family by Sister Litty, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Anoop",
+   "contact": "Email on file · p.1053@mailmask.example"
+  },
+  {
+   "id": "FB-0003",
+   "date": "2026-08-09",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "My grandfather from Hulhumale was made to wait almost 5 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Fathima",
+   "contact": "Mobile on file · +91 922xxx-xx102"
+  },
+  {
+   "id": "FB-0295",
+   "date": "2026-08-08",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Pillai was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 952xxx-xx394"
+  },
+  {
+   "id": "FB-0265",
+   "date": "2026-08-08",
+   "source": "Google review",
+   "rating": 4,
+   "department": "International patient desk",
+   "text": "We travelled from Male for my husband's consult, the OP appointment got pushed by 90 minutes without any message to us, we were already worried about flight timing. Doctor consult itself was good and thorough.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 914xxx-xx364"
+  },
+  {
+   "id": "FB-0185",
+   "date": "2026-08-08",
+   "source": "Google review",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for our diet were limited.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 945xxx-xx284"
+  },
+  {
+   "id": "FB-0132",
+   "date": "2026-08-08",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Thomas were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1131@mailmask.example"
+  },
+  {
+   "id": "FB-0074",
+   "date": "2026-08-08",
+   "source": "Google review",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for our diet were limited.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 996xxx-xx173"
+  },
+  {
+   "id": "FB-0064",
+   "date": "2026-08-08",
+   "source": "International patient email",
+   "rating": 2,
+   "department": "Billing & discharge",
+   "text": "Billing counter at discharge is a mess, no proper queue system, had to wait 3 min after doctor cleared discharge. Staff were polite but process is broken.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 999xxx-xx163"
+  },
+  {
+   "id": "FB-0289",
+   "date": "2026-08-07",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Sister Bincy and the General ward team were wonderful, always ready to help and explained medication timings clearly. Made a stressful time much easier.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Divya",
+   "contact": "Mobile on file · +91 934xxx-xx388"
+  },
+  {
+   "id": "FB-0269",
+   "date": "2026-08-07",
+   "source": "WhatsApp",
+   "rating": 1,
+   "department": "Insurance desk (TPA)",
+   "text": "Insurance desk staff is courteous but understaffed in the evenings — my claim query sat pending for 2 hours before anyone picked it up.",
+   "themes": [
+    "tpa-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 947xxx-xx368"
+  },
+  {
+   "id": "FB-0223",
+   "date": "2026-08-07",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Cardiology ward, especially Sister Litty. She explained everything patiently and checked on my wife every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Nimmy",
+   "contact": "Mobile on file · +91 947xxx-xx322"
+  },
+  {
+   "id": "FB-0134",
+   "date": "2026-08-07",
+   "source": "International patient email",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 984xxx-xx233"
+  },
+  {
+   "id": "FB-0048",
+   "date": "2026-08-07",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "My daughter from Dubai was made to wait almost 2 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Teena",
+   "contact": "Email on file · p.1047@mailmask.example"
+  },
+  {
+   "id": "FB-0018",
+   "date": "2026-08-07",
+   "source": "Google review",
+   "rating": 2,
+   "department": "International patient desk",
+   "text": "International patient desk was responsive over email before arrival, but on the ground the same information was not passed to the ward staff, we had to repeat everything.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Ayesha",
+   "contact": "Email on file · p.1017@mailmask.example"
+  },
+  {
+   "id": "FB-0015",
+   "date": "2026-08-07",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Anitha was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 926xxx-xx114"
+  },
+  {
+   "id": "FB-0261",
+   "date": "2026-08-06",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Litty, went out of their way to make my son comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Email on file · p.1260@mailmask.example"
+  },
+  {
+   "id": "FB-0258",
+   "date": "2026-08-06",
+   "source": "IP discharge form",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Maternity ward. Sister Litty was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 994xxx-xx357"
+  },
+  {
+   "id": "FB-0199",
+   "date": "2026-08-06",
+   "source": "IP discharge form",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Food quality was decent, could be less spicy for post-surgery patients. Housekeeping was prompt. Nursing care was very good throughout.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Fathima",
+   "contact": "Email on file · p.1198@mailmask.example"
+  },
+  {
+   "id": "FB-0159",
+   "date": "2026-08-06",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 945xxx-xx258"
+  },
+  {
+   "id": "FB-0083",
+   "date": "2026-08-06",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Dr. Thomas was very thorough during consult, answered all our questions without rushing. Best experience we have had at any hospital.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 954xxx-xx182"
+  },
+  {
+   "id": "FB-0061",
+   "date": "2026-08-06",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Facilities",
+   "text": "No parking space near OP block after 10am, had to park far and walk with an elderly patient. Valet counter was unmanned.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 946xxx-xx160"
+  },
+  {
+   "id": "FB-0039",
+   "date": "2026-08-06",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Ortho ward. Sister Jaseela was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 963xxx-xx138"
+  },
+  {
+   "id": "FB-0241",
+   "date": "2026-08-05",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in ICU, especially Sister Soumya. She explained everything patiently and checked on my grandfather every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 919xxx-xx340"
+  },
+  {
+   "id": "FB-0173",
+   "date": "2026-08-05",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Radiology",
+   "text": "My wife from Dar es Salaam was made to wait almost 4 hours for ultrasound with full bladder as instructed by staff. Very uncomfortable, nobody updated us on the delay. Doctors were fine but the wait was too much.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Email on file · p.1172@mailmask.example"
+  },
+  {
+   "id": "FB-0114",
+   "date": "2026-08-05",
+   "source": "OP kiosk",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "ICU team took amazing care of my wife post surgery. Constant updates given to family by Sister Anitha, very approachable. Grateful to the entire team.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Teena",
+   "contact": "Mobile on file · +91 916xxx-xx213"
+  },
+  {
+   "id": "FB-0099",
+   "date": "2026-08-05",
+   "source": "OP kiosk",
+   "rating": 1,
+   "department": "Facilities",
+   "text": "Only one lift working in the OP block today, wait was easily 2 minutes. Please fix the second lift, patients with mobility issues are really affected.",
+   "themes": [
+    "lift-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Arjun",
+   "contact": "Mobile on file · +91 974xxx-xx198"
+  },
+  {
+   "id": "FB-0029",
+   "date": "2026-08-05",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Billing & discharge",
+   "text": "Billing team took more than 1 hours to finalise discharge summary and final bill after doctor said we can go home. Overall stay was ok but discharge process needs improvement.",
+   "themes": [
+    "billing-delay"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 992xxx-xx128"
+  },
+  {
+   "id": "FB-0275",
+   "date": "2026-08-04",
+   "source": "International patient email",
+   "rating": 4,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Varkey were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Email on file · p.1274@mailmask.example"
+  },
+  {
+   "id": "FB-0222",
+   "date": "2026-08-04",
+   "source": "IP discharge form",
+   "rating": 3,
+   "department": "Dietetics & catering",
+   "text": "Diet food for diabetic patients was repetitive — same items most days. Please vary the menu a bit, otherwise care was good.",
+   "themes": [
+    "food-temp"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Email on file · p.1221@mailmask.example"
+  },
+  {
+   "id": "FB-0187",
+   "date": "2026-08-04",
+   "source": "IP discharge form",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "Booked ultrasound for 10:45, actual scan was 3 hours after. This is very difficult for elderly patients who are asked to hold water beforehand. Kindly look into this.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": true,
+   "patient": "Sarah",
+   "contact": "Email on file · p.1186@mailmask.example"
+  },
+  {
+   "id": "FB-0165",
+   "date": "2026-08-04",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Grateful to Dr. Rasheed and team for the care during my grandfather's cardiac procedure. Clear communication at every step.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Vishnu",
+   "contact": "Mobile on file · +91 912xxx-xx264"
+  },
+  {
+   "id": "FB-0092",
+   "date": "2026-08-04",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Excellent care from the nursing staff in Cardiology ward, especially Sister Jaseela. She explained everything patiently and checked on my husband every 2 hours. Doctors also very good.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Meera",
+   "contact": "Mobile on file · +91 966xxx-xx191"
+  },
+  {
+   "id": "FB-0076",
+   "date": "2026-08-04",
+   "source": "International patient email",
+   "rating": 1,
+   "department": "Facilities",
+   "text": "No parking space near OP block after 10am, had to park far and walk with an elderly patient. Valet counter was unmanned.",
+   "themes": [
+    "parking"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 974xxx-xx175"
+  },
+  {
+   "id": "FB-0045",
+   "date": "2026-08-04",
+   "source": "Google review",
+   "rating": 5,
+   "department": "Nursing",
+   "text": "Nursing staff, especially Sister Soumya, went out of their way to make my mother comfortable. Checked vitals on time every single round.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 945xxx-xx144"
+  },
+  {
+   "id": "FB-0277",
+   "date": "2026-08-03",
+   "source": "WhatsApp",
+   "rating": 5,
+   "department": "Medical / clinical",
+   "text": "Robotic surgery team and Dr. Menon were excellent, explained the whole procedure clearly beforehand. Recovery was smooth. Highly recommend.",
+   "themes": [
+    "doctor-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Manoj",
+   "contact": "Mobile on file · +91 953xxx-xx376"
+  },
+  {
+   "id": "FB-0233",
+   "date": "2026-08-03",
+   "source": "Google review",
+   "rating": 4,
+   "department": "Nursing",
+   "text": "Genuinely impressed with the nursing care in Cardiology ward. Sister Litty was kind and patient even at 2am when we had questions.",
+   "themes": [
+    "nursing-praise"
+   ],
+   "sentiment": "positive",
+   "urgent": false,
+   "patient": "Rincy",
+   "contact": "Mobile on file · +91 919xxx-xx332"
+  },
+  {
+   "id": "FB-0175",
+   "date": "2026-08-03",
+   "source": "OP kiosk",
+   "rating": 2,
+   "department": "Front office / OP",
+   "text": "Registration kiosk froze twice while I was entering details, had to start over. Staff helped but the machine itself needs maintenance.",
+   "themes": [
+    "front-desk-queue"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Sarah",
+   "contact": "Mobile on file · +91 996xxx-xx274"
+  },
+  {
+   "id": "FB-0160",
+   "date": "2026-08-03",
+   "source": "WhatsApp",
+   "rating": 3,
+   "department": "International patient desk",
+   "text": "Coordinator was helpful with visa letter but currency exchange guidance given was outdated, we had confusion at the bank. Also food options for our diet were limited.",
+   "themes": [
+    "intl-coordination"
+   ],
+   "sentiment": "neutral",
+   "urgent": false,
+   "patient": "Rahul",
+   "contact": "Mobile on file · +91 989xxx-xx259"
+  },
+  {
+   "id": "FB-0124",
+   "date": "2026-08-03",
+   "source": "Google review",
+   "rating": 2,
+   "department": "Radiology",
+   "text": "Radiology slot given was 17:45 but scan happened almost 5 hours late. My wife was in a lot of discomfort waiting with full bladder as instructed. Second time this has happened here.",
+   "themes": [
+    "radiology-wait"
+   ],
+   "sentiment": "negative",
+   "urgent": false,
+   "patient": "Faisal",
+   "contact": "Email on file · p.1123@mailmask.example"
+  }
+ ]
+}

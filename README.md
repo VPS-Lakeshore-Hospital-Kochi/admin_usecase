@@ -12,11 +12,11 @@ Static HTML — no build step, no server-side code.
 | Finance & Accounts | Audit query responder | `apps/audit-responder.html` |
 | Finance & Accounts | MIS consolidation checker | `apps/mis-pipeline.html` |
 | Revenue Cycle · TPA | Cashless pre-auth file builder ★ | `apps/tpa-preauth.html` |
-| Revenue Cycle · TPA | Denial & short-payment analyser | `apps/denial-analyser.html` |
+| Revenue Cycle · TPA | Denial & short-payment analyser ★ | `apps/denial-analyser.html` |
 | Revenue Cycle · TPA | Discharge bill checker | `apps/discharge-billing.html` |
 | Revenue Cycle · TPA | Patient cost estimate | `apps/estimate-generator.html` |
 | Purchase & Stores | Quote comparison & PC note ★ | `apps/purchase-quotes.html` |
-| Purchase & Stores | PO–GRN–invoice matcher | `apps/three-way-match.html` |
+| Purchase & Stores | PO–GRN–invoice matcher ★ | `apps/three-way-match.html` |
 | Purchase & Stores | Vendor contract summariser | `apps/vendor-contracts.html` |
 | Purchase & Stores | Reorder & expiry watch | `apps/stock-watch.html` |
 | Human Resources | Resume screener & interview kit ★ | `apps/hr-screener.html` |
@@ -30,11 +30,11 @@ Static HTML — no build step, no server-side code.
 | Marketing & Comms | Enquiry-to-revenue waterfall | `apps/enquiry-waterfall.html` |
 | Patient Experience | Feedback intelligence ★ | `apps/patient-feedback.html` |
 | Patient Experience | Call centre & WhatsApp agent | `apps/contact-centre.html` |
-| Patient Experience | Bed & discharge flow assistant | `apps/bed-flow.html` |
-| International Patients | International patient desk assistant | `apps/intl-desk.html` |
+| Patient Experience | Bed & discharge flow assistant ★ | `apps/bed-flow.html` |
+| International Patients | International patient desk assistant ★ | `apps/intl-desk.html` |
 | Quality & Accreditation | NABH readiness & policy Q&A ★ | `apps/nabh-readiness.html` |
 | Quality & Accreditation | Incident trend report | `apps/incident-trends.html` |
-| Legal & Secretarial | Contract risk review | `apps/contract-review.html` |
+| Legal & Secretarial | Contract risk review ★ | `apps/contract-review.html` |
 | Legal & Secretarial | Board paper & minutes drafter | `apps/board-papers.html` |
 | Legal & Secretarial | Approval turnaround tracker | `apps/docusign-tracker.html` |
 | Legal & Secretarial | Statutory compliance calendar | `apps/compliance-calendar.html` |
@@ -57,7 +57,7 @@ Static HTML — no build step, no server-side code.
 | CSR | CSR project reporter | `apps/csr-report.html` |
 | Training & Academics | Mandatory training planner | `apps/training-planner.html` |
 
-★ = flagship. Also: [`governance.html`](governance.html) — principles, data rules, approval tiers, phased rollout and an hours-saved estimator.
+★ = flagship: a fully working demo with its own dataset, work queue, maker/approver approval, dashboard and guided tour. Also: [`governance.html`](governance.html) — principles, data rules, approval tiers, phased rollout and an hours-saved estimator.
 
 ## Running
 
@@ -69,8 +69,15 @@ Or publish the folder to GitHub Pages.
 
 ## Demo vs live mode
 
-- **Demo mode** (default): each prototype returns a pre-written sample output, so the hub can be shown with no API key and no network.
-- **Live mode**: click **Settings**, paste an Anthropic API key. Prototypes then call the Claude Messages API directly from the browser with the on-screen input. The key is stored only in that browser's `localStorage`. This is fine for internal demos; a production rollout should route calls through a hospital-controlled backend (key custody, audit logging, PHI/DPDP controls).
+Open **Settings** on any page to choose how Claude is reached:
+
+| Mode | Who it's for | How it works |
+|---|---|---|
+| **Demo mode** (default) | Anyone, offline, on stage | Pre-written outputs built from the selected record, streamed so the page behaves as it does in live mode. Claude does not read the input. |
+| **Hospital gateway** | Presenters to admin and management | Live Claude through the Cloudflare Worker in `proxy/`, which holds the hospital's API key. Presenters enter only a passcode. See `proxy/README.md` to deploy it. |
+| **Own API key** | Developers | Calls the Claude API directly from the browser with a key stored in that browser only. |
+
+Live calls stream from `claude-opus-5` with server-side refusal fallbacks. The gateway allowlists models, caps output length and daily requests, and logs metadata only. A shared passcode is fine for synthetic-data demos; real hospital data needs SSO, per-user audit logging and DPDP review first.
 
 ## Files in and out
 
@@ -81,7 +88,11 @@ Or publish the folder to GitHub Pages.
 ## Structure
 
 - `shared/hub.css` — design system (VPS Lakeshore "In good hands" palette, light/dark)
-- `shared/claude.js` — `Hub.mountHeader`, `Hub.run`, `Hub.ask`, Markdown renderer, settings modal
+- `shared/claude.js` — `Hub.mountHeader`, `Hub.run`, `Hub.ask` (streaming), Markdown renderer, settings modal, file upload, Word export
+- `shared/kit.js` — demo toolkit: state, maker/approver roles, activity log, tabs, workflow steps, tables, review & approval, Excel export, guided tour, brand charts
+- `data/*.json` + `scripts/gen/*.mjs` — seeded synthetic datasets for the fleshed-out demos and the generators that produce them
+- `proxy/` — Cloudflare Worker gateway that holds the hospital API key (with `tests/worker.test.mjs`)
+- `docs/FLAGSHIP_BRIEF.md`, `docs/flagship-template.html` — the pattern every fleshed-out demo follows
 - `shared/apps.js` — the prototype registry (hub tiles, governance page and this table come from it)
 - `apps/*.html` — one self-contained prototype per use case
 - `tests/smoke.mjs` — Playwright smoke test (every page at 1280px and 375px: demo output, JS/network errors, overflow, hub links); runs on every PR via `.github/workflows/smoke.yml`

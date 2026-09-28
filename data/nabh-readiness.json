@@ -1,0 +1,1270 @@
+{
+ "today": "2026-09-27",
+ "chapters": [
+  {
+   "code": "AAC",
+   "name": "Access, Assessment & Continuity of Care"
+  },
+  {
+   "code": "COP",
+   "name": "Care of Patients"
+  },
+  {
+   "code": "MOM",
+   "name": "Management of Medication"
+  },
+  {
+   "code": "PRE",
+   "name": "Patient Rights & Education"
+  },
+  {
+   "code": "HIC",
+   "name": "Hospital Infection Control"
+  },
+  {
+   "code": "PSQ",
+   "name": "Patient Safety & Quality Improvement"
+  },
+  {
+   "code": "ROM",
+   "name": "Responsibilities of Management"
+  },
+  {
+   "code": "FMS",
+   "name": "Facility Management & Safety"
+  },
+  {
+   "code": "HRM",
+   "name": "Human Resource Management"
+  },
+  {
+   "code": "IMS",
+   "name": "Information Management System"
+  }
+ ],
+ "departments": [
+  {
+   "dept": "Quality & Accreditation",
+   "role": "Quality Manager"
+  },
+  {
+   "dept": "Facilities & Engineering",
+   "role": "Facilities Manager"
+  },
+  {
+   "dept": "Pharmacy",
+   "role": "Chief Pharmacist"
+  },
+  {
+   "dept": "Nursing Directorate",
+   "role": "Nursing Superintendent"
+  },
+  {
+   "dept": "Infection Control",
+   "role": "Infection Control Officer"
+  },
+  {
+   "dept": "Human Resources",
+   "role": "HR Head"
+  },
+  {
+   "dept": "Information Technology",
+   "role": "IT Head"
+  },
+  {
+   "dept": "Medical Affairs",
+   "role": "Medical Superintendent"
+  },
+  {
+   "dept": "Biomedical Engineering",
+   "role": "Biomedical Engineer"
+  },
+  {
+   "dept": "Administration",
+   "role": "Admin Manager"
+  },
+  {
+   "dept": "Emergency & Trauma",
+   "role": "ER Head of Dept"
+  },
+  {
+   "dept": "Blood Bank",
+   "role": "Blood Bank In-charge"
+  },
+  {
+   "dept": "Health Records (MRD)",
+   "role": "MRD In-charge"
+  },
+  {
+   "dept": "CSSD",
+   "role": "CSSD In-charge"
+  },
+  {
+   "dept": "Risk Management",
+   "role": "Risk Manager"
+  }
+ ],
+ "policies": [
+  {
+   "id": "LHRC/P&P/REG/06",
+   "title": "Patient Registration & Records",
+   "chapter": "AAC",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2024-01-07",
+   "reviewed": "2024-01-21",
+   "due": "2027-01-20",
+   "version": 3,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/OPA/08",
+   "title": "Outpatient Assessment Protocol",
+   "chapter": "AAC",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2024-04-26",
+   "reviewed": "2024-05-22",
+   "due": "2027-05-22",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ADM/04",
+   "title": "Inpatient Admission & Bed Allocation",
+   "chapter": "AAC",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": "2023-12-25",
+   "reviewed": "2024-02-12",
+   "due": "2027-02-11",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/COC/05",
+   "title": "Continuity of Care & Referral",
+   "chapter": "AAC",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2023-03-12",
+   "reviewed": "2023-03-30",
+   "due": "2026-03-29",
+   "version": 5,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/TRF/08",
+   "title": "Transfer of Patients (Intra/Inter-hospital)",
+   "chapter": "AAC",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2023-12-05",
+   "reviewed": "2023-12-16",
+   "due": "2026-12-15",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/DIS/13",
+   "title": "Discharge Planning & Summary",
+   "chapter": "AAC",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2026-02-15",
+   "reviewed": "2026-02-26",
+   "due": "2029-02-25",
+   "version": 6,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ER/05",
+   "title": "Emergency Department Triage Protocol",
+   "chapter": "COP",
+   "ownerDept": "Emergency & Trauma",
+   "ownerRole": "ER Head of Dept",
+   "prepared": "2026-04-25",
+   "reviewed": "2026-05-18",
+   "due": "2029-05-17",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ER/03",
+   "title": "Auto Pulse Mechanical CPR Device Use in ER",
+   "chapter": "COP",
+   "ownerDept": "Emergency & Trauma",
+   "ownerRole": "ER Head of Dept",
+   "prepared": "2024-10-08",
+   "reviewed": "2024-11-13",
+   "due": "2027-11-13",
+   "version": 3,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/OBS/09",
+   "title": "High-Risk Obstetric Care Protocol",
+   "chapter": "COP",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2023-12-13",
+   "reviewed": "2024-01-09",
+   "due": "2027-01-08",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/SED/05",
+   "title": "Moderate Sedation & Analgesia",
+   "chapter": "COP",
+   "ownerDept": "Nursing Directorate",
+   "ownerRole": "Nursing Superintendent",
+   "prepared": "2022-12-07",
+   "reviewed": "2022-12-26",
+   "due": "2025-12-25",
+   "version": 5,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/RES/11",
+   "title": "Physical Restraint & Seclusion Policy",
+   "chapter": "COP",
+   "ownerDept": "Nursing Directorate",
+   "ownerRole": "Nursing Superintendent",
+   "prepared": "2025-08-19",
+   "reviewed": "2025-09-28",
+   "due": "2028-09-27",
+   "version": 5,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/BT/06",
+   "title": "Blood & Blood Component Transfusion",
+   "chapter": "COP",
+   "ownerDept": "Blood Bank",
+   "ownerRole": "Blood Bank In-charge",
+   "prepared": "2023-02-25",
+   "reviewed": "2023-04-11",
+   "due": "2026-04-10",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/MOM/06",
+   "title": "Medication Storage & Cold Chain",
+   "chapter": "MOM",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "prepared": "2025-06-01",
+   "reviewed": "2025-07-13",
+   "due": "2028-07-12",
+   "version": 6,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/HAM/09",
+   "title": "High-Alert Medication Management",
+   "chapter": "MOM",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "prepared": "2023-09-28",
+   "reviewed": "2023-10-23",
+   "due": "2026-10-22",
+   "version": 3,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/REC/04",
+   "title": "Medication Reconciliation",
+   "chapter": "MOM",
+   "ownerDept": "Nursing Directorate",
+   "ownerRole": "Nursing Superintendent",
+   "prepared": "2025-11-01",
+   "reviewed": "2025-12-30",
+   "due": "2028-12-29",
+   "version": 6,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/NAR/09",
+   "title": "Narcotic & Controlled Drug Custody",
+   "chapter": "MOM",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "prepared": "2024-08-24",
+   "reviewed": "2024-09-07",
+   "due": "2027-09-07",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PRO/07",
+   "title": "Prescription & Verbal Order Policy",
+   "chapter": "MOM",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "prepared": "2024-11-30",
+   "reviewed": "2024-12-29",
+   "due": "2027-12-29",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ADR/12",
+   "title": "Adverse Drug Reaction Reporting",
+   "chapter": "MOM",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "prepared": "2025-09-28",
+   "reviewed": "2025-11-19",
+   "due": "2028-11-18",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PRE/05",
+   "title": "Patient Rights & Responsibilities Charter",
+   "chapter": "PRE",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2025-02-14",
+   "reviewed": "2025-02-27",
+   "due": "2028-02-27",
+   "version": 5,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/CON/08",
+   "title": "Informed Consent for Procedures",
+   "chapter": "PRE",
+   "ownerDept": "Medical Affairs",
+   "ownerRole": "Medical Superintendent",
+   "prepared": "2023-12-06",
+   "reviewed": "2024-01-20",
+   "due": "2027-01-19",
+   "version": 1,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/EDU/11",
+   "title": "Patient & Family Education Program",
+   "chapter": "PRE",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2024-12-23",
+   "reviewed": "2025-02-16",
+   "due": "2028-02-16",
+   "version": 3,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/GRV/07",
+   "title": "Grievance Redressal Mechanism",
+   "chapter": "PRE",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": "2024-09-16",
+   "reviewed": "2024-10-31",
+   "due": "2027-10-31",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/LANG/11",
+   "title": "Interpreter & Language Assistance",
+   "chapter": "PRE",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": null,
+   "reviewed": null,
+   "due": null,
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/EOL/06",
+   "title": "Advance Directives & End-of-Life Care",
+   "chapter": "PRE",
+   "ownerDept": "Medical Affairs",
+   "ownerRole": "Medical Superintendent",
+   "prepared": "2023-10-20",
+   "reviewed": "2023-12-02",
+   "due": "2026-12-01",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/HIC/04",
+   "title": "Hospital Infection Control Manual",
+   "chapter": "HIC",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "prepared": "2023-06-14",
+   "reviewed": "2023-07-04",
+   "due": "2026-07-03",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/HH/06",
+   "title": "Hand Hygiene Program",
+   "chapter": "HIC",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "prepared": "2025-02-05",
+   "reviewed": "2025-02-19",
+   "due": "2028-02-19",
+   "version": 6,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/NSI/09",
+   "title": "Needle-Stick & Sharps Injury Protocol",
+   "chapter": "HIC",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "prepared": "2024-11-23",
+   "reviewed": "2024-12-09",
+   "due": "2027-12-09",
+   "version": 5,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/ISO/12",
+   "title": "Isolation Precautions (Airborne/Droplet/Contact)",
+   "chapter": "HIC",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "prepared": "2025-06-29",
+   "reviewed": "2025-08-02",
+   "due": "2028-08-01",
+   "version": 5,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/CSSD/07",
+   "title": "Sterile Supply & CSSD Monitoring",
+   "chapter": "HIC",
+   "ownerDept": "CSSD",
+   "ownerRole": "CSSD In-charge",
+   "prepared": "2023-04-01",
+   "reviewed": "2023-04-19",
+   "due": "2026-04-18",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ABS/14",
+   "title": "Antibiotic Stewardship Program",
+   "chapter": "HIC",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "prepared": "2023-10-11",
+   "reviewed": "2023-12-09",
+   "due": "2026-12-08",
+   "version": 3,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PSQ/09",
+   "title": "Patient Safety Incident Reporting (CAPA)",
+   "chapter": "PSQ",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2026-01-30",
+   "reviewed": "2026-02-15",
+   "due": "2029-02-14",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/SEN/04",
+   "title": "Sentinel Event Review Policy",
+   "chapter": "PSQ",
+   "ownerDept": "Risk Management",
+   "ownerRole": "Risk Manager",
+   "prepared": "2024-01-14",
+   "reviewed": "2024-02-02",
+   "due": "2027-02-01",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/IND/04",
+   "title": "Clinical Indicator Monitoring",
+   "chapter": "PSQ",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2023-02-27",
+   "reviewed": "2023-04-12",
+   "due": "2026-04-11",
+   "version": 3,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/RM/06",
+   "title": "Risk Management Framework",
+   "chapter": "PSQ",
+   "ownerDept": "Risk Management",
+   "ownerRole": "Risk Manager",
+   "prepared": "2023-11-07",
+   "reviewed": "2024-01-06",
+   "due": "2027-01-05",
+   "version": 5,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PID/11",
+   "title": "Patient Identification Protocol",
+   "chapter": "PSQ",
+   "ownerDept": "Nursing Directorate",
+   "ownerRole": "Nursing Superintendent",
+   "prepared": "2023-03-11",
+   "reviewed": "2023-05-06",
+   "due": "2026-05-05",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/QC/13",
+   "title": "Quality Council Charter",
+   "chapter": "PSQ",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2024-02-03",
+   "reviewed": "2024-02-17",
+   "due": "2027-02-16",
+   "version": 6,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ROM/04",
+   "title": "Organisation Chart & Delegation of Authority",
+   "chapter": "ROM",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": null,
+   "reviewed": null,
+   "due": null,
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/AOP/04",
+   "title": "Strategic & Annual Operating Plan",
+   "chapter": "ROM",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": null,
+   "reviewed": null,
+   "due": null,
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/COMP/08",
+   "title": "Corporate Compliance Policy",
+   "chapter": "ROM",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": "2023-03-13",
+   "reviewed": "2023-04-20",
+   "due": "2026-04-19",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/ETH/11",
+   "title": "Ethics Committee Charter",
+   "chapter": "ROM",
+   "ownerDept": "Medical Affairs",
+   "ownerRole": "Medical Superintendent",
+   "prepared": "2023-09-25",
+   "reviewed": "2023-11-16",
+   "due": "2026-11-15",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/CSO/12",
+   "title": "Contracted Services Oversight",
+   "chapter": "ROM",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": "2022-10-19",
+   "reviewed": "2022-12-18",
+   "due": "2025-12-17",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PUB/06",
+   "title": "Public Disclosure & Website Policy",
+   "chapter": "ROM",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "prepared": null,
+   "reviewed": null,
+   "due": null,
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/FS/07",
+   "title": "Fire Safety & Evacuation",
+   "chapter": "FMS",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "prepared": "2025-05-31",
+   "reviewed": "2025-06-10",
+   "due": "2028-06-09",
+   "version": 1,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/BMW/10",
+   "title": "Biomedical Waste Management",
+   "chapter": "FMS",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "prepared": "2026-01-20",
+   "reviewed": "2026-02-25",
+   "due": "2029-02-24",
+   "version": 1,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/HSM/03",
+   "title": "Hazardous Material Safety",
+   "chapter": "FMS",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "prepared": "2024-06-08",
+   "reviewed": "2024-06-30",
+   "due": "2027-06-30",
+   "version": 3,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/DMP/11",
+   "title": "Disaster Management Plan (Code Grey)",
+   "chapter": "FMS",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "prepared": "2025-01-13",
+   "reviewed": "2025-03-02",
+   "due": "2028-03-01",
+   "version": 2,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/EQP/07",
+   "title": "Medical Equipment Maintenance Program",
+   "chapter": "FMS",
+   "ownerDept": "Biomedical Engineering",
+   "ownerRole": "Biomedical Engineer",
+   "prepared": "2026-03-10",
+   "reviewed": "2026-03-29",
+   "due": "2029-03-28",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/UTL/11",
+   "title": "Utility Systems Management (Power/Water/Medical Gas)",
+   "chapter": "FMS",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "prepared": "2023-04-18",
+   "reviewed": "2023-06-03",
+   "due": "2026-06-02",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/HRM/07",
+   "title": "HR Credentialing & Privileging",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": "2024-04-19",
+   "reviewed": "2024-04-30",
+   "due": "2027-04-30",
+   "version": 6,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/ORI/08",
+   "title": "Staff Orientation & Induction",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": "2023-05-26",
+   "reviewed": "2023-07-09",
+   "due": "2026-07-08",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/CE/04",
+   "title": "Continuing Education & Training Hours",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": "2023-06-20",
+   "reviewed": "2023-07-18",
+   "due": "2026-07-17",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/SH/06",
+   "title": "Staff Health & Immunization",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": "2023-10-10",
+   "reviewed": "2023-12-02",
+   "due": "2026-12-01",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/PA/12",
+   "title": "Performance Appraisal Policy",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": null,
+   "reviewed": null,
+   "due": null,
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/GDP/10",
+   "title": "Grievance & Disciplinary Procedure (Staff)",
+   "chapter": "HRM",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "prepared": "2023-11-27",
+   "reviewed": "2023-12-08",
+   "due": "2026-12-07",
+   "version": 4,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/IMS/08",
+   "title": "IT & Cybersecurity Policy (Downtime Procedure)",
+   "chapter": "IMS",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "prepared": "2024-07-22",
+   "reviewed": "2024-09-06",
+   "due": "2027-09-06",
+   "version": 1,
+   "hasExcerpt": true
+  },
+  {
+   "id": "LHRC/P&P/EMR/10",
+   "title": "Electronic Medical Record Access Control",
+   "chapter": "IMS",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "prepared": "2024-10-26",
+   "reviewed": "2024-11-09",
+   "due": "2027-11-09",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/MRR/10",
+   "title": "Medical Records Retention & Retrieval",
+   "chapter": "IMS",
+   "ownerDept": "Health Records (MRD)",
+   "ownerRole": "MRD In-charge",
+   "prepared": "2025-04-02",
+   "reviewed": "2025-05-30",
+   "due": "2028-05-29",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/DBR/12",
+   "title": "Data Backup & Disaster Recovery",
+   "chapter": "IMS",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "prepared": "2026-02-27",
+   "reviewed": "2026-04-15",
+   "due": "2029-04-14",
+   "version": 2,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/SIR/06",
+   "title": "Statistical Indicator Reporting",
+   "chapter": "IMS",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "prepared": "2024-01-29",
+   "reviewed": "2024-02-16",
+   "due": "2027-02-15",
+   "version": 1,
+   "hasExcerpt": false
+  },
+  {
+   "id": "LHRC/P&P/DPP/08",
+   "title": "Confidentiality & Data Privacy Policy",
+   "chapter": "IMS",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "prepared": "2024-09-21",
+   "reviewed": "2024-11-19",
+   "due": "2027-11-19",
+   "version": 6,
+   "hasExcerpt": false
+  }
+ ],
+ "excerpts": [
+  {
+   "id": "LHRC/P&P/ER/03",
+   "title": "Auto Pulse Mechanical CPR Device Use in ER",
+   "chapter": "COP",
+   "section": "Section 4.2–4.3 — Authorised Use",
+   "text": "Section 4.2 — Authorised Use: The Auto Pulse mechanical CPR device is approved for use within the Emergency Department and the Cath Lab only, by ER physicians and Critical Care physicians who have completed the vendor-certified competency module (valid 2 years).\nSection 4.3 — Use Outside ER: Deployment of the device outside the ER or Cath Lab (e.g. during an in-hospital transport code blue) requires verbal authorisation from the ER Medical Officer on duty OR the Critical Care Consultant on call, to be countersigned within 24 hours. Nursing staff may not independently authorise use."
+  },
+  {
+   "id": "LHRC/P&P/FS/07",
+   "title": "Fire Safety & Evacuation",
+   "chapter": "FMS",
+   "section": "Section 3 — Evacuation & Fire Drills",
+   "text": "Section 3.1 — Fire Alarm Response: On activation of a fire alarm, the ward in-charge announces \"Code Red, [location]\" over the PA system and initiates horizontal evacuation to the adjoining fire compartment first; vertical evacuation via the designated fire stairs is used only if the fire compartment itself is compromised.\nSection 3.2 — Drill Frequency: A full-scale fire evacuation drill is conducted each quarter per building block, with at least one night-shift drill per year. Records (attendance, evacuation time, debrief notes) are retained by Facilities for 3 years.\nSection 3.3 — Fire Extinguisher Checks: Monthly visual check and annual refill/pressure test by an empanelled vendor; tags updated on each extinguisher."
+  },
+  {
+   "id": "LHRC/P&P/BMW/10",
+   "title": "Biomedical Waste Management",
+   "chapter": "FMS",
+   "section": "Section 2 — Waste Segregation & Handover",
+   "text": "Section 2.1 — Colour Coding: Yellow (human anatomical waste, soiled linen), Red (contaminated plastics, tubing, catheters), White/translucent (sharps, needles), Blue (glassware, metallic implants).\nSection 2.2 — Segregation Point: Segregation happens at the point of generation (bedside/OT), never retrospectively at the storage room.\nSection 2.3 — Handover: Waste is weighed and logged in the BMW register at each shift change, then handed to the empanelled BMW contractor daily by 6 pm; the contractor's manifest is countersigned by the ward in-charge and filed for 5 years."
+  },
+  {
+   "id": "LHRC/P&P/HSM/03",
+   "title": "Hazardous Material Safety",
+   "chapter": "FMS",
+   "section": "Section 6 — Chemical Spill Response (Mercury Spills)",
+   "text": "Section 6.1 — Mercury Spills (e.g. broken thermometer/sphygmomanometer): Evacuate the immediate area; do not use a vacuum cleaner or broom. Don PPE (nitrile gloves, N95). Use the designated Mercury Spill Kit (stored in each nursing station utility room) to contain droplets using the suction bulb/cardboard provided; place residue in the kit's sealed container, label as hazardous waste, and hand over to the BMW contractor per LHRC/P&P/BMW/01. Ventilate the area for a minimum of 2 hours.\nSection 6.2 — Non-mercury chemical spills (housekeeping chemicals): refer to the MSDS on file with the Housekeeping Supervisor; this excerpt does not reproduce the MSDS index."
+  },
+  {
+   "id": "LHRC/P&P/MOM/06",
+   "title": "Medication Storage & Cold Chain",
+   "chapter": "MOM",
+   "section": "Section 5 — Storage & Cold Chain",
+   "text": "Section 5.1 — Ambient Storage: Medication store rooms are maintained at 20–25°C with daily logged temperature checks (twice a shift); any excursion beyond 30°C for over 2 hours is reported to Pharmacy and the affected batch quarantined pending manufacturer advice.\nSection 5.2 — Cold Chain: Refrigerated medicines (vaccines, insulin, some biologics) are stored at 2–8°C in a dedicated pharmacy refrigerator with a continuous data logger and backup power; a stock-out or power failure alarm routes to the on-call pharmacist's phone.\nSection 5.3 — Look-Alike/Sound-Alike (LASA): LASA drugs are stored with tall-man lettering and a physical separator, never adjacent on the same shelf."
+  },
+  {
+   "id": "LHRC/P&P/PRE/05",
+   "title": "Patient Rights & Responsibilities Charter",
+   "chapter": "PRE",
+   "section": "Section 1 — Patient Rights",
+   "text": "Section 1.4 — Right to Information: Patients and, where relevant, their attendants have the right to receive information about their diagnosis, planned treatment, expected cost estimate, and alternatives, in a language they understand.\nSection 1.7 — Right to Refuse Treatment: A competent adult patient may refuse a recommended treatment after being informed of the likely consequences; the refusal and the counselling given are documented and countersigned by the treating consultant.\nSection 1.9 — Privacy & Confidentiality: Patient information is disclosed to family only with the patient's consent, except where law requires disclosure (e.g. notifiable diseases, medico-legal cases)."
+  },
+  {
+   "id": "LHRC/P&P/CON/08",
+   "title": "Informed Consent for Procedures",
+   "chapter": "PRE",
+   "section": "Section 2 — Informed Consent",
+   "text": "Section 2.1 — Who Obtains Consent: Informed consent for any invasive procedure or surgery is obtained by the operating/treating consultant (or a designated qualified team member), not by administrative or nursing staff alone.\nSection 2.3 — High-Risk Procedures: For high-risk procedures (e.g. robotic surgery, procedures under general anaesthesia), consent is taken on the specific high-risk consent form listing the procedure, alternatives, anticipated benefits, material risks and the named consultant, at least on the day prior to an elective procedure where feasible.\nSection 2.5 — Video/Photo Consent: Separate written consent is required before any clinical photography or video recording, specifying the purpose (record vs teaching vs publication)."
+  },
+  {
+   "id": "LHRC/P&P/RES/11",
+   "title": "Physical Restraint & Seclusion Policy",
+   "chapter": "COP",
+   "section": "Section 4 — Restraint Use",
+   "text": "Section 4.1 — Indications: Physical restraint is used only when a patient is a danger to self or others and less-restrictive measures have failed or are not feasible; it is never used for staff convenience.\nSection 4.2 — Authorisation: Restraint requires a documented physician order specifying type, reason and maximum duration (renewable in writing every 4 hours for behavioural restraint, every 24 hours for medical/surgical restraint); a verbal order must be countersigned within 1 hour.\nSection 4.4 — Monitoring: A restrained patient is assessed and the restraint's continued need reviewed at least every 2 hours, with skin integrity, circulation and toileting needs checked and logged on the restraint monitoring sheet."
+  },
+  {
+   "id": "LHRC/P&P/HRM/07",
+   "title": "HR Credentialing & Privileging",
+   "chapter": "HRM",
+   "section": "Section 3 — Credentialing & Privileging",
+   "text": "Section 3.1 — Primary Source Verification: Before a consultant is granted clinical privileges, HR/Medical Affairs verifies the medical degree, postgraduate qualification, Kerala Medical Council registration, and prior employment references from the primary source (issuing university/council), not from photocopies alone.\nSection 3.3 — Privilege Delineation: Privileges are granted procedure-wise (a delineated privileges list), not merely by department, and are reviewed at re-credentialing every 2 years or on request for a new procedure/technology (e.g. a new robotic platform).\nSection 3.5 — Locum & Visiting Consultants: A locum or visiting consultant practising for fewer than 30 days in a year still requires the same primary source verification before any patient contact, with an abbreviated file retained."
+  },
+  {
+   "id": "LHRC/P&P/IMS/08",
+   "title": "IT & Cybersecurity Policy (Downtime Procedure)",
+   "chapter": "IMS",
+   "section": "Section 7 — Downtime Procedure",
+   "text": "Section 7.1 — Planned Downtime: IT notifies all clinical and billing areas at least 24 hours before planned HIS/EMR downtime; each ward switches to the paper downtime forms kept in the downtime box at the nursing station.\nSection 7.2 — Unplanned Downtime: On an unplanned outage, the ward in-charge activates the downtime protocol immediately: paper vitals charting, paper drug charts, and manual bed-board tracking, with a designated \"runner\" for lab/pharmacy communication until systems are restored.\nSection 7.3 — Data Reconciliation: Once systems are restored, all paper records generated during downtime are entered into the EMR within 24 hours and the original paper forms scanned and retained per the medical records retention schedule."
+  },
+  {
+   "id": "LHRC/P&P/DMP/11",
+   "title": "Disaster Management Plan (Code Grey)",
+   "chapter": "FMS",
+   "section": "Section 2 — Code Alerts",
+   "text": "Section 2.1 — Code Grey (Internal Disaster, e.g. structural/fire/utility failure): Announced hospital-wide; the Disaster Management Committee convenes at the designated command point within 15 minutes; non-essential admissions are paused and the surge bed list is activated.\nSection 2.2 — Code Yellow (External/Mass Casualty Disaster): Triggers activation of the triage area near the ER ambulance bay, recall of off-duty clinical staff per the recall tree, and opening of the overflow ward.\nSection 2.4 — Drills: At least two mock disaster drills per year, one of which simulates a mass casualty (Code Yellow) scenario, with a written debrief within 1 week."
+  },
+  {
+   "id": "LHRC/P&P/NSI/09",
+   "title": "Needle-Stick & Sharps Injury Protocol",
+   "chapter": "HIC",
+   "section": "Section 9 — Sharps and Needle-Stick Injuries",
+   "text": "Section 9.1 — Immediate First Aid: Wash the exposed site with soap and running water (do not squeeze or suck); for mucosal splash, flush with saline or water for 10 minutes.\nSection 9.2 — Reporting: Report to the Infection Control Officer within 1 hour of exposure using the needle-stick injury form; do not wait for the shift to end.\nSection 9.3 — Post-Exposure Prophylaxis: PEP eligibility and regimen are assessed per Annexure C based on source-patient status and exposure severity; baseline and follow-up serology are tracked by Infection Control at 6 weeks, 3 months and 6 months."
+  }
+ ],
+ "gaps": [
+  {
+   "id": "GAP-001",
+   "title": "IT & Cybersecurity Policy overdue for revision",
+   "chapter": "IMS",
+   "severity": "High",
+   "description": "The governing IT & Cybersecurity policy has crossed its 3-year revision cycle with no updated VAPT (vulnerability assessment/penetration test) evidence on file.",
+   "policyId": "LHRC/P&P/IMS/08",
+   "policyTitle": "IT & Cybersecurity Policy (Downtime Procedure)",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "raisedOn": "2026-09-05",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-002",
+   "title": "Auto Pulse device competency certificates lapsing",
+   "chapter": "COP",
+   "severity": "High",
+   "description": "Vendor competency certification for the mechanical CPR device is 2-year validity; several ER nursing staff certificates lapsed without a refresher batch scheduled.",
+   "policyId": "LHRC/P&P/ER/05",
+   "policyTitle": "Emergency Department Triage Protocol",
+   "ownerDept": "Emergency & Trauma",
+   "ownerRole": "ER Head of Dept",
+   "raisedOn": "2026-08-15",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-003",
+   "title": "Fire drill records incomplete for Q2",
+   "chapter": "FMS",
+   "severity": "Medium",
+   "description": "Quarterly fire evacuation drill for the OPD block in Q2 2026 has no attendance sheet or evacuation-time record on file.",
+   "policyId": "LHRC/P&P/FS/07",
+   "policyTitle": "Fire Safety & Evacuation",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "raisedOn": "2026-09-15",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-004",
+   "title": "Mercury spill kit missing in two nursing stations",
+   "chapter": "FMS",
+   "severity": "High",
+   "description": "Internal round found the designated Mercury Spill Kit absent from the utility rooms of 3rd floor Medicine ward and 5th floor Surgical ward.",
+   "policyId": "LHRC/P&P/HSM/03",
+   "policyTitle": "Hazardous Material Safety",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "raisedOn": "2026-08-24",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-005",
+   "title": "BMW manifest countersignature gaps",
+   "chapter": "FMS",
+   "severity": "Medium",
+   "description": "Random audit of 20 daily BMW handover manifests found 4 without the ward in-charge countersignature.",
+   "policyId": "LHRC/P&P/BMW/10",
+   "policyTitle": "Biomedical Waste Management",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "raisedOn": "2026-09-10",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-006",
+   "title": "Cold-chain temperature log gaps in pharmacy store",
+   "chapter": "MOM",
+   "severity": "Medium",
+   "description": "The twice-a-shift refrigerator temperature log for the main pharmacy store had unexplained gaps on 6 days in August 2026.",
+   "policyId": "LHRC/P&P/MOM/06",
+   "policyTitle": "Medication Storage & Cold Chain",
+   "ownerDept": "Pharmacy",
+   "ownerRole": "Chief Pharmacist",
+   "raisedOn": "2026-08-26",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-007",
+   "title": "Restraint monitoring sheet not completed every 2 hours",
+   "chapter": "COP",
+   "severity": "High",
+   "description": "Chart review of 5 ICU restraint episodes found the 2-hourly monitoring sheet completed for only 2 of the required intervals in 3 cases.",
+   "policyId": "LHRC/P&P/RES/11",
+   "policyTitle": "Physical Restraint & Seclusion Policy",
+   "ownerDept": "Nursing Directorate",
+   "ownerRole": "Nursing Superintendent",
+   "raisedOn": "2026-09-09",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-008",
+   "title": "Credentialing file missing primary-source verification",
+   "chapter": "HRM",
+   "severity": "High",
+   "description": "One visiting consultant file (cardiology) had degree copies on record but no documented primary-source verification from the issuing university.",
+   "policyId": "LHRC/P&P/HRM/07",
+   "policyTitle": "HR Credentialing & Privileging",
+   "ownerDept": "Human Resources",
+   "ownerRole": "HR Head",
+   "raisedOn": "2026-08-27",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-009",
+   "title": "Informed consent form missing consultant signature",
+   "chapter": "PRE",
+   "severity": "Medium",
+   "description": "Medical records audit of 30 surgical files found 2 high-risk consent forms with the patient signature but no countersignature from the named consultant.",
+   "policyId": "LHRC/P&P/CON/08",
+   "policyTitle": "Informed Consent for Procedures",
+   "ownerDept": "Medical Affairs",
+   "ownerRole": "Medical Superintendent",
+   "raisedOn": "2026-08-21",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-010",
+   "title": "Needle-stick injuries not reported within 1 hour",
+   "chapter": "HIC",
+   "severity": "Medium",
+   "description": "Of 12 needle-stick injuries logged in the last quarter, 4 were reported to Infection Control more than 4 hours after the exposure.",
+   "policyId": "LHRC/P&P/NSI/09",
+   "policyTitle": "Needle-Stick & Sharps Injury Protocol",
+   "ownerDept": "Infection Control",
+   "ownerRole": "Infection Control Officer",
+   "raisedOn": "2026-08-19",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-011",
+   "title": "Disaster drill debrief not completed",
+   "chapter": "FMS",
+   "severity": "Low",
+   "description": "The mass-casualty (Code Yellow) mock drill in July 2026 was conducted but the written debrief was never circulated within the required 1 week.",
+   "policyId": "LHRC/P&P/DMP/11",
+   "policyTitle": "Disaster Management Plan (Code Grey)",
+   "ownerDept": "Facilities & Engineering",
+   "ownerRole": "Facilities Manager",
+   "raisedOn": "2026-09-09",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-012",
+   "title": "Patient rights charter not displayed in regional language",
+   "chapter": "PRE",
+   "severity": "Low",
+   "description": "Patient rights charter posters in 2 outpatient waiting areas are in English only; Malayalam version is not displayed.",
+   "policyId": "LHRC/P&P/PRE/05",
+   "policyTitle": "Patient Rights & Responsibilities Charter",
+   "ownerDept": "Quality & Accreditation",
+   "ownerRole": "Quality Manager",
+   "raisedOn": "2026-09-07",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-013",
+   "title": "Downtime paper forms stock low at nursing stations",
+   "chapter": "IMS",
+   "severity": "Low",
+   "description": "Spot check found the downtime box in 2 wards had fewer than 5 paper vitals-charting forms remaining, below the stocked minimum of 20.",
+   "policyId": "LHRC/P&P/IMS/08",
+   "policyTitle": "IT & Cybersecurity Policy (Downtime Procedure)",
+   "ownerDept": "Information Technology",
+   "ownerRole": "IT Head",
+   "raisedOn": "2026-08-20",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-014",
+   "title": "Sentinel event review turnaround exceeding target",
+   "chapter": "PSQ",
+   "severity": "Medium",
+   "description": "Root cause analysis for the last 2 sentinel events took 18 and 21 days respectively, against the policy target of completion within 10 working days.",
+   "policyId": "LHRC/P&P/SEN/04",
+   "policyTitle": "Sentinel Event Review Policy",
+   "ownerDept": "Risk Management",
+   "ownerRole": "Risk Manager",
+   "raisedOn": "2026-09-04",
+   "status": "Open"
+  },
+  {
+   "id": "GAP-015",
+   "title": "Delegation of authority chart not updated post reorganisation",
+   "chapter": "ROM",
+   "severity": "Medium",
+   "description": "The approved organisation chart and delegation-of-authority table still reflects the pre-reorganisation structure from 2024; 3 roles have since changed.",
+   "policyId": "LHRC/P&P/ROM/04",
+   "policyTitle": "Organisation Chart & Delegation of Authority",
+   "ownerDept": "Administration",
+   "ownerRole": "Admin Manager",
+   "raisedOn": "2026-09-19",
+   "status": "Open"
+  }
+ ],
+ "surveyBank": {
+  "AAC": [
+   {
+    "q": "Walk me through a patient from registration to bed allocation — where is continuity of care documented?",
+    "evidence": "Admission register, bed board log, nursing assessment sheet"
+   },
+   {
+    "q": "Show me a recent inter-hospital patient transfer record with the accompanying clinical summary.",
+    "evidence": "Transfer form, referral letter, ambulance handover checklist"
+   },
+   {
+    "q": "How do you ensure a discharge summary reaches the patient and the referring doctor?",
+    "evidence": "Discharge summary log, courier/email dispatch register"
+   }
+  ],
+  "COP": [
+   {
+    "q": "Demonstrate the competency record for staff authorised to use the mechanical CPR device.",
+    "evidence": "Vendor competency certificates, training attendance log"
+   },
+   {
+    "q": "Show me a recent restraint episode and its 2-hourly monitoring sheet.",
+    "evidence": "Restraint order, monitoring sheet, physician review notes"
+   },
+   {
+    "q": "How is a blood transfusion reaction identified and escalated?",
+    "evidence": "Transfusion reaction reporting form, blood bank register"
+   }
+  ],
+  "MOM": [
+   {
+    "q": "Show me today's cold-chain temperature log for the pharmacy store.",
+    "evidence": "Refrigerator temperature log, alarm/escalation record"
+   },
+   {
+    "q": "How are look-alike/sound-alike drugs physically separated on the shelf?",
+    "evidence": "Pharmacy store walk-through, LASA labelling"
+   },
+   {
+    "q": "Walk me through medication reconciliation at admission and discharge.",
+    "evidence": "Reconciliation form, discharge medication list"
+   }
+  ],
+  "PRE": [
+   {
+    "q": "Show me a high-risk procedure consent form completed in the last week.",
+    "evidence": "Signed high-risk consent form with consultant countersignature"
+   },
+   {
+    "q": "How does a patient register a grievance, and how is it tracked to closure?",
+    "evidence": "Grievance register, turnaround-time log"
+   },
+   {
+    "q": "Is the patient rights charter available in the local language?",
+    "evidence": "Charter display at OPD/wards, translated versions"
+   }
+  ],
+  "HIC": [
+   {
+    "q": "Show me the needle-stick injury reporting and PEP tracking for the last quarter.",
+    "evidence": "Injury report forms, PEP register, serology follow-up log"
+   },
+   {
+    "q": "Demonstrate a hand-hygiene compliance audit and the corrective actions taken.",
+    "evidence": "Hand-hygiene audit checklist, trend chart, CAPA if below target"
+   },
+   {
+    "q": "How is isolation precaution signage and PPE stocked for an airborne-precaution room?",
+    "evidence": "Isolation room walk-through, PPE stock log"
+   }
+  ],
+  "PSQ": [
+   {
+    "q": "Show me the root-cause analysis for your most recent sentinel event, with turnaround time.",
+    "evidence": "RCA report, timeline against the 10-working-day target"
+   },
+   {
+    "q": "How are clinical indicators tracked and reviewed by the Quality Council?",
+    "evidence": "Indicator dashboard, Quality Council minutes"
+   },
+   {
+    "q": "Demonstrate the patient identification protocol at the bedside.",
+    "evidence": "ID band check, two-identifier verification at a care point"
+   }
+  ],
+  "ROM": [
+   {
+    "q": "Show me the current approved organisation chart and delegation-of-authority table.",
+    "evidence": "Signed org chart, DoA table, board/management approval"
+   },
+   {
+    "q": "How does management oversee contracted/outsourced services (housekeeping, security, F&B)?",
+    "evidence": "Vendor contract, service-level review minutes"
+   },
+   {
+    "q": "Walk me through the annual operating plan review cycle.",
+    "evidence": "AOP document, management review minutes"
+   }
+  ],
+  "FMS": [
+   {
+    "q": "Show me the last fire evacuation drill record, including a night-shift drill.",
+    "evidence": "Drill attendance sheet, evacuation time, debrief notes"
+   },
+   {
+    "q": "Demonstrate the mercury spill kit and walk me through the spill response.",
+    "evidence": "Spill kit at the nursing station, SOP walk-through"
+   },
+   {
+    "q": "Show me the biomedical waste segregation and handover manifest for today.",
+    "evidence": "Colour-coded bins, BMW register, contractor manifest"
+   }
+  ],
+  "HRM": [
+   {
+    "q": "Show me the credentialing file for a recently onboarded consultant, including primary-source verification.",
+    "evidence": "Credentialing file, primary-source verification letter"
+   },
+   {
+    "q": "How is staff continuing education tracked against the required annual hours?",
+    "evidence": "Training log, CE hour tracker"
+   },
+   {
+    "q": "Demonstrate the staff health and immunization record for a clinical staff member.",
+    "evidence": "Immunization card, pre-employment health check record"
+   }
+  ],
+  "IMS": [
+   {
+    "q": "Walk me through what happens on an unplanned HIS/EMR downtime.",
+    "evidence": "Downtime SOP, paper downtime forms, reconciliation log"
+   },
+   {
+    "q": "Show me the data backup and disaster recovery test record.",
+    "evidence": "Backup log, last DR drill report"
+   },
+   {
+    "q": "How is access to the EMR restricted by role?",
+    "evidence": "Access control matrix, audit trail of a sample record"
+   }
+  ]
+ },
+ "months": [
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep"
+ ],
+ "readinessTrend": [
+  60,
+  60,
+  58,
+  63,
+  65,
+  65
+ ]
+}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flagship template</title>
+<link rel="stylesheet" href="../shared/hub.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="page-head">
+    <h1>Flagship pattern</h1>
+    <p>Reference for fleshed-out demos: queue → item → Claude draft → maker/approver review, plus a dashboard.</p>
+  </section>
+  <div id="toolbar"></div>
+  <div id="tabs"></div>
+  <section id="view"></section>
+</main>
+<script src="../shared/claude.js"></script>
+<script src="../shared/kit.js"></script>
+<script>
+const SLUG = 'flagship-template';
+Hub.mountHeader({ dept: 'Template', title: 'Flagship pattern' });
+const st = Hub.kit.state(SLUG, { tab: 'queue', selected: null, reviews: {} });
+let DATA;
+
+function queue(el) {
+  el.innerHTML = `<div class="grid cols-2"><div class="card"><h2>Work queue</h2><div id="tbl"></div></div>
+    <div class="card"><h2>Selected item</h2><div id="detail"><p class="small">Pick a row.</p></div></div></div>`;
+  Hub.kit.table(el.querySelector('#tbl'), {
+    rows: DATA.items, search: true, selectedKey: st.get().selected,
+    columns: [{ key: 'id', label: 'ID' }, { key: 'name', label: 'Request' }, { key: 'dept', label: 'Dept' },
+      { key: 'amount', label: 'Amount', num: true, format: v => Hub.inr(v) },
+      { key: 'status', label: 'Status', render: r => { const s = (st.get().reviews[r.id] || {}).status; return `<span class="tag ${s === 'approved' ? 'ok' : 'warn'}">${Hub.esc(s || r.status)}</span>`; } }],
+    onRowClick: r => { st.set({ selected: r.id }); detail(r); },
+  });
+  const sel = DATA.items.find(i => i.id === st.get().selected);
+  if (sel) detail(sel);
+}
+
+function detail(r) {
+  const el = document.getElementById('detail');
+  const done = st.get().reviews[r.id];
+  el.innerHTML = `<div id="steps"></div><p><b>${Hub.esc(r.name)}</b> · ${Hub.esc(r.dept)} · ${Hub.inr(r.amount)}</p>
+    <button class="primary" id="run">Run with Claude</button><div class="claude-out" id="out" style="margin-top:10px"></div><div id="rv"></div>`;
+  Hub.kit.steps(el.querySelector('#steps'), ['Intake', 'Claude draft', 'Review', 'Approved'], done ? (done.status === 'approved' ? 3 : 2) : 0);
+  if (done) Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: r.name }, text: done.text, st, onDecision: () => { detail(r); } });
+  el.querySelector('#run').onclick = async () => {
+    const text = await Hub.run({ out: '#out', button: '#run', system: 'You review requests.', prompt: JSON.stringify(r), manualMinutes: 30,
+      demo: `## Assessment for ${r.id}\n\n| Check | Result |\n|---|---|\n| Budget | Within limit |\n| Documents | Complete |\n\n**Recommendation:** approve with standard terms. This paragraph pads the demo output past the smoke-test length threshold so the check is meaningful.` });
+    if (!text) return;
+    Hub.kit.log(SLUG, 'Claude draft created', r.id);
+    Hub.kit.steps(el.querySelector('#steps'), ['Intake', 'Claude draft', 'Review', 'Approved'], 2);
+    Hub.kit.review(el.querySelector('#rv'), { slug: SLUG, item: { id: r.id, title: r.name }, text, st, onDecision: () => detail(r) });
+  };
+}
+
+function dashboard(el) {
+  el.innerHTML = `<div class="kpis"><div class="kpi"><div class="label">Items</div><div class="value">${DATA.items.length}</div></div></div>
+    <div class="grid cols-2"><div class="card" id="c1"></div><div class="card" id="c2"></div></div>`;
+  Hub.chart.line(el.querySelector('#c1'), { title: 'Requests per month', labels: DATA.months, series: [{ name: 'Requests', values: DATA.trend }] });
+  Hub.chart.hbar(el.querySelector('#c2'), { title: 'Amount by request', data: DATA.items.map(i => ({ label: i.name, value: i.amount })), format: v => Hub.inr(v) });
+}
+
+Hub.kit.data(SLUG).then(d => {
+  DATA = d;
+  Hub.kit.toolbar(document.getElementById('toolbar'), { slug: SLUG, onReset: () => { st.reset(); location.reload(); },
+    tour: [{ sel: '#tbl', title: 'The queue', text: 'Pick an item.' }, { sel: '#tabs', title: 'Dashboard', text: 'Trends live here.' }] });
+  Hub.kit.tabs(document.getElementById('tabs'), [{ id: 'queue', label: 'Work queue' }, { id: 'dash', label: 'Dashboard' }],
+    id => { st.set({ tab: id }); (id === 'queue' ? queue : dashboard)(document.getElementById('view')); }, st.get().tab);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2393 @@
+{
+ "today": "2026-09-28",
+ "playbook": [
+  {
+   "topic": "Revenue share",
+   "position": "Visiting-consultant revenue share stays within the standard band of 40-55% of net collections, reflecting specialty, consumable cost and OT overhead recovery."
+  },
+  {
+   "topic": "Facilitator commission",
+   "position": "International-facilitator commission stays within the standard band of 12-18% of gross billing, payable only once the Hospital has actually collected the patient's bill."
+  },
+  {
+   "topic": "Liability cap",
+   "position": "Cap proportionate to annual contract value, typically 1x-2x annual spend — not a flat token amount irrespective of contract size."
+  },
+  {
+   "topic": "Indemnity",
+   "position": "Mutual and capped. Counterparty indemnifies the hospital for its own acts; hospital indemnifies counterparty only for hospital-caused negligence (e.g. equipment failure, staff error), not a one-sided obligation."
+  },
+  {
+   "topic": "Termination for convenience",
+   "position": "Hospital retains a no-cause exit with 90-180 days' written notice and pro-rata settlement, in addition to for-cause termination with immediate effect on breach, licence loss or misconduct."
+  },
+  {
+   "topic": "Jurisdiction & arbitration",
+   "position": "Courts at Ernakulam, Kerala for litigation; where arbitration is used, seat and venue at Kochi under the Arbitration and Conciliation Act, 1996."
+  },
+  {
+   "topic": "DPDP data processing",
+   "position": "Any counterparty accessing patient or personal data must have a DPDP Act 2023-compliant clause: purpose limitation, breach notification within 72 hours, and data return/deletion within 30 days of termination."
+  },
+  {
+   "topic": "Payment terms",
+   "position": "Standard 30 days from invoice or collection, as applicable. 45 days may be accepted for large capital purchases; anything beyond that needs Finance sign-off."
+  },
+  {
+   "topic": "Auto-renewal",
+   "position": "No silent auto-renewal beyond one term without written confirmation; hospital must get at least 60 days' notice before a renewal window closes, with a clear opt-out mechanism."
+  },
+  {
+   "topic": "Non-compete",
+   "position": "Maximum 1 year, narrowly scoped to directly competing NABH-accredited facilities within a reasonable radius — not a blanket district- or state-wide bar (restraint-of-trade risk under Contract Act s.27)."
+  },
+  {
+   "topic": "Insurance",
+   "position": "Counterparty must carry adequate professional indemnity / public liability / cyber insurance for the risk involved, with the hospital named as additional insured where the counterparty works on hospital premises."
+  },
+  {
+   "topic": "Audit rights",
+   "position": "Hospital retains the right to audit records, compliance and (where data is processed) security controls on reasonable notice, at least once a year, without needing the counterparty's consent each time."
+  }
+ ],
+ "contracts": [
+  {
+   "id": "CT-2601",
+   "title": "Visiting consultant agreement — Dr. Divya Warrier, Interventional Cardiology",
+   "type": "Visiting consultant agreement",
+   "counterparty": "Dr. Divya Warrier",
+   "counterpartyType": "Individual consultant",
+   "value": 13330000,
+   "valueLabel": "Est. 62% of net collections (variable)",
+   "term": "3 years",
+   "requestingDept": "Cardiology",
+   "receivedDate": "2026-09-25",
+   "stage": "Intake",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "This agreement is for a period of 3 years from the date of signing, renewable by mutual written consent.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "REVENUE SHARE",
+     "text": "Hospital shall pay the Consultant 62% of net collections from interventional cardiology procedures performed by the Consultant, payable within 30 days of collection.",
+     "severity": "High",
+     "risk": "Revenue share of 62% is well above the standard band of 40-55% for visiting consultants, eroding the hospital's margin on high-cost consumables and OT overheads.",
+     "playbook": "Revenue share",
+     "redline": "Revise to a tiered structure (e.g. 55% below a monthly volume threshold, 45% above it) or cap at 50% of net collections."
+    },
+    {
+     "no": 3,
+     "heading": "INDEMNITY",
+     "text": "The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.",
+     "severity": "High",
+     "risk": "One-sided indemnity: the Consultant bears all risk while the Hospital carries zero indemnity obligation even for its own equipment failure or staff negligence.",
+     "playbook": "Indemnity",
+     "redline": "Make mutual: Hospital indemnifies the Consultant for Hospital-caused equipment/staff negligence, capped at a reasonable multiple of annual revenue share."
+    },
+    {
+     "no": 4,
+     "heading": "NON-COMPETE",
+     "text": "The Consultant shall not practice interventional cardiology at any other NABH-accredited hospital within a 5 km radius of this Hospital for a period of 1 year after termination of this agreement.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Non-compete",
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "EQUIPMENT & OT ACCESS",
+     "text": "The Consultant shall have priority use of scheduled OT slots for interventional cardiology procedures, subject to the Hospital's OT allocation policy.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "CREDENTIALING",
+     "text": "The Consultant shall maintain valid medical registration and Hospital credentialing/privileging for the duration of this agreement, and shall notify the Hospital immediately of any change in licence status.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 90 days' written notice.",
+     "severity": "Medium",
+     "risk": "Only no-cause termination exists; there is no immediate-effect exit for licence suspension or misconduct, forcing the Hospital to run out the full notice period even in a serious case.",
+     "playbook": "Termination for convenience",
+     "redline": "Add an immediate-termination clause for licence suspension, criminal conviction, or a finding of professional misconduct."
+    },
+    {
+     "no": 8,
+     "heading": "CONFIDENTIALITY",
+     "text": "The Consultant shall keep confidential all non-public information of the Hospital, including patient data accessed in the course of practice, and shall not disclose it to any third party.",
+     "severity": "Medium",
+     "risk": "Confidentiality is stated generally but there is no DPDP Act 2023-specific clause covering purpose limitation, breach notification, or post-termination data return/deletion for the patient data the Consultant accesses.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing clause: purpose limitation, 72-hour breach notification, and data return/deletion within 30 days of termination."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW & JURISDICTION",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Jurisdiction & arbitration",
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "INSURANCE",
+     "text": null,
+     "severity": "Medium",
+     "risk": "No professional indemnity insurance requirement on the Consultant, leaving the Hospital exposed if a claim exceeds what the Consultant can personally satisfy.",
+     "playbook": "Insurance",
+     "redline": "Add a requirement for professional indemnity insurance of at least ₹1 crore, with proof furnished annually."
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP Act 2023-compliant clause for the patient data the Consultant accesses in the course of practice."
+    },
+    {
+     "topic": "Termination for convenience",
+     "note": "No separate for-cause, immediate-effect termination alongside the no-cause notice clause."
+    },
+    {
+     "topic": "Insurance",
+     "note": "No professional indemnity insurance obligation on the Consultant."
+    }
+   ]
+  },
+  {
+   "id": "CT-2602",
+   "title": "Equipment lease / reagent rental — Sunrise Labtech Solutions (chemiluminescence immunoassay analyser)",
+   "type": "Equipment lease / reagent rental",
+   "counterparty": "Sunrise Labtech Solutions",
+   "counterpartyType": "Company",
+   "value": 14400000,
+   "valueLabel": "₹48 lakh/yr est. reagent spend",
+   "term": "3 years",
+   "requestingDept": "Radiology & Imaging",
+   "receivedDate": "2026-09-23",
+   "stage": "Intake",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "Lease of one (1) chemiluminescence immunoassay analyser for 3 years, with reagent rental (cost-per-test) pricing model.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "MINIMUM COMMITMENT",
+     "text": "Hospital commits to a minimum of 38,000 tests per year; any shortfall is billed at the full reagent rate regardless of actual utilisation.",
+     "severity": "High",
+     "risk": "No tolerance band — a slow quarter (e.g. a competing lab tie-up) results in full-rate billing on tests never run.",
+     "playbook": "Payment terms",
+     "redline": "Add a 15% shortfall tolerance before penal billing; true up annually, not per quarter."
+    },
+    {
+     "no": 3,
+     "heading": "MAINTENANCE & SLA",
+     "text": "Vendor shall provide preventive maintenance quarterly. Breakdown response time is best-effort, with no SLA specified.",
+     "severity": "High",
+     "risk": "This analyser is critical-path for OPD/IPD reporting; an undefined response time risks reporting delays with no contractual recourse.",
+     "playbook": "Audit rights",
+     "redline": "Add an SLA: 4-hour response, 24-hour resolution, >=95% uptime guarantee with service credits below threshold."
+    },
+    {
+     "no": 4,
+     "heading": "PRICE ESCALATION",
+     "text": "Reagent pricing may be revised annually by the Vendor at its sole discretion.",
+     "severity": "High",
+     "risk": "Open-ended cost exposure over a 3-year term with no ceiling on annual increases.",
+     "playbook": "Payment terms",
+     "redline": "Cap escalation at 5% p.a. or CPI/WPI-linked, whichever is lower."
+    },
+    {
+     "no": 5,
+     "heading": "LIABILITY",
+     "text": "Vendor's total liability under this agreement shall not exceed 1.5 times the annual contract value, irrespective of the cause of loss.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Liability cap",
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "EXIT",
+     "text": "Hospital may not terminate before completion of 3 years except for Vendor's uncured material breach, with a 6-month cure period.",
+     "severity": "Medium",
+     "risk": "Hospital is locked in for the full term even if a better-value vendor emerges, with no convenience exit at all.",
+     "playbook": "Termination for convenience",
+     "redline": "Add a convenience termination after year 2, with 6 months' notice and pro-rata settlement."
+    },
+    {
+     "no": 7,
+     "heading": "TITLE & RETURN",
+     "text": "Title to the equipment remains with the Vendor throughout the lease term. On expiry or termination, the Hospital shall permit removal within 30 days, subject to settlement of outstanding dues.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "DATA & LIS INTEGRATION",
+     "text": null,
+     "severity": "Medium",
+     "risk": "The analyser integrates with the LIS and patient records; the agreement is silent on data-handling, access-control, or breach-notification terms.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing addendum covering purpose limitation, access control and data return/deletion."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of the state where the Vendor is headquartered (Bangalore), with courts at Bangalore having exclusive jurisdiction.",
+     "severity": "High",
+     "risk": "Forces the Hospital to litigate outside Kerala for a Kochi-based dispute — high cost and inconvenience.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend to Kerala law, courts at Ernakulam."
+    },
+    {
+     "no": 10,
+     "heading": "FORCE MAJEURE",
+     "text": "Neither party shall be liable for delay or failure caused by events beyond its reasonable control, provided the affected party gives prompt notice and uses reasonable efforts to mitigate.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant addendum despite LIS/patient-data integration."
+    },
+    {
+     "topic": "Audit rights",
+     "note": "No uptime/SLA reporting obligation to allow the Hospital to audit vendor performance against a defined standard."
+    }
+   ]
+  },
+  {
+   "id": "CT-2603",
+   "title": "IT SaaS — AI-assisted radiology reporting (Vertex Clinical Cloud)",
+   "type": "IT SaaS (HIS add-on)",
+   "counterparty": "Vertex Clinical Cloud",
+   "counterpartyType": "Company",
+   "value": 5100000,
+   "valueLabel": "₹17.0 lakh/yr subscription",
+   "term": "3 year(s)",
+   "requestingDept": "Information Technology",
+   "receivedDate": "2026-09-26",
+   "stage": "Intake",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Vendor shall provide the AI-assisted radiology reporting module as a hosted, subscription (SaaS) add-on integrated with the Hospital's HIS via API, for 3 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "DATA PROCESSING ADDENDUM",
+     "text": "Vendor shall process patient data solely to provide the Services, in accordance with its general privacy policy.",
+     "severity": "High",
+     "risk": "No DPDP-specific Data Processing Addendum — reliance on a generic privacy policy does not satisfy the Hospital's obligations as data fiduciary for patient personal data processed by this Vendor.",
+     "playbook": "DPDP data processing",
+     "redline": "Annex a DPDP-compliant DPA covering purpose limitation, processor obligations, and the Hospital's instructions as data fiduciary."
+    },
+    {
+     "no": 3,
+     "heading": "DATA RESIDENCY",
+     "text": "All patient data processed under this agreement shall be hosted on servers located within India.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "BREACH NOTIFICATION",
+     "text": "Vendor shall notify the Hospital of any data breach affecting patient data within 24 hours of becoming aware of it.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "SUB-PROCESSORS",
+     "text": "Vendor shall maintain and disclose to the Hospital a current list of sub-processors with access to patient data, and shall not add a new sub-processor without 30 days' prior notice.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "SERVICE LEVEL",
+     "text": "Vendor guarantees 99.5% monthly uptime, with service credits for shortfall, and shall notify the Hospital of planned downtime at least 48 hours in advance.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "FEES & AUTO-RENEWAL",
+     "text": "Subscription fees are payable annually in advance. This agreement automatically renews for successive one-year terms unless either party gives notice of non-renewal at least 30 days before the then-current term ends.",
+     "severity": "Medium",
+     "risk": "Only a 30-day opt-out window before silent auto-renewal — short enough that it is easy to miss and get locked into another year.",
+     "playbook": "Auto-renewal",
+     "redline": "Extend the opt-out window to at least 60 days, or require the Hospital's active written confirmation to renew."
+    },
+    {
+     "no": 8,
+     "heading": "EXIT & DATA RETURN",
+     "text": "On termination or expiry, Vendor shall export all Hospital data in a usable format within 30 days and thereafter permanently delete it, certifying deletion in writing.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 9,
+     "heading": "LIABILITY",
+     "text": "Vendor's aggregate liability under this agreement is capped at the fees paid in the preceding 12 months, except for liability arising from a data breach caused by the Vendor's negligence, which is uncapped.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant Data Processing Addendum annexed."
+    }
+   ]
+  },
+  {
+   "id": "CT-2604",
+   "title": "Housekeeping outsourcing — Silverline Facility Services",
+   "type": "Housekeeping/security outsourcing",
+   "counterparty": "Silverline Facility Services",
+   "counterpartyType": "Company",
+   "value": 99792000,
+   "valueLabel": "₹499.0 lakh/yr · 99 staff",
+   "term": "2 year(s)",
+   "requestingDept": "Housekeeping",
+   "receivedDate": "2026-09-16",
+   "stage": "Reviewed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE & MANPOWER",
+     "text": "Vendor shall deploy 99 trained housekeeping personnel across the Hospital campus on a 3-shift basis, per the roster agreed with Facilities/Administration.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "STATUTORY COMPLIANCE",
+     "text": "Vendor shall pay all deployed personnel not less than the applicable Kerala minimum wage, remit PF/ESI contributions on time, and furnish monthly compliance proof (challans, wage registers) to the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "SUPERVISION",
+     "text": "Vendor shall provide one on-site supervisor per shift, responsible for quality checks, attendance, and escalation of incidents to the Hospital's Facilities/Security desk.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "INDEMNITY",
+     "text": "Vendor indemnifies the Hospital against claims arising from acts of its personnel. This indemnity survives termination without any liability cap.",
+     "severity": "Medium",
+     "risk": "An uncapped survival clause could be read to expose the Vendor (and by extension disputes over enforceability) to open-ended liability years after the contract ends — better practice is a capped, time-bound indemnity.",
+     "playbook": "Indemnity",
+     "redline": "Cap the indemnity at contract value and limit survival to 2 years post-termination."
+    },
+    {
+     "no": 5,
+     "heading": "INSURANCE",
+     "text": "Vendor shall maintain insurance \"as required by law\".",
+     "severity": "Medium",
+     "risk": "No specified insurance amount or requirement to name the Hospital as additional insured — a generic \"as required by law\" clause offers little practical protection.",
+     "playbook": "Insurance",
+     "redline": "Specify workmen's compensation for all deployed staff and public liability of at least ₹50 lakh, Hospital named as additional insured."
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 30 days' written notice, or with immediate effect for a serious breach (e.g. repeated statutory non-compliance, a security lapse causing harm).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT",
+     "text": "Hospital may audit the Vendor's compliance records, training logs and deployment rosters at any time on 48 hours' notice.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": []
+  },
+  {
+   "id": "CT-2605",
+   "title": "CMC — cath lab imaging system (Trident Engineering Care)",
+   "type": "CMC/AMC service contract",
+   "counterparty": "Trident Engineering Care",
+   "counterpartyType": "Company",
+   "value": 7000000,
+   "valueLabel": "₹35.0 lakh/yr",
+   "term": "2 year(s)",
+   "requestingDept": "Cardiology",
+   "receivedDate": "2026-09-10",
+   "stage": "Reviewed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Comprehensive Maintenance Contract (CMC) covering the cath lab imaging system, including all preventive maintenance, breakdown calls, and software updates for 2 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "RESPONSE TIME",
+     "text": "Vendor shall respond to a breakdown call within 4 hours and resolve within 24 hours, on a 24x7 basis given the criticality of this asset.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "UPTIME GUARANTEE",
+     "text": null,
+     "severity": "Medium",
+     "risk": "No uptime guarantee or service credit mechanism — downtime has no contractual consequence for the Vendor.",
+     "playbook": "Audit rights",
+     "redline": "Add a minimum 95% uptime guarantee with service credits for shortfall."
+    },
+    {
+     "no": 4,
+     "heading": "SPARE PARTS",
+     "text": "Spare parts above ₹25,000 per item are billed separately at the Vendor's then-current price list, at the Vendor's sole discretion on availability.",
+     "severity": "Medium",
+     "risk": "\"Sole discretion on availability\" pricing for high-value parts creates open-ended cost exposure and a possible hold-up if a critical part is delayed.",
+     "playbook": "Payment terms",
+     "redline": "Fix a parts price list for the contract term, or cap the mark-up over cost."
+    },
+    {
+     "no": 5,
+     "heading": "ESCALATION",
+     "text": "CMC value may be revised at renewal at the Vendor's discretion based on then-prevailing market rates.",
+     "severity": "Medium",
+     "risk": "Open-ended renewal pricing with no cap makes multi-year budgeting difficult and favours the Vendor at each renewal.",
+     "playbook": "Payment terms",
+     "redline": "Cap renewal escalation at 5% p.a."
+    },
+    {
+     "no": 6,
+     "heading": "LIABILITY",
+     "text": "Vendor's liability for direct loss arising from its negligence is capped at the annual CMC value; consequential losses are excluded by both parties.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate with 60 days' written notice, or with immediate effect for uncured material breach following a 30-day cure period.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT & REPORTING",
+     "text": null,
+     "severity": "Low",
+     "risk": "No obligation on the Vendor to report service metrics, making it hard for the Hospital to verify SLA compliance without a dispute.",
+     "playbook": "Audit rights",
+     "redline": "Add a quarterly service-report obligation and an audit right over maintenance logs."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with disputes referred to arbitration seated at Pune.",
+     "severity": "Medium",
+     "risk": "Arbitration seat is set at Pune rather than Kochi, adding cost and inconvenience for a Kerala-based dispute.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend the arbitration seat and venue to Kochi."
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Audit rights",
+     "note": "No uptime guarantee or service-credit mechanism on a critical clinical asset."
+    },
+    {
+     "topic": "Audit rights",
+     "note": "No quarterly reporting or audit right over maintenance logs."
+    }
+   ]
+  },
+  {
+   "id": "CT-2606",
+   "title": "International facilitator agreement — Continental Health Bridge",
+   "type": "International facilitator agreement",
+   "counterparty": "Continental Health Bridge",
+   "counterpartyType": "Overseas company",
+   "value": 29700000,
+   "valueLabel": "Est. ₹99.0 lakh/yr commission (~110 patients/yr)",
+   "term": "3 year(s)",
+   "requestingDept": "International Patient Services",
+   "receivedDate": "2026-09-19",
+   "stage": "Reviewed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "APPOINTMENT",
+     "text": "Hospital appoints the Facilitator on a non-exclusive basis to refer international patients from Central and East Africa for treatment at the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "COMMISSION",
+     "text": "Facilitator shall receive a commission of 18% of the gross billed amount for each referred patient who completes treatment at the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Facilitator commission",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "PAYMENT TIMING",
+     "text": "Commission is payable within 15 days of the patient's admission, regardless of eventual collection.",
+     "severity": "High",
+     "risk": "Paying commission on admission rather than on collection exposes the Hospital to paying out on bills that are later disputed, discounted, or written off (common with international insurance/TPA cases).",
+     "playbook": "Payment terms",
+     "redline": "Tie commission payment to actual collection, not admission."
+    },
+    {
+     "no": 4,
+     "heading": "ANTI-KICKBACK / PATIENT INTEREST",
+     "text": "Facilitator shall not receive any payment from the patient for the referral itself, shall disclose the commission arrangement to the patient on request, and shall not steer patients toward specific treatments for commission purposes.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "MARKETING MATERIALS",
+     "text": "Facilitator may use Hospital-approved marketing materials only, and shall not make clinical claims not authorised in writing by the Hospital's Marketing department.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "DATA SHARING",
+     "text": "Any patient information shared by the Facilitator for pre-arrival coordination shall be limited to what is necessary, handled under a DPDP Act 2023-compliant undertaking, and not retained beyond the referral's conclusion.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERM & TERMINATION",
+     "text": "This agreement runs for 3 year(s) and may be terminated by either party with 90 days' written notice, or immediately for a breach of the anti-kickback/patient-interest clause.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with disputes referred to arbitration seated at Kochi under the Arbitration and Conciliation Act, 1996.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Jurisdiction & arbitration",
+     "redline": null
+    },
+    {
+     "no": 9,
+     "heading": "CURRENCY & TAX",
+     "text": "Commission is payable in Indian Rupees, net of applicable TDS, within the timeline set out above.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": []
+  },
+  {
+   "id": "CT-2607",
+   "title": "Visiting consultant agreement — Dr. Thomas Abraham, Interventional Cardiology",
+   "type": "Visiting consultant agreement",
+   "counterparty": "Dr. Thomas Abraham",
+   "counterpartyType": "Individual consultant",
+   "value": 5330000,
+   "valueLabel": "Est. 65% of net collections (variable)",
+   "term": "5 years",
+   "requestingDept": "Orthopaedics & Joint Replacement",
+   "receivedDate": "2026-09-07",
+   "stage": "Reviewed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "This agreement is for a period of 5 years from the date of signing, renewable by mutual written consent.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "REVENUE SHARE",
+     "text": "Hospital shall pay the Consultant 65% of net collections from interventional cardiology procedures performed by the Consultant, payable within 60 days of collection.",
+     "severity": "High",
+     "risk": "Revenue share of 65% is well above the standard band of 40-55% for visiting consultants, eroding the hospital's margin on high-cost consumables and OT overheads.",
+     "playbook": "Revenue share",
+     "redline": "Revise to a tiered structure (e.g. 55% below a monthly volume threshold, 45% above it) or cap at 50% of net collections."
+    },
+    {
+     "no": 2,
+     "heading": "PAYMENT (cont.)",
+     "text": "Payment beyond the 60-day cycle noted above applies to all revenue-share disbursements without exception.",
+     "severity": "Medium",
+     "risk": "Standard payment terms are 30 days; 60 days is a cash-flow drag on the Consultant relationship and an outlier versus other visiting-consultant agreements.",
+     "playbook": "Payment terms",
+     "redline": "Amend to 30 days of collection, or 45 days at most with Finance sign-off."
+    },
+    {
+     "no": 3,
+     "heading": "INDEMNITY",
+     "text": "The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.",
+     "severity": "High",
+     "risk": "One-sided indemnity: the Consultant bears all risk while the Hospital carries zero indemnity obligation even for its own equipment failure or staff negligence.",
+     "playbook": "Indemnity",
+     "redline": "Make mutual: Hospital indemnifies the Consultant for Hospital-caused equipment/staff negligence, capped at a reasonable multiple of annual revenue share."
+    },
+    {
+     "no": 4,
+     "heading": "NON-COMPETE",
+     "text": "The Consultant shall not practice interventional cardiology at any other hospital within Ernakulam district for a period of 1 years after termination of this agreement.",
+     "severity": "High",
+     "risk": "A district-wide, multi-year non-compete is a blanket restraint of trade likely unenforceable under Contract Act s.27 (Percept D'Mark v. Zaheer Khan line of authority); litigation risk if challenged.",
+     "playbook": "Non-compete",
+     "redline": "Narrow to 1 year, limited to directly competing NABH-accredited hospitals within a defined radius, not a district-wide bar."
+    },
+    {
+     "no": 5,
+     "heading": "EQUIPMENT & OT ACCESS",
+     "text": "The Consultant shall have priority use of scheduled OT slots for interventional cardiology procedures, subject to the Hospital's OT allocation policy.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "CREDENTIALING",
+     "text": "The Consultant shall maintain valid medical registration and Hospital credentialing/privileging for the duration of this agreement, and shall notify the Hospital immediately of any change in licence status.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 90 days' written notice.",
+     "severity": "Medium",
+     "risk": "Only no-cause termination exists; there is no immediate-effect exit for licence suspension or misconduct, forcing the Hospital to run out the full notice period even in a serious case.",
+     "playbook": "Termination for convenience",
+     "redline": "Add an immediate-termination clause for licence suspension, criminal conviction, or a finding of professional misconduct."
+    },
+    {
+     "no": 8,
+     "heading": "CONFIDENTIALITY",
+     "text": "The Consultant shall keep confidential all non-public information of the Hospital, including patient data accessed in the course of practice, and shall not disclose it to any third party.",
+     "severity": "Medium",
+     "risk": "Confidentiality is stated generally but there is no DPDP Act 2023-specific clause covering purpose limitation, breach notification, or post-termination data return/deletion for the patient data the Consultant accesses.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing clause: purpose limitation, 72-hour breach notification, and data return/deletion within 30 days of termination."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW & JURISDICTION",
+     "text": "This agreement is governed by the laws of India, with courts at Mumbai having exclusive jurisdiction.",
+     "severity": "High",
+     "risk": "Jurisdiction is set at Mumbai rather than Ernakulam, forcing the Hospital to litigate outside Kerala at material cost and inconvenience.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend to courts at Ernakulam, Kerala."
+    },
+    {
+     "no": 10,
+     "heading": "INSURANCE",
+     "text": "The Consultant shall maintain professional indemnity insurance of not less than ₹1 crore for the duration of this agreement and shall furnish proof on request.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Insurance",
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP Act 2023-compliant clause for the patient data the Consultant accesses in the course of practice."
+    },
+    {
+     "topic": "Termination for convenience",
+     "note": "No separate for-cause, immediate-effect termination alongside the no-cause notice clause."
+    }
+   ]
+  },
+  {
+   "id": "CT-2608",
+   "title": "Equipment lease / reagent rental — Meridian Medisystems (haematology analyser with sample-track)",
+   "type": "Equipment lease / reagent rental",
+   "counterparty": "Meridian Medisystems",
+   "counterpartyType": "Company",
+   "value": 29000000,
+   "valueLabel": "₹58 lakh/yr est. reagent spend",
+   "term": "5 years",
+   "requestingDept": "Laboratory & Pathology",
+   "receivedDate": "2026-08-25",
+   "stage": "Redlines sent",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "Lease of one (1) haematology analyser with sample-track for 5 years, with reagent rental (cost-per-test) pricing model.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "MINIMUM COMMITMENT",
+     "text": "Hospital commits to a minimum of 37,000 tests per year, with a 15% shortfall tolerance before penal billing applies, trued up annually.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "MAINTENANCE & SLA",
+     "text": "Vendor shall provide preventive maintenance quarterly, with a 4-hour response time and 24-hour resolution target for breakdowns, and a minimum 95% uptime guarantee with service credits below that threshold.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "PRICE ESCALATION",
+     "text": "Reagent pricing may be revised annually by the Vendor at its sole discretion.",
+     "severity": "High",
+     "risk": "Open-ended cost exposure over a 5-year term with no ceiling on annual increases.",
+     "playbook": "Payment terms",
+     "redline": "Cap escalation at 5% p.a. or CPI/WPI-linked, whichever is lower."
+    },
+    {
+     "no": 5,
+     "heading": "LIABILITY",
+     "text": "Vendor's total liability under this agreement shall not exceed ₹1,00,000 in aggregate, irrespective of the cause of loss.",
+     "severity": "High",
+     "risk": "A flat ₹1 lakh cap is grossly disproportionate to a likely annual spend of ₹58 lakh at this volume — inadequate cover for a reporting-error or equipment-damage event.",
+     "playbook": "Liability cap",
+     "redline": "Raise the cap to 1x-2x annual contract value."
+    },
+    {
+     "no": 6,
+     "heading": "EXIT",
+     "text": "Hospital may not terminate before completion of 5 years except for Vendor's uncured material breach, with a 6-month cure period.",
+     "severity": "Medium",
+     "risk": "Hospital is locked in for the full term even if a better-value vendor emerges, with no convenience exit at all.",
+     "playbook": "Termination for convenience",
+     "redline": "Add a convenience termination after year 2, with 6 months' notice and pro-rata settlement."
+    },
+    {
+     "no": 7,
+     "heading": "TITLE & RETURN",
+     "text": "Title to the equipment remains with the Vendor throughout the lease term. On expiry or termination, the Hospital shall permit removal within 30 days, subject to settlement of outstanding dues.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "DATA & LIS INTEGRATION",
+     "text": null,
+     "severity": "Medium",
+     "risk": "The analyser integrates with the LIS and patient records; the agreement is silent on data-handling, access-control, or breach-notification terms.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing addendum covering purpose limitation, access control and data return/deletion."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of the state where the Vendor is headquartered (Chennai), with courts at Chennai having exclusive jurisdiction.",
+     "severity": "High",
+     "risk": "Forces the Hospital to litigate outside Kerala for a Kochi-based dispute — high cost and inconvenience.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend to Kerala law, courts at Ernakulam."
+    },
+    {
+     "no": 10,
+     "heading": "FORCE MAJEURE",
+     "text": "Neither party shall be liable for delay or failure caused by events beyond its reasonable control, provided the affected party gives prompt notice and uses reasonable efforts to mitigate.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant addendum despite LIS/patient-data integration."
+    }
+   ]
+  },
+  {
+   "id": "CT-2609",
+   "title": "IT SaaS — AI-assisted radiology reporting (Vertex Clinical Cloud)",
+   "type": "IT SaaS (HIS add-on)",
+   "counterparty": "Vertex Clinical Cloud",
+   "counterpartyType": "Company",
+   "value": 6000000,
+   "valueLabel": "₹20.0 lakh/yr subscription",
+   "term": "3 year(s)",
+   "requestingDept": "Information Technology",
+   "receivedDate": "2026-08-31",
+   "stage": "Redlines sent",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Vendor shall provide the AI-assisted radiology reporting module as a hosted, subscription (SaaS) add-on integrated with the Hospital's HIS via API, for 3 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "DATA PROCESSING ADDENDUM",
+     "text": "Vendor shall process patient data solely to provide the Services, in accordance with its general privacy policy.",
+     "severity": "High",
+     "risk": "No DPDP-specific Data Processing Addendum — reliance on a generic privacy policy does not satisfy the Hospital's obligations as data fiduciary for patient personal data processed by this Vendor.",
+     "playbook": "DPDP data processing",
+     "redline": "Annex a DPDP-compliant DPA covering purpose limitation, processor obligations, and the Hospital's instructions as data fiduciary."
+    },
+    {
+     "no": 3,
+     "heading": "DATA RESIDENCY",
+     "text": "Patient data may be hosted on the Vendor's global cloud infrastructure, which may be located outside India.",
+     "severity": "High",
+     "risk": "Cross-border hosting of patient health data without an explicit data-localisation commitment raises DPDP and sectoral-guidance concerns for a hospital data fiduciary.",
+     "playbook": "DPDP data processing",
+     "redline": "Require all patient data to be hosted within India."
+    },
+    {
+     "no": 4,
+     "heading": "BREACH NOTIFICATION",
+     "text": "Vendor shall notify the Hospital of any data breach affecting patient data within 24 hours of becoming aware of it.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "SUB-PROCESSORS",
+     "text": "Vendor shall maintain and disclose to the Hospital a current list of sub-processors with access to patient data, and shall not add a new sub-processor without 30 days' prior notice.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "SERVICE LEVEL",
+     "text": "Vendor targets \"high availability\" with no specific uptime commitment.",
+     "severity": "Medium",
+     "risk": "No measurable uptime SLA for a module integrated into clinical/administrative workflow — outages have no contractual consequence.",
+     "playbook": "Audit rights",
+     "redline": "Add a 99%+ uptime SLA with service credits and planned-downtime notice."
+    },
+    {
+     "no": 7,
+     "heading": "FEES & AUTO-RENEWAL",
+     "text": "Subscription fees are payable annually in advance. The Hospital will be notified at least 60 days before the renewal date and must actively confirm renewal in writing.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Auto-renewal",
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "EXIT & DATA RETURN",
+     "text": "On termination, Vendor will \"assist with data migration on a commercially reasonable basis\" for an additional fee.",
+     "severity": "Medium",
+     "risk": "No firm data-return obligation or timeline, and migration assistance is conditioned on an undefined additional fee — a lock-in risk at exit.",
+     "playbook": "DPDP data processing",
+     "redline": "Require data export in a usable format within 30 days of termination, followed by certified deletion, at no extra fee."
+    },
+    {
+     "no": 9,
+     "heading": "LIABILITY",
+     "text": "Vendor's aggregate liability under this agreement is capped at the fees paid in the preceding 12 months, except for liability arising from a data breach caused by the Vendor's negligence, which is uncapped.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant Data Processing Addendum annexed."
+    },
+    {
+     "topic": "DPDP data processing",
+     "note": "No India data-residency commitment for patient data."
+    }
+   ]
+  },
+  {
+   "id": "CT-2610",
+   "title": "Housekeeping outsourcing — CleanCore Hospital Services",
+   "type": "Housekeeping/security outsourcing",
+   "counterparty": "CleanCore Hospital Services",
+   "counterpartyType": "Company",
+   "value": 31416000,
+   "valueLabel": "₹314.2 lakh/yr · 119 staff",
+   "term": "1 year(s)",
+   "requestingDept": "Housekeeping",
+   "receivedDate": "2026-08-19",
+   "stage": "Redlines sent",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE & MANPOWER",
+     "text": "Vendor shall deploy 119 trained housekeeping personnel across the Hospital campus on a 3-shift basis, per the roster agreed with Facilities/Administration.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "STATUTORY COMPLIANCE",
+     "text": "Vendor shall pay all deployed personnel not less than the applicable Kerala minimum wage, remit PF/ESI contributions on time, and furnish monthly compliance proof (challans, wage registers) to the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "SUPERVISION",
+     "text": "Vendor shall provide one on-site supervisor per shift, responsible for quality checks, attendance, and escalation of incidents to the Hospital's Facilities/Security desk.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "INDEMNITY",
+     "text": "Vendor indemnifies the Hospital against claims arising from acts of its personnel. This indemnity survives termination without any liability cap.",
+     "severity": "Medium",
+     "risk": "An uncapped survival clause could be read to expose the Vendor (and by extension disputes over enforceability) to open-ended liability years after the contract ends — better practice is a capped, time-bound indemnity.",
+     "playbook": "Indemnity",
+     "redline": "Cap the indemnity at contract value and limit survival to 2 years post-termination."
+    },
+    {
+     "no": 5,
+     "heading": "INSURANCE",
+     "text": "Vendor shall maintain workmen's compensation insurance for all deployed personnel and public liability insurance of at least ₹50 lakh, with the Hospital named as additional insured.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Insurance",
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 60 days' written notice, or with immediate effect for a serious breach (e.g. repeated statutory non-compliance, a security lapse causing harm).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT",
+     "text": null,
+     "severity": "Low",
+     "risk": "No explicit audit right over the Vendor's compliance records or training logs.",
+     "playbook": "Audit rights",
+     "redline": "Add an audit right over compliance records, training logs and rosters on reasonable notice."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": []
+  },
+  {
+   "id": "CT-2611",
+   "title": "CMC — MRI system (1.5T) (Apex CSSD Solutions)",
+   "type": "CMC/AMC service contract",
+   "counterparty": "Apex CSSD Solutions",
+   "counterpartyType": "Company",
+   "value": 2400000,
+   "valueLabel": "₹12.0 lakh/yr",
+   "term": "2 year(s)",
+   "requestingDept": "Facilities & Engineering",
+   "receivedDate": "2026-09-03",
+   "stage": "Redlines sent",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Comprehensive Maintenance Contract (CMC) covering the MRI system (1.5T), including all preventive maintenance, breakdown calls, and software updates for 2 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "RESPONSE TIME",
+     "text": "Vendor shall respond to a breakdown call within 8 hours and resolve within 24 hours, on a 24x7 basis given the criticality of this asset.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "UPTIME GUARANTEE",
+     "text": null,
+     "severity": "Medium",
+     "risk": "No uptime guarantee or service credit mechanism — downtime has no contractual consequence for the Vendor.",
+     "playbook": "Audit rights",
+     "redline": "Add a minimum 95% uptime guarantee with service credits for shortfall."
+    },
+    {
+     "no": 4,
+     "heading": "SPARE PARTS",
+     "text": "Spare parts above ₹25,000 per item are billed separately at the Vendor's then-current price list, at the Vendor's sole discretion on availability.",
+     "severity": "Medium",
+     "risk": "\"Sole discretion on availability\" pricing for high-value parts creates open-ended cost exposure and a possible hold-up if a critical part is delayed.",
+     "playbook": "Payment terms",
+     "redline": "Fix a parts price list for the contract term, or cap the mark-up over cost."
+    },
+    {
+     "no": 5,
+     "heading": "ESCALATION",
+     "text": "CMC value may be revised at renewal, capped at 5% over the prior year's value.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "LIABILITY",
+     "text": "Vendor's liability for direct loss arising from its negligence is capped at the annual CMC value; consequential losses are excluded by both parties.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate with 60 days' written notice, or with immediate effect for uncured material breach following a 30-day cure period.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT & REPORTING",
+     "text": null,
+     "severity": "Low",
+     "risk": "No obligation on the Vendor to report service metrics, making it hard for the Hospital to verify SLA compliance without a dispute.",
+     "playbook": "Audit rights",
+     "redline": "Add a quarterly service-report obligation and an audit right over maintenance logs."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with disputes referred to arbitration seated at Delhi.",
+     "severity": "Medium",
+     "risk": "Arbitration seat is set at Delhi rather than Kochi, adding cost and inconvenience for a Kerala-based dispute.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend the arbitration seat and venue to Kochi."
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Audit rights",
+     "note": "No uptime guarantee or service-credit mechanism on a critical clinical asset."
+    },
+    {
+     "topic": "Audit rights",
+     "note": "No quarterly reporting or audit right over maintenance logs."
+    }
+   ]
+  },
+  {
+   "id": "CT-2612",
+   "title": "Visiting consultant agreement — Dr. Divya Warrier, Bariatric Surgery",
+   "type": "Visiting consultant agreement",
+   "counterparty": "Dr. Divya Warrier",
+   "counterpartyType": "Individual consultant",
+   "value": 4760000,
+   "valueLabel": "Est. 70% of net collections (variable)",
+   "term": "2 years",
+   "requestingDept": "Orthopaedics & Joint Replacement",
+   "receivedDate": "2026-08-04",
+   "stage": "Negotiating",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "This agreement is for a period of 2 years from the date of signing, renewable by mutual written consent.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "REVENUE SHARE",
+     "text": "Hospital shall pay the Consultant 70% of net collections from bariatric surgery procedures performed by the Consultant, payable within 60 days of collection.",
+     "severity": "High",
+     "risk": "Revenue share of 70% is well above the standard band of 40-55% for visiting consultants, eroding the hospital's margin on high-cost consumables and OT overheads.",
+     "playbook": "Revenue share",
+     "redline": "Revise to a tiered structure (e.g. 55% below a monthly volume threshold, 45% above it) or cap at 50% of net collections."
+    },
+    {
+     "no": 2,
+     "heading": "PAYMENT (cont.)",
+     "text": "Payment beyond the 60-day cycle noted above applies to all revenue-share disbursements without exception.",
+     "severity": "Medium",
+     "risk": "Standard payment terms are 30 days; 60 days is a cash-flow drag on the Consultant relationship and an outlier versus other visiting-consultant agreements.",
+     "playbook": "Payment terms",
+     "redline": "Amend to 30 days of collection, or 45 days at most with Finance sign-off."
+    },
+    {
+     "no": 3,
+     "heading": "INDEMNITY",
+     "text": "The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.",
+     "severity": "High",
+     "risk": "One-sided indemnity: the Consultant bears all risk while the Hospital carries zero indemnity obligation even for its own equipment failure or staff negligence.",
+     "playbook": "Indemnity",
+     "redline": "Make mutual: Hospital indemnifies the Consultant for Hospital-caused equipment/staff negligence, capped at a reasonable multiple of annual revenue share."
+    },
+    {
+     "no": 4,
+     "heading": "NON-COMPETE",
+     "text": "The Consultant shall not practice bariatric surgery at any other hospital within Ernakulam district for a period of 1 years after termination of this agreement.",
+     "severity": "High",
+     "risk": "A district-wide, multi-year non-compete is a blanket restraint of trade likely unenforceable under Contract Act s.27 (Percept D'Mark v. Zaheer Khan line of authority); litigation risk if challenged.",
+     "playbook": "Non-compete",
+     "redline": "Narrow to 1 year, limited to directly competing NABH-accredited hospitals within a defined radius, not a district-wide bar."
+    },
+    {
+     "no": 5,
+     "heading": "EQUIPMENT & OT ACCESS",
+     "text": "The Consultant shall have priority use of scheduled OT slots for bariatric surgery procedures, subject to the Hospital's OT allocation policy.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "CREDENTIALING",
+     "text": "The Consultant shall maintain valid medical registration and Hospital credentialing/privileging for the duration of this agreement, and shall notify the Hospital immediately of any change in licence status.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 120 days' written notice.",
+     "severity": "Medium",
+     "risk": "Only no-cause termination exists; there is no immediate-effect exit for licence suspension or misconduct, forcing the Hospital to run out the full notice period even in a serious case.",
+     "playbook": "Termination for convenience",
+     "redline": "Add an immediate-termination clause for licence suspension, criminal conviction, or a finding of professional misconduct."
+    },
+    {
+     "no": 8,
+     "heading": "CONFIDENTIALITY",
+     "text": "The Consultant shall keep confidential all non-public information of the Hospital, including patient data accessed in the course of practice, and shall not disclose it to any third party.",
+     "severity": "Medium",
+     "risk": "Confidentiality is stated generally but there is no DPDP Act 2023-specific clause covering purpose limitation, breach notification, or post-termination data return/deletion for the patient data the Consultant accesses.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing clause: purpose limitation, 72-hour breach notification, and data return/deletion within 30 days of termination."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW & JURISDICTION",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Jurisdiction & arbitration",
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "INSURANCE",
+     "text": "The Consultant shall maintain professional indemnity insurance of not less than ₹1 crore for the duration of this agreement and shall furnish proof on request.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Insurance",
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP Act 2023-compliant clause for the patient data the Consultant accesses in the course of practice."
+    },
+    {
+     "topic": "Termination for convenience",
+     "note": "No separate for-cause, immediate-effect termination alongside the no-cause notice clause."
+    }
+   ]
+  },
+  {
+   "id": "CT-2613",
+   "title": "International facilitator agreement — Continental Health Bridge",
+   "type": "International facilitator agreement",
+   "counterparty": "Continental Health Bridge",
+   "counterpartyType": "Overseas company",
+   "value": 22920000,
+   "valueLabel": "Est. ₹114.6 lakh/yr commission (~191 patients/yr)",
+   "term": "2 year(s)",
+   "requestingDept": "International Patient Services",
+   "receivedDate": "2026-08-11",
+   "stage": "Negotiating",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "APPOINTMENT",
+     "text": "Hospital appoints the Facilitator on a non-exclusive basis to refer international patients from Central and East Africa for treatment at the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "COMMISSION",
+     "text": "Facilitator shall receive a commission of 12% of the gross billed amount for each referred patient who completes treatment at the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Facilitator commission",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "PAYMENT TIMING",
+     "text": "Commission is payable within 30 days of the Hospital actually collecting the patient's bill in full.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "ANTI-KICKBACK / PATIENT INTEREST",
+     "text": "Facilitator's dealings with patients are its own responsibility; the Hospital makes no representation as to the Facilitator's conduct with patients.",
+     "severity": "High",
+     "risk": "No safeguard against the Facilitator double-charging patients or steering treatment choices for commission — a reputational and (in some destination countries) regulatory risk that can attach to the Hospital by association.",
+     "playbook": null,
+     "redline": "Add a clause prohibiting patient-side charges for the referral and requiring disclosure of the commission arrangement on request."
+    },
+    {
+     "no": 5,
+     "heading": "MARKETING MATERIALS",
+     "text": "Facilitator may use Hospital-approved marketing materials only, and shall not make clinical claims not authorised in writing by the Hospital's Marketing department.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "DATA SHARING",
+     "text": "Facilitator may share patient enquiry details (including passport copies and medical history) with the Hospital by email as needed for coordination.",
+     "severity": "Medium",
+     "risk": "Patient medical history and identity documents moving by plain email, with no data-minimisation or retention limit, is a DPDP-relevant gap on both sides of the relationship.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data-handling undertaking with a secure channel and defined retention limit."
+    },
+    {
+     "no": 7,
+     "heading": "TERM & TERMINATION",
+     "text": "This agreement runs for 2 year(s) and may be terminated by either party with 90 days' written notice, or immediately for a breach of the anti-kickback/patient-interest clause.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with disputes subject to the exclusive jurisdiction of the courts of the Facilitator's home jurisdiction.",
+     "severity": "High",
+     "risk": "Ceding jurisdiction to the Facilitator's home country makes enforcement (e.g. of the anti-kickback clause) impractical for the Hospital.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend to Indian law with arbitration seated at Kochi."
+    },
+    {
+     "no": 9,
+     "heading": "CURRENCY & TAX",
+     "text": "Commission is payable in Indian Rupees, net of applicable TDS, within the timeline set out above.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Indemnity",
+     "note": "No anti-kickback / patient-interest safeguard — reputational and regulatory exposure by association."
+    },
+    {
+     "topic": "DPDP data processing",
+     "note": "Patient documents shared by plain email with no data-handling undertaking."
+    }
+   ]
+  },
+  {
+   "id": "CT-2614",
+   "title": "Clinical establishment lease — Kavya Estates Pvt Ltd (Kaloor outpatient centre)",
+   "type": "Clinical establishment lease",
+   "counterparty": "Kavya Estates Pvt Ltd",
+   "counterpartyType": "Company (lessor)",
+   "value": 171000000,
+   "valueLabel": "₹9.5 lakh/month base rent",
+   "term": "15 years",
+   "requestingDept": "Administration",
+   "receivedDate": "2026-07-20",
+   "stage": "Negotiating",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "PREMISES & USE",
+     "text": "Landlord leases the ground-plus-3 building at Kaloor, Kochi, admeasuring approx. 42,000 sq ft, for use exclusively as a clinical establishment (outpatient centre and day-care procedures) under this Hospital's brand.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "TERM",
+     "text": "Lease term of 15 years from the commencement date, with a lock-in period of 3 years during which the Hospital may not exit except for the Landlord's breach.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Termination for convenience",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "RENT & ESCALATION",
+     "text": "Monthly rent of ₹9.5 lakh, escalating at 12% every 3 years.",
+     "severity": "Medium",
+     "risk": "12% triennial escalation is above the typical 5-8% band for comparable Kochi clinical premises.",
+     "playbook": "Payment terms",
+     "redline": "Negotiate escalation down to 5-8% per 3-year block, or link to a published rent index."
+    },
+    {
+     "no": 4,
+     "heading": "REGISTRATION & STAMP DUTY",
+     "text": "The parties may execute this lease as an unregistered document notarised before a notary public.",
+     "severity": "High",
+     "risk": "A 15-year lease exceeding 1 year must be registered to be enforceable in court; an unregistered document weakens the Hospital's position on any future dispute over possession or terms.",
+     "playbook": null,
+     "redline": "Require registration under the Registration Act, 1908."
+    },
+    {
+     "no": 5,
+     "heading": "STRUCTURAL & FIT-OUT",
+     "text": "Hospital may carry out structural modifications required for clinical licensing (fire safety, biomedical waste storage, oxygen pipeline) subject to Landlord's consent, not to be unreasonably withheld or delayed.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "SUBLEASE & ASSIGNMENT",
+     "text": "Hospital may permit specific clinical departments or empanelled diagnostic partners to operate from the premises under its overall licence, without requiring fresh Landlord consent for each such arrangement.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "MAINTENANCE",
+     "text": "Landlord is responsible for structural repairs and common-area maintenance; the Hospital is responsible for interior fit-out and equipment maintenance.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "TERMINATION FOR CAUSE",
+     "text": "Either party may terminate immediately for the other's uncured material breach following 60 days' written notice and opportunity to cure.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 9,
+     "heading": "INSURANCE",
+     "text": "Hospital shall maintain fire and special-perils insurance covering its fit-out and equipment; Landlord shall maintain building insurance for the structure.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "GOVERNING LAW",
+     "text": "This lease is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Audit rights",
+     "note": "Lease exceeds 1 year but is proposed as unregistered — enforceability risk."
+    }
+   ]
+  },
+  {
+   "id": "CT-2615",
+   "title": "NDA — Meridian Biosciences Sponsor Trust (an investigator-initiated diagnostics validation study)",
+   "type": "NDA with research sponsor",
+   "counterparty": "Meridian Biosciences Sponsor Trust",
+   "counterpartyType": "Research foundation",
+   "value": 0,
+   "valueLabel": "No monetary value (NDA only)",
+   "term": "3 years",
+   "requestingDept": "Research & Academics",
+   "receivedDate": "2026-08-29",
+   "stage": "Ready to sign",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "PURPOSE",
+     "text": "This Non-Disclosure Agreement is entered into in connection with discussions for an investigator-initiated diagnostics validation study at the Hospital, sponsored by Meridian Biosciences Sponsor Trust.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "CONFIDENTIALITY OBLIGATION",
+     "text": "The Hospital shall keep confidential all information disclosed by the Sponsor. The Sponsor has no reciprocal confidentiality obligation toward information disclosed by the Hospital (e.g. site capability, patient volume data).",
+     "severity": "Medium",
+     "risk": "A one-way NDA leaves the Hospital's own disclosures (site data, capability information) unprotected, which is unusual and unfavourable for a bilateral research relationship.",
+     "playbook": null,
+     "redline": "Make the confidentiality obligation mutual."
+    },
+    {
+     "no": 3,
+     "heading": "CARVE-OUTS",
+     "text": "The confidentiality obligation does not apply to information that is already public, independently developed, or required to be disclosed by law or a regulatory authority (including the Ethics Committee and CDSCO), provided notice is given where legally permissible.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "TERM & SURVIVAL",
+     "text": "This NDA is effective for 3 years, with the confidentiality obligation surviving for 3 years after termination or expiry.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "PATIENT DATA",
+     "text": "Any patient-identifiable information remains subject to the Hospital's own DPDP Act 2023 obligations and the study's Ethics Committee-approved protocol, independent of this NDA's general confidentiality terms.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "RETURN OR DESTRUCTION",
+     "text": "On request or termination, each party shall return or certify destruction of the other's confidential information within 30 days, except for one archival copy retained for legal/regulatory record-keeping.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "NO LICENCE",
+     "text": "Nothing in this NDA grants either party a licence to use the other's confidential information for any purpose other than evaluating and conducting the study.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Indemnity",
+     "note": "Confidentiality obligation is one-way; Hospital disclosures are unprotected."
+    }
+   ]
+  },
+  {
+   "id": "CT-2616",
+   "title": "Equipment lease / reagent rental — Coral Diagnostics Pvt Ltd (chemiluminescence immunoassay analyser)",
+   "type": "Equipment lease / reagent rental",
+   "counterparty": "Coral Diagnostics Pvt Ltd",
+   "counterpartyType": "Company",
+   "value": 19500000,
+   "valueLabel": "₹39 lakh/yr est. reagent spend",
+   "term": "5 years",
+   "requestingDept": "Radiology & Imaging",
+   "receivedDate": "2026-07-28",
+   "stage": "Ready to sign",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "Lease of one (1) chemiluminescence immunoassay analyser for 5 years, with reagent rental (cost-per-test) pricing model.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "MINIMUM COMMITMENT",
+     "text": "Hospital commits to a minimum of 32,000 tests per year, with a 15% shortfall tolerance before penal billing applies, trued up annually.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "MAINTENANCE & SLA",
+     "text": "Vendor shall provide preventive maintenance quarterly. Breakdown response time is best-effort, with no SLA specified.",
+     "severity": "High",
+     "risk": "This analyser is critical-path for OPD/IPD reporting; an undefined response time risks reporting delays with no contractual recourse.",
+     "playbook": "Audit rights",
+     "redline": "Add an SLA: 4-hour response, 24-hour resolution, >=95% uptime guarantee with service credits below threshold."
+    },
+    {
+     "no": 4,
+     "heading": "PRICE ESCALATION",
+     "text": "Reagent pricing may be revised annually by the Vendor at its sole discretion.",
+     "severity": "High",
+     "risk": "Open-ended cost exposure over a 5-year term with no ceiling on annual increases.",
+     "playbook": "Payment terms",
+     "redline": "Cap escalation at 5% p.a. or CPI/WPI-linked, whichever is lower."
+    },
+    {
+     "no": 5,
+     "heading": "LIABILITY",
+     "text": "Vendor's total liability under this agreement shall not exceed ₹1,00,000 in aggregate, irrespective of the cause of loss.",
+     "severity": "High",
+     "risk": "A flat ₹1 lakh cap is grossly disproportionate to a likely annual spend of ₹39 lakh at this volume — inadequate cover for a reporting-error or equipment-damage event.",
+     "playbook": "Liability cap",
+     "redline": "Raise the cap to 1x-2x annual contract value."
+    },
+    {
+     "no": 6,
+     "heading": "EXIT",
+     "text": "Hospital may not terminate before completion of 5 years except for Vendor's uncured material breach, with a 6-month cure period.",
+     "severity": "Medium",
+     "risk": "Hospital is locked in for the full term even if a better-value vendor emerges, with no convenience exit at all.",
+     "playbook": "Termination for convenience",
+     "redline": "Add a convenience termination after year 2, with 6 months' notice and pro-rata settlement."
+    },
+    {
+     "no": 7,
+     "heading": "TITLE & RETURN",
+     "text": "Title to the equipment remains with the Vendor throughout the lease term. On expiry or termination, the Hospital shall permit removal within 30 days, subject to settlement of outstanding dues.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "DATA & LIS INTEGRATION",
+     "text": null,
+     "severity": "Medium",
+     "risk": "The analyser integrates with the LIS and patient records; the agreement is silent on data-handling, access-control, or breach-notification terms.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing addendum covering purpose limitation, access control and data return/deletion."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of the state where the Vendor is headquartered (Pune), with courts at Pune having exclusive jurisdiction.",
+     "severity": "High",
+     "risk": "Forces the Hospital to litigate outside Kerala for a Kochi-based dispute — high cost and inconvenience.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend to Kerala law, courts at Ernakulam."
+    },
+    {
+     "no": 10,
+     "heading": "FORCE MAJEURE",
+     "text": "Neither party shall be liable for delay or failure caused by events beyond its reasonable control, provided the affected party gives prompt notice and uses reasonable efforts to mitigate.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant addendum despite LIS/patient-data integration."
+    },
+    {
+     "topic": "Audit rights",
+     "note": "No uptime/SLA reporting obligation to allow the Hospital to audit vendor performance against a defined standard."
+    }
+   ]
+  },
+  {
+   "id": "CT-2617",
+   "title": "CMC — cath lab imaging system (Apex CSSD Solutions)",
+   "type": "CMC/AMC service contract",
+   "counterparty": "Apex CSSD Solutions",
+   "counterpartyType": "Company",
+   "value": 2900000,
+   "valueLabel": "₹29.0 lakh/yr",
+   "term": "1 year(s)",
+   "requestingDept": "Cardiology",
+   "receivedDate": "2026-03-02",
+   "stage": "Signed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Comprehensive Maintenance Contract (CMC) covering the cath lab imaging system, including all preventive maintenance, breakdown calls, and software updates for 1 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "RESPONSE TIME",
+     "text": "Vendor shall respond to a breakdown call within 24 hours during business hours (Mon-Sat, 9am-6pm).",
+     "severity": "High",
+     "risk": "A 24-hour, business-hours-only response is inadequate for a critical diagnostic/imaging asset that runs emergency and inpatient cases outside those hours.",
+     "playbook": "Audit rights",
+     "redline": "Amend to a 4-8 hour response, 24x7, given the criticality of this asset."
+    },
+    {
+     "no": 3,
+     "heading": "UPTIME GUARANTEE",
+     "text": null,
+     "severity": "Medium",
+     "risk": "No uptime guarantee or service credit mechanism — downtime has no contractual consequence for the Vendor.",
+     "playbook": "Audit rights",
+     "redline": "Add a minimum 95% uptime guarantee with service credits for shortfall."
+    },
+    {
+     "no": 4,
+     "heading": "SPARE PARTS",
+     "text": "All spare parts and consumable components (excluding items under a separate reagent contract) are included within the CMC value.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "ESCALATION",
+     "text": "CMC value may be revised at renewal, capped at 5% over the prior year's value.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Payment terms",
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "LIABILITY",
+     "text": "Vendor's liability for direct loss arising from its negligence is capped at the annual CMC value; consequential losses are excluded by both parties.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate with 60 days' written notice, or with immediate effect for uncured material breach following a 30-day cure period.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT & REPORTING",
+     "text": null,
+     "severity": "Low",
+     "risk": "No obligation on the Vendor to report service metrics, making it hard for the Hospital to verify SLA compliance without a dispute.",
+     "playbook": "Audit rights",
+     "redline": "Add a quarterly service-report obligation and an audit right over maintenance logs."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with disputes referred to arbitration seated at Bangalore.",
+     "severity": "Medium",
+     "risk": "Arbitration seat is set at Bangalore rather than Kochi, adding cost and inconvenience for a Kerala-based dispute.",
+     "playbook": "Jurisdiction & arbitration",
+     "redline": "Amend the arbitration seat and venue to Kochi."
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Audit rights",
+     "note": "No uptime guarantee or service-credit mechanism on a critical clinical asset."
+    },
+    {
+     "topic": "Audit rights",
+     "note": "No quarterly reporting or audit right over maintenance logs."
+    }
+   ]
+  },
+  {
+   "id": "CT-2618",
+   "title": "Housekeeping outsourcing — Silverline Facility Services",
+   "type": "Housekeeping/security outsourcing",
+   "counterparty": "Silverline Facility Services",
+   "counterpartyType": "Company",
+   "value": 78624000,
+   "valueLabel": "₹262.1 lakh/yr · 52 staff",
+   "term": "3 year(s)",
+   "requestingDept": "Housekeeping",
+   "receivedDate": "2026-01-11",
+   "stage": "Signed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE & MANPOWER",
+     "text": "Vendor shall deploy 52 trained housekeeping personnel across the Hospital campus on a 3-shift basis, per the roster agreed with Facilities/Administration.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "STATUTORY COMPLIANCE",
+     "text": "Vendor shall pay all deployed personnel not less than the applicable Kerala minimum wage, remit PF/ESI contributions on time, and furnish monthly compliance proof (challans, wage registers) to the Hospital.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 3,
+     "heading": "SUPERVISION",
+     "text": "Vendor shall provide one on-site supervisor per shift, responsible for quality checks, attendance, and escalation of incidents to the Hospital's Facilities/Security desk.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "INDEMNITY",
+     "text": "Vendor indemnifies the Hospital against claims arising from acts of its personnel; the Hospital indemnifies the Vendor only for loss caused by the Hospital's own instructions to Vendor staff, subject to a cap of one year's contract value.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Indemnity",
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "INSURANCE",
+     "text": "Vendor shall maintain insurance \"as required by law\".",
+     "severity": "Medium",
+     "risk": "No specified insurance amount or requirement to name the Hospital as additional insured — a generic \"as required by law\" clause offers little practical protection.",
+     "playbook": "Insurance",
+     "redline": "Specify workmen's compensation for all deployed staff and public liability of at least ₹50 lakh, Hospital named as additional insured."
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 30 days' written notice, or with immediate effect for a serious breach (e.g. repeated statutory non-compliance, a security lapse causing harm).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "AUDIT",
+     "text": null,
+     "severity": "Low",
+     "risk": "No explicit audit right over the Vendor's compliance records or training logs.",
+     "playbook": "Audit rights",
+     "redline": "Add an audit right over compliance records, training logs and rosters on reasonable notice."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": []
+  },
+  {
+   "id": "CT-2619",
+   "title": "IT SaaS — e-prescription & drug-interaction checker (NimbusHealth Systems)",
+   "type": "IT SaaS (HIS add-on)",
+   "counterparty": "NimbusHealth Systems",
+   "counterpartyType": "Company",
+   "value": 1000000,
+   "valueLabel": "₹10.0 lakh/yr subscription",
+   "term": "1 year(s)",
+   "requestingDept": "Information Technology",
+   "receivedDate": "2026-04-01",
+   "stage": "Signed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "SCOPE",
+     "text": "Vendor shall provide the e-prescription & drug-interaction checker module as a hosted, subscription (SaaS) add-on integrated with the Hospital's HIS via API, for 1 year(s).",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "DATA PROCESSING ADDENDUM",
+     "text": "Vendor shall process patient data solely to provide the Services, in accordance with its general privacy policy.",
+     "severity": "High",
+     "risk": "No DPDP-specific Data Processing Addendum — reliance on a generic privacy policy does not satisfy the Hospital's obligations as data fiduciary for patient personal data processed by this Vendor.",
+     "playbook": "DPDP data processing",
+     "redline": "Annex a DPDP-compliant DPA covering purpose limitation, processor obligations, and the Hospital's instructions as data fiduciary."
+    },
+    {
+     "no": 3,
+     "heading": "DATA RESIDENCY",
+     "text": "All patient data processed under this agreement shall be hosted on servers located within India.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "BREACH NOTIFICATION",
+     "text": "The agreement does not specify a breach-notification timeline.",
+     "severity": "High",
+     "risk": "DPDP Act practice expects breach notification within 72 hours; a non-binding target or silence leaves the Hospital unable to meet its own regulatory notification timelines.",
+     "playbook": "DPDP data processing",
+     "redline": "Set a binding 72-hour breach-notification obligation."
+    },
+    {
+     "no": 5,
+     "heading": "SUB-PROCESSORS",
+     "text": "Vendor may engage sub-processors at its discretion without notice to the Hospital.",
+     "severity": "Medium",
+     "risk": "Undisclosed sub-processing of patient data removes the Hospital's ability to assess or object to additional parties handling patient information.",
+     "playbook": "DPDP data processing",
+     "redline": "Require a disclosed sub-processor list with 30 days' prior notice before any addition."
+    },
+    {
+     "no": 6,
+     "heading": "SERVICE LEVEL",
+     "text": "Vendor guarantees 99.5% monthly uptime, with service credits for shortfall, and shall notify the Hospital of planned downtime at least 48 hours in advance.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Audit rights",
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "FEES & AUTO-RENEWAL",
+     "text": "Subscription fees are payable annually in advance. The Hospital will be notified at least 60 days before the renewal date and must actively confirm renewal in writing.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Auto-renewal",
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "EXIT & DATA RETURN",
+     "text": "On termination or expiry, Vendor shall export all Hospital data in a usable format within 30 days and thereafter permanently delete it, certifying deletion in writing.",
+     "severity": null,
+     "risk": null,
+     "playbook": "DPDP data processing",
+     "redline": null
+    },
+    {
+     "no": 9,
+     "heading": "LIABILITY",
+     "text": "Vendor's aggregate liability under this agreement is capped at the fees paid in the preceding 12 months, except for liability arising from a data breach caused by the Vendor's negligence, which is uncapped.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP-compliant Data Processing Addendum annexed."
+    }
+   ]
+  },
+  {
+   "id": "CT-2620",
+   "title": "Visiting consultant agreement — Dr. Priya Nair, Interventional Cardiology",
+   "type": "Visiting consultant agreement",
+   "counterparty": "Dr. Priya Nair",
+   "counterpartyType": "Individual consultant",
+   "value": 2835000,
+   "valueLabel": "Est. 45% of net collections (variable)",
+   "term": "3 years",
+   "requestingDept": "Orthopaedics & Joint Replacement",
+   "receivedDate": "2025-11-12",
+   "stage": "Signed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "TERM",
+     "text": "This agreement is for a period of 3 years from the date of signing, renewable by mutual written consent.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "REVENUE SHARE",
+     "text": "Hospital shall pay the Consultant 45% of net collections from interventional cardiology procedures performed by the Consultant, payable within 60 days of collection.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Revenue share",
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "PAYMENT (cont.)",
+     "text": "Payment beyond the 60-day cycle noted above applies to all revenue-share disbursements without exception.",
+     "severity": "Medium",
+     "risk": "Standard payment terms are 30 days; 60 days is a cash-flow drag on the Consultant relationship and an outlier versus other visiting-consultant agreements.",
+     "playbook": "Payment terms",
+     "redline": "Amend to 30 days of collection, or 45 days at most with Finance sign-off."
+    },
+    {
+     "no": 3,
+     "heading": "INDEMNITY",
+     "text": "The Consultant shall indemnify the Hospital against all claims arising from the Consultant's professional acts. The Hospital shall have no obligation to indemnify the Consultant under any circumstances.",
+     "severity": "High",
+     "risk": "One-sided indemnity: the Consultant bears all risk while the Hospital carries zero indemnity obligation even for its own equipment failure or staff negligence.",
+     "playbook": "Indemnity",
+     "redline": "Make mutual: Hospital indemnifies the Consultant for Hospital-caused equipment/staff negligence, capped at a reasonable multiple of annual revenue share."
+    },
+    {
+     "no": 4,
+     "heading": "NON-COMPETE",
+     "text": "The Consultant shall not practice interventional cardiology at any other hospital within Ernakulam district for a period of 2 years after termination of this agreement.",
+     "severity": "High",
+     "risk": "A district-wide, multi-year non-compete is a blanket restraint of trade likely unenforceable under Contract Act s.27 (Percept D'Mark v. Zaheer Khan line of authority); litigation risk if challenged.",
+     "playbook": "Non-compete",
+     "redline": "Narrow to 1 year, limited to directly competing NABH-accredited hospitals within a defined radius, not a district-wide bar."
+    },
+    {
+     "no": 5,
+     "heading": "EQUIPMENT & OT ACCESS",
+     "text": "The Consultant shall have priority use of scheduled OT slots for interventional cardiology procedures, subject to the Hospital's OT allocation policy.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "CREDENTIALING",
+     "text": "The Consultant shall maintain valid medical registration and Hospital credentialing/privileging for the duration of this agreement, and shall notify the Hospital immediately of any change in licence status.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 7,
+     "heading": "TERMINATION",
+     "text": "Either party may terminate this agreement with 120 days' written notice.",
+     "severity": "Medium",
+     "risk": "Only no-cause termination exists; there is no immediate-effect exit for licence suspension or misconduct, forcing the Hospital to run out the full notice period even in a serious case.",
+     "playbook": "Termination for convenience",
+     "redline": "Add an immediate-termination clause for licence suspension, criminal conviction, or a finding of professional misconduct."
+    },
+    {
+     "no": 8,
+     "heading": "CONFIDENTIALITY",
+     "text": "The Consultant shall keep confidential all non-public information of the Hospital, including patient data accessed in the course of practice, and shall not disclose it to any third party.",
+     "severity": "Medium",
+     "risk": "Confidentiality is stated generally but there is no DPDP Act 2023-specific clause covering purpose limitation, breach notification, or post-termination data return/deletion for the patient data the Consultant accesses.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a DPDP-compliant data processing clause: purpose limitation, 72-hour breach notification, and data return/deletion within 30 days of termination."
+    },
+    {
+     "no": 9,
+     "heading": "GOVERNING LAW & JURISDICTION",
+     "text": "This agreement is governed by the laws of India, with courts at Ernakulam, Kerala having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": "Jurisdiction & arbitration",
+     "redline": null
+    },
+    {
+     "no": 10,
+     "heading": "INSURANCE",
+     "text": null,
+     "severity": "Medium",
+     "risk": "No professional indemnity insurance requirement on the Consultant, leaving the Hospital exposed if a claim exceeds what the Consultant can personally satisfy.",
+     "playbook": "Insurance",
+     "redline": "Add a requirement for professional indemnity insurance of at least ₹1 crore, with proof furnished annually."
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "DPDP data processing",
+     "note": "No DPDP Act 2023-compliant clause for the patient data the Consultant accesses in the course of practice."
+    },
+    {
+     "topic": "Termination for convenience",
+     "note": "No separate for-cause, immediate-effect termination alongside the no-cause notice clause."
+    },
+    {
+     "topic": "Insurance",
+     "note": "No professional indemnity insurance obligation on the Consultant."
+    }
+   ]
+  },
+  {
+   "id": "CT-2621",
+   "title": "NDA — Meridian Biosciences Sponsor Trust (a Phase III cardiometabolic drug trial)",
+   "type": "NDA with research sponsor",
+   "counterparty": "Meridian Biosciences Sponsor Trust",
+   "counterpartyType": "Research foundation",
+   "value": 0,
+   "valueLabel": "No monetary value (NDA only)",
+   "term": "5 years",
+   "requestingDept": "Research & Academics",
+   "receivedDate": "2026-05-01",
+   "stage": "Signed",
+   "clauses": [
+    {
+     "no": 1,
+     "heading": "PURPOSE",
+     "text": "This Non-Disclosure Agreement is entered into in connection with discussions for a Phase III cardiometabolic drug trial at the Hospital, sponsored by Meridian Biosciences Sponsor Trust.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 2,
+     "heading": "CONFIDENTIALITY OBLIGATION",
+     "text": "The Hospital shall keep confidential all information disclosed by the Sponsor. The Sponsor has no reciprocal confidentiality obligation toward information disclosed by the Hospital (e.g. site capability, patient volume data).",
+     "severity": "Medium",
+     "risk": "A one-way NDA leaves the Hospital's own disclosures (site data, capability information) unprotected, which is unusual and unfavourable for a bilateral research relationship.",
+     "playbook": null,
+     "redline": "Make the confidentiality obligation mutual."
+    },
+    {
+     "no": 3,
+     "heading": "CARVE-OUTS",
+     "text": "The confidentiality obligation does not apply to information that is already public, independently developed, or required to be disclosed by law or a regulatory authority (including the Ethics Committee and CDSCO), provided notice is given where legally permissible.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 4,
+     "heading": "TERM & SURVIVAL",
+     "text": "This NDA is effective for 5 years, with the confidentiality obligation surviving for 3 years after termination or expiry.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 5,
+     "heading": "PATIENT DATA",
+     "text": "Any patient-identifiable information remains subject to the Hospital's own DPDP Act 2023 obligations and the study's Ethics Committee-approved protocol, independent of this NDA's general confidentiality terms.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 6,
+     "heading": "RETURN OR DESTRUCTION",
+     "text": "The agreement does not specify what happens to shared information on termination.",
+     "severity": "Low",
+     "risk": "No return/destruction mechanism at the end of the relationship — a housekeeping gap rather than a high-risk term, but worth closing before signature.",
+     "playbook": "DPDP data processing",
+     "redline": "Add a return-or-certify-destruction clause with a defined timeline, subject to an archival-record exception."
+    },
+    {
+     "no": 7,
+     "heading": "NO LICENCE",
+     "text": "Nothing in this NDA grants either party a licence to use the other's confidential information for any purpose other than evaluating and conducting the study.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    },
+    {
+     "no": 8,
+     "heading": "GOVERNING LAW",
+     "text": "This agreement is governed by the laws of Kerala, with courts at Ernakulam having exclusive jurisdiction.",
+     "severity": null,
+     "risk": null,
+     "playbook": null,
+     "redline": null
+    }
+   ],
+   "missingClauses": [
+    {
+     "topic": "Indemnity",
+     "note": "Confidentiality obligation is one-way; Hospital disclosures are unprotected."
+    },
+    {
+     "topic": "DPDP data processing",
+     "note": "No return-or-destruction mechanism for shared information at termination."
+    }
+   ]
+  }
+ ],
+ "obligations": [
+  {
+   "contractId": "CT-2617",
+   "contractTitle": "CMC — cath lab imaging system (Apex CSSD Solutions)",
+   "type": "Renewal",
+   "date": "2027-03-02",
+   "description": "Contract term ends; renew, renegotiate, or exit."
+  },
+  {
+   "contractId": "CT-2617",
+   "contractTitle": "CMC — cath lab imaging system (Apex CSSD Solutions)",
+   "type": "Notice deadline",
+   "date": "2026-12-02",
+   "description": "Last date to give 90 days' non-renewal / renegotiation notice."
+  },
+  {
+   "contractId": "CT-2617",
+   "contractTitle": "CMC — cath lab imaging system (Apex CSSD Solutions)",
+   "type": "Price escalation",
+   "date": "2027-03-02",
+   "description": "First annual price/CMC-value revision date."
+  },
+  {
+   "contractId": "CT-2618",
+   "contractTitle": "Housekeeping outsourcing — Silverline Facility Services",
+   "type": "Renewal",
+   "date": "2029-01-10",
+   "description": "Contract term ends; renew, renegotiate, or exit."
+  },
+  {
+   "contractId": "CT-2618",
+   "contractTitle": "Housekeeping outsourcing — Silverline Facility Services",
+   "type": "Notice deadline",
+   "date": "2028-10-12",
+   "description": "Last date to give 90 days' non-renewal / renegotiation notice."
+  },
+  {
+   "contractId": "CT-2619",
+   "contractTitle": "IT SaaS — e-prescription & drug-interaction checker (NimbusHealth Systems)",
+   "type": "Renewal",
+   "date": "2027-04-01",
+   "description": "Contract term ends; renew, renegotiate, or exit."
+  },
+  {
+   "contractId": "CT-2619",
+   "contractTitle": "IT SaaS — e-prescription & drug-interaction checker (NimbusHealth Systems)",
+   "type": "Notice deadline",
+   "date": "2027-01-31",
+   "description": "Last date to give 60 days' non-renewal / renegotiation notice."
+  },
+  {
+   "contractId": "CT-2619",
+   "contractTitle": "IT SaaS — e-prescription & drug-interaction checker (NimbusHealth Systems)",
+   "type": "Price escalation",
+   "date": "2027-04-01",
+   "description": "First annual price/CMC-value revision date."
+  },
+  {
+   "contractId": "CT-2620",
+   "contractTitle": "Visiting consultant agreement — Dr. Priya Nair, Interventional Cardiology",
+   "type": "Renewal",
+   "date": "2028-11-11",
+   "description": "Contract term ends; renew, renegotiate, or exit."
+  },
+  {
+   "contractId": "CT-2620",
+   "contractTitle": "Visiting consultant agreement — Dr. Priya Nair, Interventional Cardiology",
+   "type": "Notice deadline",
+   "date": "2028-08-13",
+   "description": "Last date to give 90 days' non-renewal / renegotiation notice."
+  },
+  {
+   "contractId": "CT-2621",
+   "contractTitle": "NDA — Meridian Biosciences Sponsor Trust (a Phase III cardiometabolic drug trial)",
+   "type": "NDA expiry",
+   "date": "2031-04-30",
+   "description": "NDA term ends (confidentiality obligations continue to survive separately)."
+  }
+ ]
+}
